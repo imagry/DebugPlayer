@@ -1,5 +1,4 @@
-# main.py
-from PyQt5.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication
 from playback_viewer import PlaybackViewer
 import sys
 
@@ -9,4 +8,4 @@ if __name__ == '__main__':
     viewer = PlaybackViewer()
     viewer.show()
     
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

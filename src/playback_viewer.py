@@ -1,14 +1,17 @@
-# playback_viewer.py
-from PyQt5.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
-                             QSlider, QLabel, QCheckBox, QGridLayout, QMenuBar, QAction)
-from PyQt5.QtCore import Qt
-from plot_widget import PlotWidget
+from PySide6.QtWidgets import QMainWindow, QVBoxLayout, QWidget, QMenuBar, QHBoxLayout
+from PySide6.QtGui import QAction
+from PySide6.QtCore import Qt
+from pyqtgraph.dockarea import DockArea, Dock
+from playback_controls import PlaybackControls
+from plot_manager import PlotManager
+from data_handler import DataHandler
+from signal_manager import SignalManager
 
 class PlaybackViewer(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle('Playback Viewer')
-        self.setGeometry(100, 100, 800, 600)
+        self.setWindowTitle('Playback Viewer with PyQtGraph Docks')
+        self.setGeometry(100, 100, 1200, 800)
         
         # Main layout
         self.central_widget = QWidget()
@@ -19,81 +22,69 @@ class PlaybackViewer(QMainWindow):
         self.menu_bar = QMenuBar(self)
         self.setMenuBar(self.menu_bar)
         file_menu = self.menu_bar.addMenu('File')
-        view_menu = self.menu_bar.addMenu('View')
-        help_menu = self.menu_bar.addMenu('Help')
 
-        # Add actions to file menu (save/reset)
+        # Add actions to file menu (save/load/reset)
+        load_action = QAction('Load Trip Data', self)
+        load_action.triggered.connect(self.load_data)
         save_action = QAction('Save Current State', self)
+        save_action.triggered.connect(self.save_state)
         reset_action = QAction('Reset Trip', self)
+        reset_action.triggered.connect(self.reset_trip)
+        file_menu.addAction(load_action)
         file_menu.addAction(save_action)
         file_menu.addAction(reset_action)
 
-        # Create top section (Main Window and Secondary Window)
-        self.main_window = PlotWidget("Main Window")
-        self.secondary_window = PlotWidget("Secondary Window")
+        # Create DockArea
+        self.dock_area = DockArea()
+        layout.addWidget(self.dock_area)
 
-        top_layout = QHBoxLayout()
-        top_layout.addWidget(self.main_window)
-        top_layout.addWidget(self.secondary_window)
-        layout.addLayout(top_layout)
+        # Instantiate Managers
+        self.data_handler = DataHandler()
+        self.plot_manager = PlotManager(self.dock_area)
+        self.signal_manager = SignalManager(self.plot_manager.update_temporal_plot)
 
-        # Create Temporal Window and signal selection
-        self.temporal_window = PlotWidget("Temporal Window")
+        # Create Docks
+        self.main_dock = Dock("Main Window", size=(500, 300))
+        self.secondary_dock = Dock("Secondary Window", size=(500, 300))
+        self.temporal_dock = Dock("Temporal Window", size=(1000, 200))
 
-        self.signal_selection_layout = QVBoxLayout()
-        self.signal_selection_layout.addWidget(QLabel("Temporal Window ->"))
+        # Add Docks to DockArea
+        self.dock_area.addDock(self.main_dock, 'left')
+        self.dock_area.addDock(self.secondary_dock, 'right', self.main_dock)
+        self.dock_area.addDock(self.temporal_dock, 'bottom')
 
-        # Create checkboxes for signals
-        self.signals = ['Signal 1', 'Signal 2', 'Signal 3', 'Signal 4']
-        self.signal_checkboxes = []
-        for signal in self.signals:
-            checkbox = QCheckBox(signal)
-            checkbox.stateChanged.connect(self.update_signals)
-            self.signal_selection_layout.addWidget(checkbox)
-            self.signal_checkboxes.append(checkbox)
+        # Add plots to docks
+        self.plot_manager.initialize_plots(self.main_dock, self.secondary_dock, self.temporal_dock)
 
-        # Place temporal window and signal selection in a horizontal layout
-        bottom_layout = QHBoxLayout()
-        bottom_layout.addLayout(self.signal_selection_layout)
-        bottom_layout.addWidget(self.temporal_window)
-        layout.addLayout(bottom_layout)
-        
-        # Create slider and playback controls
-        control_layout = QHBoxLayout()
-        self.play_button = QPushButton("Play/Pause")
-        self.play_button.clicked.connect(self.toggle_playback)
+        # Signal selection layout
+        self.signal_selection_widget = self.signal_manager.get_signal_selection_widget()
+        self.temporal_dock.addWidget(self.signal_selection_widget, row=1, col=0)
 
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setMinimum(0)
-        self.slider.setMaximum(100)
-        self.slider.setValue(0)
-        self.slider.sliderMoved.connect(self.update_slider_position)
+        # Create playback controls
+        self.playback_controls = PlaybackControls(self.plot_manager.update_plots, self.data_handler.get_time_data)
+        control_layout = self.playback_controls.get_control_layout()
 
-        self.playback_speed_label = QLabel("Speed: 1.00x")
-        self.playback_speed_label.mousePressEvent = self.change_speed
-        
-        self.time_label = QLabel("00:00/00:41")
-        
-        control_layout.addWidget(self.play_button)
-        control_layout.addWidget(self.slider)
-        control_layout.addWidget(self.playback_speed_label)
-        control_layout.addWidget(self.time_label)
-        
         layout.addLayout(control_layout)
-    
-    def toggle_playback(self):
-        # Placeholder for play/pause functionality
-        print("Toggled play/pause")
-    
-    def update_slider_position(self, position):
-        # Placeholder for slider control functionality
-        print(f"Slider moved to: {position}")
-    
-    def change_speed(self, event):
-        # Placeholder for playback speed change functionality
-        print("Playback speed changed")
 
-    def update_signals(self):
-        # Update signals based on checkbox selections
-        selected_signals = [cb.text() for cb in self.signal_checkboxes if cb.isChecked()]
-        print(f"Selected signals: {selected_signals}")
+    def load_data(self):
+        """
+        Loads trip data from a file and updates the viewer.
+        """
+        success = self.data_handler.load_data()
+        if success:
+            self.signal_manager.update_signal_checkboxes(self.data_handler.get_signals())
+            self.plot_manager.update_data(self.data_handler.get_main_data(), self.data_handler.get_secondary_data())
+            self.plot_manager.update_temporal_plot(self.data_handler.get_temporal_data())
+    
+    def save_state(self):
+        """
+        Placeholder for saving the current state.
+        """
+        print("Save state functionality not yet implemented.")
+
+    def reset_trip(self):
+        """
+        Placeholder for resetting the trip to the initial state.
+        """
+        self.playback_controls.reset_playback()
+        self.plot_manager.reset_plots()
