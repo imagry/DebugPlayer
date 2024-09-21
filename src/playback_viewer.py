@@ -8,7 +8,7 @@ from data_handler import DataHandler
 from signal_manager import SignalManager
 
 class PlaybackViewer(QMainWindow):
-    def __init__(self):
+    def __init__(self, trip_directory=None):
         super().__init__()
         self.setWindowTitle('Playback Viewer with PyQtGraph Docks')
         self.setGeometry(100, 100, 1200, 800)
@@ -39,7 +39,7 @@ class PlaybackViewer(QMainWindow):
         layout.addWidget(self.dock_area)
 
         # Instantiate Managers
-        self.data_handler = DataHandler()
+        self.data_handler = DataHandler(trip_directory)
         self.plot_manager = PlotManager(self.dock_area)
         self.signal_manager = SignalManager(self.plot_manager.update_temporal_plot)
 

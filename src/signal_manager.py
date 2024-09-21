@@ -44,3 +44,6 @@ class SignalManager:
         """
         selected_signals = [cb.text() for cb in self.signal_checkboxes if cb.isChecked()]
         self.update_temporal_plot_callback(selected_signals)
+
+    
+    
