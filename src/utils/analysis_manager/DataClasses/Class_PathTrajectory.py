@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from spatialmath import SE2
 from spatialmath.base import *
-import utils.se2_function as se2lib
+import se2_function as se2lib
 class PathTrajectory:
     """
     The class initializes with df_path which stores the paths of the trip in ego coordinates.

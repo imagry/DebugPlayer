@@ -1,7 +1,7 @@
 import json
 import numpy as np
 import pandas as pd
-import utils.utils_geo as geo
+import utils_geo as geo
 import os
 import yaml
 import socket

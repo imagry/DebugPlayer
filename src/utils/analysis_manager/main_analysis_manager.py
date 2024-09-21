@@ -1,5 +1,7 @@
 # main_analysis_manager.py
 
+import argparse
+
 # %% Import libraries
 import os
 import sys
@@ -9,7 +11,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.insert(0, parent_dir)
 
-from utils.init_utils import initialize_environment
+from init_utils import initialize_environment
 
 # Initialize the environment
 initialize_environment()
@@ -34,7 +36,12 @@ class State:
 state = State()
 
 # Initialize state by reading the environment variable
-def init_state():
+def init_state(trip_dir=None):
+    if trip_dir is not None:
+        # split trip_dir into trips_folder and selected_trip - trip_dir parent folder is trips_folder
+        state.trips_folder, state.selected_trip  = os.path.split(trip_dir)
+        return
+    
     trip_path_env = os.getenv('OFFLINE_DATA_PATH_URBAN')
     
     if trip_path_env and os.path.exists(trip_path_env):
@@ -60,7 +67,7 @@ def refresh_callback(selected_trip):
     print(f"Refreshing with selected trip: {selected_trip}")
 
 #%% Main function to execute the process
-def main():
+def main(trip_dir = None):
     root = tk.Tk()
     root.title("Analysis Manager")
     root.geometry("800x600")
@@ -77,9 +84,20 @@ def main():
     play_button = tk.Button(root, text="Play", command=on_play_button_pressed, font=custom_font)
     play_button.pack(pady=20)
     
-    init_state()
+    init_state(trip_dir)
     
     root.mainloop()
 
 if __name__ == "__main__":
-    main()
+    
+          # Step 1: Create the parser
+    parser = argparse.ArgumentParser(description='Process some flags.')
+    
+    # Step 2: Define the arguments
+    parser.add_argument('--trip_dir', type=str, help='path to the directory containing trip data')
+    # parser.add_argument('--flag2', type=int, help='Description for flag2')
+    
+    # Step 3: Parse the arguments
+    args = parser.parse_args()
+    
+    main(args.trip_dir)

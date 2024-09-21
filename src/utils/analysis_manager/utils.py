@@ -2,7 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
-import utils.plot_helpers as plt_helper
+import plot_helpers as plt_helper
 from analysis_manager.DataClasses.Class_PathTrajectory import *
 from config import ClassObjType
 

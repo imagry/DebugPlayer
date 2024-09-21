@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from spatialmath import SE2
-from utils.se2_function import *
+from se2_function import *
 import webbrowser
 
 import sys
@@ -18,7 +18,7 @@ except pkg_resources.DistributionNotFound:
     subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
 
 from mpl_interactions import ioff, panhandler, zoom_factory
-from utils.utils_geo import trip_view_on_map
+from utils_geo import trip_view_on_map
 
 def path_merger_plot_cpp(X_1_world, X_2_world, X_now_world, p1_world, p2_world, p2_merged_world):
     #%% Plots

@@ -1,12 +1,12 @@
 # data_preparation.py
 
-import utils.time_series as time_series
+import time_series as time_series
 import pandas as pd
 import os
-import utils.analysis_manager.data_loader as data_loader
-from utils.analysis_manager.DataClasses.Class_PathTrajectory import PathTrajectory
-from utils.analysis_manager.config import DataFrameType, ClassObjType
-import utils.analysis_manager.data_preparation as data_preparation
+import analysis_manager.data_loader as data_loader
+from analysis_manager.DataClasses.Class_PathTrajectory import PathTrajectory
+from analysis_manager.config import DataFrameType, ClassObjType
+import analysis_manager.data_preparation as data_preparation
 
 def load_data_for_trip(trip_path):
     """

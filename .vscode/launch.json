@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--trip_dir", "/home/thamam/data/trips/Logs_2024-09-11T13_42_44/2024-09-11T15_36_18/"]
+            "args": ["--trip_dir", "/home/thamam/data/trips/Logs_2024-09-11T13_42_44/2024-09-11T15_36_18"]
         }
     ]    
 }
