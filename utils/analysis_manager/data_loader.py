@@ -2,11 +2,8 @@
 import numpy as np
 import pandas as pd
 import os
-
 from py_utils.aidriver_logs_readers.path_loader import read_nissan_imu_data, read_path_data
 import py_utils.aidriver_logs_readers.utils_trip_data_handler as dh
-
-
 import pandas as pd
 
 def general_read_dynamic_path_data_by_rows(filepath, columns=None):
