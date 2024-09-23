@@ -42,7 +42,7 @@ def pre_required_install_check():
     """
     Checks if the required packages are installed and installs them if not.
     """
-    packages = ['mpl_interactions', 'pandas', 'spatialmath-python', 'bspline', 'matplotlib', 'numpy', 'scipy', 'folium', 'mplcursors']
+    packages = ['mpl_interactions', 'pandas', 'polars','spatialmath-python', 'bspline', 'matplotlib', 'numpy', 'scipy', 'folium', 'mplcursors']
 
     for package_name in packages:
         try:

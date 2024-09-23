@@ -5,12 +5,25 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Analysis Manaer Python Debugger: Send Arguments",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args": [ "--trip",
+                "/home/thh3/data/trips/Nissan/12_09_2024/2024-09-12T16_15_08/"
+            ]
+        },
+        {
             "name": "Python Debugger: Current File with Arguments",
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args": ["--trip_dir", "/home/thamam/data/trips/Logs_2024-09-11T13_42_44/2024-09-11T15_36_18"]
+            "args": [
+                "--trip_dir",
+                "/home/thamam/data/trips/Logs_2024-09-11T13_42_44/2024-09-11T15_36_18"
+            ]
         }
-    ]    
+    ]
 }

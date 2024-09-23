@@ -35,11 +35,30 @@ class State:
 
 state = State()
 
+def split_trip_path(trip_path):
+    """
+    Splits the trip path into trips_folder and selected_trip, ensuring consistent results
+    for paths with or without trailing slashes.
+
+    Args:
+        trip_path (str): The path to the trip.
+
+    Returns:
+        tuple: A tuple containing trips_folder and selected_trip.
+    """
+    # Normalize the path to remove any trailing slashes
+    normalized_path = os.path.normpath(trip_path)
+    
+    # Split the normalized path
+    trips_folder, selected_trip = os.path.split(normalized_path)
+    
+    return trips_folder, selected_trip
+
 # Initialize state by reading the environment variable
 def init_state(trip_dir=None):
     if trip_dir is not None:
         # split trip_dir into trips_folder and selected_trip - trip_dir parent folder is trips_folder
-        state.trips_folder, state.selected_trip  = os.path.split(trip_dir)
+        state.trips_folder, state.selected_trip  = split_trip_path(trip_dir)
         return
     
     trip_path_env = os.getenv('OFFLINE_DATA_PATH_URBAN')
@@ -68,12 +87,22 @@ def refresh_callback(selected_trip):
 
 #%% Main function to execute the process
 def main(trip_dir = None):
+        
+      # Create an argument parser
+    parser = argparse.ArgumentParser(description="Main Analysis Manager")
+    
+    # Add the --trip argument
+    parser.add_argument('--trip', type=str, help='Path to the trip file')
+    
+    # Parse the command-line arguments
+    args = parser.parse_args()
+                  
     root = tk.Tk()
     root.title("Analysis Manager")
     root.geometry("800x600")
     
     custom_font = font.Font(family="Helvetica", size=12)
-    
+    Run_font = font.Font(family="Helvetica", size=22)
     menu_bar = Menu(root, font=custom_font)
     
     create_file_menu(menu_bar, root, state, refresh_callback, custom_font)
@@ -81,23 +110,18 @@ def main(trip_dir = None):
     
     root.config(menu=menu_bar)
     
-    play_button = tk.Button(root, text="Play", command=on_play_button_pressed, font=custom_font)
+    play_button = tk.Button(root, text="Run", command=on_play_button_pressed, font=Run_font)
     play_button.pack(pady=20)
-    
+
+    # Check if the --trip flag is provided
+    if args.trip:
+        trip_dir = args.trip
+    else:
+        trip_dir = None   
     init_state(trip_dir)
     
     root.mainloop()
 
 if __name__ == "__main__":
-    
-          # Step 1: Create the parser
-    parser = argparse.ArgumentParser(description='Process some flags.')
-    
-    # Step 2: Define the arguments
-    parser.add_argument('--trip_dir', type=str, help='path to the directory containing trip data')
-    # parser.add_argument('--flag2', type=int, help='Description for flag2')
-    
-    # Step 3: Parse the arguments
-    args = parser.parse_args()
-    
-    main(args.trip_dir)
+                      
+    main()

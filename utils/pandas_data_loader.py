@@ -71,7 +71,7 @@ def general_read_dynamic_path_data_by_rows(filepath, columns=None):
 
     return df_path_data, path_xy
 
-def read_dynamic_path_data_by_rows(filepath):
+def read_path_handler_data(filepath):
     """
     Reads a CSV file with dynamic path_x and path_y columns, handling inconsistent row lengths.
 
@@ -180,66 +180,6 @@ def read_dynamic_path_data_by_rows(filepath):
     
     
     return df_path_data, path_xy
-
-def read_dynamic_path_data(trip_path):
-    """
-    Reads a CSV file with dynamic path_x and path_y columns.
-
-    Parameters:
-    filepath (str): The path to the CSV file.
-
-    Returns:
-    dict: A dictionary containing the extracted data.
-    """
-    # Read the CSV file
-    filepath =  trip_path +'/'+ 'path_trajectory.csv' 
-
-    df = pd.read_csv(filepath, header=0, engine='python')
-    df = pd.read_csv(filepath, header=0, engine='python', error_bad_lines=False, warn_bad_lines=True)
-
-    # Extract fixed columns
-    data_timestamp_sec = df['data_timestamp_sec']
-    current_speed_mps = df['current_speed_mps']
-    target_speed_mps = df['target_speed_mps']
-    turn_signal_state = df['turn_signal_state']
-    w_car_pose_now_x = df['w_car_pose_now_x_']
-    w_car_pose_now_y = df['w_car_pose_now_y']
-    w_car_pose_now_yaw_rad = df['w_car_pose_now_yaw_rad']
-    car_pose_now_timestamp = df['car_pose_now_timestamp']
-    w_car_pose_image_x = df['w_car_pose_image_x']
-    w_car_pose_image_y = df['w_car_pose_image_y']
-    w_car_pose_image_yaw_rad = df['w_car_pose_image_yaw_rad']
-    car_pose_image_timestamp_sec = df['car_pose_image_timestamp_sec']
-
-    # Determine the number of path_x and path_y pairs
-    path_columns = [col for col in df.columns if col.startswith('path_x_') or col.startswith('path_y_')]
-    path_x_columns = [col for col in path_columns if col.startswith('path_x_')]
-    path_y_columns = [col for col in path_columns if col.startswith('path_y_')]
-
-    # Ensure the number of path_x and path_y columns are the same
-    assert len(path_x_columns) == len(path_y_columns), "Mismatch in number of path_x and path_y columns"
-
-    # Extract path_x and path_y data
-    path_x_data = df[path_x_columns]
-    path_y_data = df[path_y_columns]
-
-    # Return the extracted data as a dictionary
-    return {
-        'data_timestamp_sec': data_timestamp_sec,
-        'current_speed_mps': current_speed_mps,
-        'target_speed_mps': target_speed_mps,
-        'turn_signal_state': turn_signal_state,
-        'w_car_pose_now_x': w_car_pose_now_x,
-        'w_car_pose_now_y': w_car_pose_now_y,
-        'w_car_pose_now_yaw_rad': w_car_pose_now_yaw_rad,
-        'car_pose_now_timestamp': car_pose_now_timestamp,
-        'w_car_pose_image_x': w_car_pose_image_x,
-        'w_car_pose_image_y': w_car_pose_image_y,
-        'w_car_pose_image_yaw_rad': w_car_pose_image_yaw_rad,
-        'car_pose_image_timestamp_sec': car_pose_image_timestamp_sec,
-        'path_x_data': path_x_data,
-        'path_y_data': path_y_data
-    }
 
 def load_trip_data(trip_path, data_ds_factor):
     import aidriver_logs_readers.utils_trip_data_handler as dh

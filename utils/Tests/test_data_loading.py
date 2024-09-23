@@ -12,8 +12,8 @@ sys.path.insert(0, parent_dir)
 analysis_manager_dir = os.path.abspath(os.path.join(parent_dir, 'analysis_manager'))
 sys.path.insert(0, analysis_manager_dir)
 
-from utils.data_loader import read_dynamic_path_data_by_rows
-import utils.new_data_loader as new_data_loader
+import utils.pandas_data_loader as  pd_data_loader
+import utils.polars_data_loader as pl_data_loader
     
 
 def tic_toc(func):
@@ -28,11 +28,11 @@ def tic_toc(func):
 
 @tic_toc
 def load_data(filepath):
-    return read_dynamic_path_data_by_rows(filepath)
+    return pd_data_loader.read_dynamic_path_data_by_rows(filepath)
 
 @tic_toc
 def load_new_data(filepath):
-    return new_data_loader.pl_read_dynamic_path_data_by_rows(filepath)
+    return pl_data_loader.read_path_handler_data(filepath)
 
     
 # trip_path = 'Example_Trips/2024-09-11T15_55_30' # '/home/thh3/dev/DebugPlayer/Example_Trips'

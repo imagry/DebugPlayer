@@ -6,7 +6,7 @@ from datetime import datetime
 
 import polars as pl
 
-def pl_read_dynamic_path_data_by_rows(filepath):
+def read_path_handler_data(filepath):
     """
     Reads a CSV file with dynamic path_x and path_y columns, handling inconsistent row lengths.
 
@@ -59,24 +59,6 @@ def pl_read_dynamic_path_data_by_rows(filepath):
 
 # Example usage:
 # df_path_data, path_xy = read_dynamic_path_data_by_rows('path_to_file.csv')
-
-
-def read_path_data(path):
-    """
-    Reads path data from a CSV file and returns a DataFrame.
-    """
-    df = pl.read_csv(path)
-    
-    # scan columns and sort them into : columns that has path_x in col to path_x_columns, and path_y_columns to columns with path_y in col, and fixed_columns to all other columns
-    
-    
-    # Extract fixed columns - no 'path_x_' or 'path_y_' prefix
-    fixed_columns = [col for col in df.columns if not 'path_x' in col and not 'path_y' in col]
-    
-    
-    return df
-
-
 
 # Add a test for the read_path_data function here
 if __name__ == "__main__":
