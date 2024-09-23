@@ -5,9 +5,7 @@ Install libxcb:
 pip install setuptools
 sudo apt-get install libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev
 
-pip install pyside6 matplotlib pyqtgraph SciPy NumPy python-opengl spatialmath-python polars
-
-
+pip install pyside6 matplotlib pyqtgraph SciPy NumPy spatialmath-python polars pandas
 
 Overview of File Structure:
 main.py: Entry point for launching the application.
@@ -18,11 +16,6 @@ plot_manager.py: Responsible for managing all plots and updating them based on t
 signal_manager.py: Manages the signal selection UI and updates the temporal plot based on user selections.
 
 Utils:
-
-
-
-
-
 
 How to add new data - Step-by-Step Guide:
 1. Data Preparation: Ensure your data is in a suitable format (e.g., CSV or JSON).

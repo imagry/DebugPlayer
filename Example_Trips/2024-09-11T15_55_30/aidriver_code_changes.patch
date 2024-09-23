@@ -1,0 +1,47 @@
+diff --git a/config/planner.conf b/config/planner.conf
+index 5065be538e..3b73532792 100644
+--- a/config/planner.conf
++++ b/config/planner.conf
+@@ -157,7 +157,7 @@ TRIM_PATH_MAX_DISTANCE=1 # bool, [0/1] if true, will trim path to max distance
+ MAX_PATH_DISTANCE=75.0 # [m] maximum accumulated distance of the path
+ 
+ ############################### PATH ADJUSTMENT CONFIGS ##############################
+-USE_PATH_ADJUSTMENT=1 # [bool] set true to enable path adjustment
++USE_PATH_ADJUSTMENT=0 # [bool] set true to enable path adjustment
+ DEFAULT_MARGIN_AGGRESSIVE_SWERVE=3. # [m]
+ DEFAULT_MARGIN=3. # [m]
+ LANE_DIVIDIER_MARGIN_AGGRESSIVE_SWERVE=3. # [m]
+@@ -195,7 +195,7 @@ SPLINE_INTERPOLATION_PA_LAMBDA_HEADING=0 # [float] heading lambda to enforce whe
+ 
+ ############################### PATH MERGER CONFIGS ##############################
+ # temporal path merging
+-TEMPORAL_PATH_MERGING_ENABLED=0 # [bool] set true to enable temporal path merging
++TEMPORAL_PATH_MERGING_ENABLED=1 # [bool] set true to enable temporal path merging
+ PATH_MERGER_TAU=0.2 # [s] time constant for temporal path merging
+ PATH_MERGER_BLENDING_LENGTH=5.0 # [Meters] Merging region offset from starting point of path p2
+ PATH_MERGER_LM1=0.5 # [unitless] smoothing lambda
+diff --git a/config/vehicle_config/BASE.conf b/config/vehicle_config/BASE.conf
+index e353ebcfa3..d1a934acaa 100644
+--- a/config/vehicle_config/BASE.conf
++++ b/config/vehicle_config/BASE.conf
+@@ -73,7 +73,7 @@ ENABLE_PITCH_VALUE_USAGE=0
+ SS_NEAR_TL_FILTER=1
+ 
+ #Speed rule toggles
+-SPEED_HANDLER_PRINTS_ENABLED=0          # 1 for speed handler prints in terminal, 0 for log file only
++SPEED_HANDLER_PRINTS_ENABLED=1        # 1 for speed handler prints in terminal, 0 for log file only
+ SPEED_SHORTCUTS_ENABLED=1               # allow keyboard shortcuts
+ USE_BLOCKED_LANE_SPEED_RULE=1
+ USE_CURVATURE_SPEED_RULE=1
+@@ -98,9 +98,9 @@ USE_STEERING_LOCK_SPEED_RULE=1
+ USE_STOP_SIGN_SPEED_REDUCTION_RULE=0
+ USE_STOP_SIGN_SPEED_RULE=1
+ USE_SWERVE_SPEED_RULE=1
+-USE_TRAFFIC_LIGHT_SPEED_RULE=1
++USE_TRAFFIC_LIGHT_SPEED_RULE=0
+ 
+-SPATIAL_SPEED_PRINTS_ENABLED=0
++SPATIAL_SPEED_PRINTS_ENABLED=1
+ 
+ CARFOLLOW_FRAMES_THRESHOLD_FOR_STOPPED_LEADER=10
+ CARFOLLOW_MIN_SPEED_FOR_REGULAR_FOLLOW =0
