@@ -11,7 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": [ "--trip",
-                "/home/thh3/data/trips/Nissan/12_09_2024/2024-09-12T16_15_08/"
+                "/home/thamam/data/trips/2024-09-19T13_25_15/"
             ]
         },
         {

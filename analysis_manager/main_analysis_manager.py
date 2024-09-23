@@ -1,5 +1,4 @@
 # main_analysis_manager.py
-
 import argparse
 
 # %% Import libraries
@@ -34,6 +33,16 @@ class State:
         self.selected_trip = None
 
 state = State()
+
+def update_selection_labels(root):# Add a label to the main window to display the selected trips directory and selected trip
+    
+    label_custom_font = font.Font(family="Helvetica", size=16)
+    
+    trips_folder_label = tk.Label(root, text=f"Trips Folder: {state.trips_folder}", font=label_custom_font)
+    trips_folder_label.pack()
+    
+    selected_trip_label = tk.Label(root, text=f"Selected Trip: {state.selected_trip}", font=label_custom_font)
+    selected_trip_label.pack()
 
 def split_trip_path(trip_path):
     """
@@ -104,13 +113,13 @@ def main(trip_dir = None):
     custom_font = font.Font(family="Helvetica", size=12)
     Run_font = font.Font(family="Helvetica", size=22)
     menu_bar = Menu(root, font=custom_font)
-    
+           
     create_file_menu(menu_bar, root, state, refresh_callback, custom_font)
     create_edit_menu(menu_bar, custom_font)
     
     root.config(menu=menu_bar)
     
-    play_button = tk.Button(root, text="Run", command=on_play_button_pressed, font=Run_font)
+    play_button = tk.Button(root, text="RUN", command=on_play_button_pressed, font=Run_font)
     play_button.pack(pady=20)
 
     # Check if the --trip flag is provided
@@ -118,7 +127,10 @@ def main(trip_dir = None):
         trip_dir = args.trip
     else:
         trip_dir = None   
+        
     init_state(trip_dir)
+    
+    update_selection_labels(root)
     
     root.mainloop()
 
