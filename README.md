@@ -1,11 +1,37 @@
-# DebugPlayer
-Debug data player
+# Analysis Manager
+   
+Run /home/thh3/dev/DebugPlayer/analysis_manager/main_analysis_manager.py
 
-Install libxcb:
+Most missing packages should be installed on the fly. You can install missing ones and send let me know. 
+
+## Running trip from menu:
+  ### On the menu:
+    press File-> Open Trips Folder : select where all your trip are located
+    press File-> Select Trip : select trip from among list of trips
+  
+  ### To open playback window press the RUN button. 
+
+## Loading trip with argv:
+  go to launch.json and make sure you have:
+   "args": [ "--trip", "trip_path"] in your configurations field
+   or call 
+             
+
+
+
+
+# DebugPlayer
+
+## Preparations:
+pip install pyside6 matplotlib pyqtgraph SciPy NumPy spatialmath-python polars pandas
+
+### Install libxcb:
+sudo apt update
 pip install setuptools
 sudo apt-get install libxcb-randr0-dev libxcb-xtest0-dev libxcb-xinerama0-dev libxcb-shape0-dev libxcb-xkb-dev
+sudo apt install libxcb-xinerama0 libxcb-cursor0 libxcb1 libxcb-util1 libxkbcommon-x11-0
 
-pip install pyside6 matplotlib pyqtgraph SciPy NumPy spatialmath-python polars pandas
+
 
 Overview of File Structure:
 main.py: Entry point for launching the application.
