@@ -7,7 +7,7 @@ from tkinter import filedialog
 import os
 import time
 import numpy as np
-
+from file_menu import update_selection_labels
 # from config import increment
 class SharedState:
     def __init__(self, increment, trips_folder="default/path/to/trips"):
@@ -26,6 +26,7 @@ def setup_trips_folder_button(fig, state):
         if selected_folder:
             state.trips_folder = selected_folder
             print(f"Trips folder selected: {state.trips_folder}")
+        update_selection_labels(root, state)   
     
     # Create the button for selecting trips folder
     ax_button_trips_folder = plt.axes([0.05, 0.85, 0.2, 0.05])  # Position of the button
@@ -52,7 +53,8 @@ def setup_trip_selection_button(fig, state, refresh_callback):
                 print("Invalid selection.")
         else:
             print("No trips available in the selected folder.")
-    
+        
+        
     # Create the button for selecting a specific trip
     ax_button_trip_selection = plt.axes([0.3, 0.85, 0.2, 0.05])  # Position of the button
     button_trip_selection = Button(ax_button_trip_selection, 'Select Trip')

@@ -24,7 +24,7 @@ from analysis_manager.config import initialize_parameters
 import tkinter as tk
 from tkinter import Menu, font
 
-from file_menu import create_file_menu, create_edit_menu
+from file_menu import create_file_menu, create_edit_menu, update_selection_labels
 
 # Placeholder state object
 class State:
@@ -33,16 +33,6 @@ class State:
         self.selected_trip = None
 
 state = State()
-
-def update_selection_labels(root):# Add a label to the main window to display the selected trips directory and selected trip
-    
-    label_custom_font = font.Font(family="Helvetica", size=16)
-    
-    trips_folder_label = tk.Label(root, text=f"Trips Folder: {state.trips_folder}", font=label_custom_font)
-    trips_folder_label.pack()
-    
-    selected_trip_label = tk.Label(root, text=f"Selected Trip: {state.selected_trip}", font=label_custom_font)
-    selected_trip_label.pack()
 
 def split_trip_path(trip_path):
     """
@@ -130,7 +120,7 @@ def main(trip_dir = None):
         
     init_state(trip_dir)
     
-    update_selection_labels(root)
+    update_selection_labels(root, state)
     
     root.mainloop()
 
