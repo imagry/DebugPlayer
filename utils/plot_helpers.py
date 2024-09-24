@@ -163,7 +163,8 @@ def draw_car_box(ax, x, y, yaw):
     # Optionally, plot the center of the front axle
     ax.plot(front_axle_x, front_axle_y, 'bo')  # Blue dot for the front axle center
 
-def plot_ego_path(x_ego, y_ego, ax_=None, linestyle='--', color='orange', linewidth=1, label='ego'):
+def plot_ego_path(x_ego, y_ego, param_dict={}, ax_=None):# linestyle='--', color='orange', linewidth=1, label='ego', 
+                  #marker = 'o', markersize = 5, markerfacecolor = 'orange', markeredgecolor = 'black'):
     """
     Plots the full ego vehicle trajectory as a background.
     
@@ -179,7 +180,7 @@ def plot_ego_path(x_ego, y_ego, ax_=None, linestyle='--', color='orange', linewi
             ax = ax_                
         
         # Plot the trajectory in the background
-        my_plotter(ax, x_ego, y_ego, {'color': 'orange', 'linewidth': 1, 'linestyle': '--', 'label': 'ego'})
+        my_plotter(ax, x_ego, y_ego, param_dict)#{'color': 'orange', 'linewidth': 1, 'linestyle': '--', 'label': 'ego'})
         ax.set_title('Ego Path')
         ax.set_aspect('equal')
         

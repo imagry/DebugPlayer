@@ -40,7 +40,8 @@ def update_plots(slider_val, cp_time_seconds, str_time_seconds, df_steering, ax_
         ylim = ax_pose.get_ylim()
         
         ax_pose.clear()
-        plt_helper.plot_ego_path(cp_x, cp_y, ax_=ax_pose)
+        plot_dict = {'linestyle':':', 'color':'orange', 'linewidth':1, 'label':'ego', 'marker':'o', 'markersize':2, 'markerfacecolor':'orange', 'markeredgecolor':'orange'}
+        plt_helper.plot_ego_path(cp_x, cp_y, plot_dict, ax_=ax_pose)
         plt_helper.plot_se2_path(cp_x.iloc[cp_index], cp_y.iloc[cp_index], cp_yaw_deg.iloc[cp_index], ax_=ax_pose, plot_full_path=False)
         
         # Plot all the poses reading columns: w_car_pose_now_x, w_car_pose_now_y, w_car_pose_now_yaw_deg, 
