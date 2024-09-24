@@ -8,7 +8,7 @@
             "name": "Analysis Manaer Python Debugger: Send Arguments",
             "type": "debugpy",
             "request": "launch",
-            "program": "${file}",
+            "program": "${workspaceFolder}/analysis_manager/main_analysis_manager.py",
             "console": "integratedTerminal",
             "args": [ "--trip",
                 "/home/thh3/data/trips/Nissan/debug_car_pose_jump/2024-09-20T13_43_59/"

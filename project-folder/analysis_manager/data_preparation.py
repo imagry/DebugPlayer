@@ -6,7 +6,10 @@ import os
 import utils.pandas_data_loader as pd_data_loader
 import utils.polars_data_loader as pl_data_loader
 
-from analysis_manager.DataClasses.Class_PathTrajectory import PathTrajectory
+from analysis_manager.DataClasses.PathTrajectory_pandas import PathTrajectory
+import analysis_manager.DataClasses.PathTrajectory_pandas as  PathTrajectory_pandas
+import analysis_manager.DataClasses.PathTrajectory_polars as  PathTrajectory_polars
+
 from analysis_manager.config import DataFrameType, ClassObjType
 
 
@@ -107,10 +110,10 @@ def prepare_path_data(trip_path, interpolation=False, path_file_name = 'path_tra
     # load path data
     filepath = trip_path + '/' + path_file_name
 
-    df_path_data, path_xy = pl_data_loader.read_dynamic_path_data_by_rows(filepath)
+    df_path_data, path_xy = pd_data_loader.read_path_handler_data(filepath)
     
     # convert path_data to pandas dataframe
-    PathObj = PathTrajectory(df_path_data, path_xy)
+    PathObj = PathTrajectory_pandas.PathTrajectory(df_path_data, path_xy)
     
     return PathObj    
 
@@ -135,10 +138,10 @@ def prepare_path_extraction_data(trip_path, interpolation=False, path_file_name 
     # load path data
     filepath = trip_path + '/' + path_file_name
 
-    df_path_extraction_data, path_extraction_xy = pl_data_loader.read_dynamic_path_data_by_rows(filepath)
+    df_path_extraction_data, path_extraction_xy = pd_data_loader.read_path_handler_data(filepath)
     
     # convert path_data to pandas dataframe
-    PathObj_extraction = PathTrajectory(df_path_extraction_data, path_extraction_xy)
+    PathObj_extraction = PathTrajectory_pandas.PathTrajectory(df_path_extraction_data, path_extraction_xy)
     
     return PathObj_extraction   
 
