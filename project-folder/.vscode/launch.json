@@ -11,7 +11,8 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": [ "--trip",
-                "/home/thamam/data/trips/nissan_rtl_bug/2024-09-20T13_43_59/"
+                "/home/thh3/data/trips/Nissan/debug_car_pose_jump/2024-09-20T13_43_59/"
+                
             ]
         },
         {

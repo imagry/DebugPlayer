@@ -157,6 +157,9 @@ cython_debug/
 # DebugPlayer example files
 ExampleData/
 
+# add personal_proecjt_setting  - contains personal settings for the project, e.g. launch.json or settings.json
+personal-folder/
+
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore

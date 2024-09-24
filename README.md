@@ -25,6 +25,13 @@ Most missing packages should be installed on the fly. If you encounter any issue
     python analysis_manager/main_analysis_manager.py --trip "/home/thamam/data/trips/2024-09-19T13_14_48/"
     ```
 
+## **personal-folder setting**
+1. This project supports a prsonal folder so you can configure the vscode according to your preference. For, example, you can config launch.json according to your local file structure, where trip are saved, or define list of extension that will be included when this project is in use. 
+2. `personal-folder` and its content are already in the project .gitignore file.
+### ***Loading the prject***
+To properly process the usage of personal-folder, please make sure that the project Workspace is Opened Correctly:
+Go to File > Open Workspace and select your DebugPlayer.code-workspace
+
 
 
 # DebugPlayer - `UNDER CONSTRUCTIONS`

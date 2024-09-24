@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"name": "project-folder",
+			"path": "project-folder"
+		},
+		{
+			"name": "personal-folder",
+			"path": "personal-folder"
+		}
+	],
+	"settings": {}
+}
