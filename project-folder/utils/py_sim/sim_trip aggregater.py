@@ -7,7 +7,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.insert(0, parent_dir)
 
-from utils.path_aux_utils import *
+from path_aux_utils import *
+from init_utils import pre_required_install_check
 # check if the required packages are installed and install them if not
 pre_required_install_check()
 
@@ -23,19 +24,21 @@ from scipy import linalg
 import math
 import webbrowser
 
-from utils.path_loader_utils import *
-from utils.se2_function import *
-from utils.path_geom_utils import * 
-from utils.path_aux_utils import *
+# from utils.path_loader_utils import *
+from se2_function import *
+from path_geom_utils import * 
+from path_aux_utils import *
 from path_merger.path_merger_utils import PathMergerOptions, path_merger_wrapper
 from path_merger.PathMerger import PathMerger
 from py_sim.sim_path_merger import path_pre_processing
-import utils.utils_trip_data_handler as dh
-from utils.se2_function import get_interpolated_pose_SE2, apply_se2_transform
-from utils.plot_helpers import *
-from utils.utils_geo import trip_view_on_map
-from utils.path_aggregator import PathAggregator
-    
+import aidriver_logs_readers.utils_trip_data_handler as dh
+from se2_function import get_interpolated_pose_SE2, apply_se2_transform
+from plot_helpers import *
+from utils_geo import trip_view_on_map
+from path_aggregator import PathAggregator
+import pandas_data_loader as data_loader
+import data_preparation as dp
+from DataClasses.PathTrajectory_pandas import PathTrajectory
 #%% Initialize settings and parameters
 def initialize_parameters():
     params = {
@@ -47,13 +50,13 @@ def initialize_parameters():
         'spline_ds': 0.1,  # spline interpolation step
         'spline_degree': 3,  # spline interpolation degree
         'plot_settings': {
-            'print_trip_map': True,
-            'plot_poses': True,
-            'plot_ego': True,
+            'print_trip_map': False,
+            'plot_poses': False,
+            'plot_ego': False,
             'plot_after_merge': False,
         },
         'trip_settings': {
-            'Run_alternative_trip': True,
+            'Run_alternative_trip': False,
             'alternative_trip_name': '2024-07-18T11_29_56', #'2024-07-18T11_29_56',
             'trip_path': os.environ.get('OFFLINE_DATA_PATH_URBAN'),
             'data_ds_factor': 1,
@@ -80,25 +83,9 @@ def convert_NED_to_ENU(df_xyz):
 #%% Load trip data
 def load_trip_data(trip_path, data_ds_factor):
     tanent_frame = "NED"
-    X_gps_lng_lat, df_xyz = dh.load_trip_gps_data(trip_path, coordinates_type="both",
+    X_gps_lng_lat = dh.load_trip_gps_data(trip_path, coordinates_type="wgs_84",
                                                   sample_spacing=data_ds_factor, tangent_frame=tanent_frame)
-    df_imu = read_nissan_imu_data(trip_path)
-    yaw = np.asarray(df_imu['yaw'])
-
-    df_xyz_out = convert_NED_to_ENU(df_xyz)
-    yaw = -yaw
-    # if tanent_frame == "ENU":
-    #     yaw = -yaw
-    # elif tanent_frame == "NED":
-    #     yaw = yaw   
-
-    # # Convert from NED to ENU
-    # if tanent_frame == "NED":        
-    #     yaw = -yaw         
-    #     df_xyz_ENU = convert_NED_to_ENU(df_xyz)                
-    
-    t_yaw = np.asarray(df_imu['time_stamp'])
-    return X_gps_lng_lat, df_xyz_out, yaw, t_yaw
+    return X_gps_lng_lat
 
 #%% Plot trip map
 def plot_trip_map(X_gps_lng_lat, trip_name):
@@ -241,10 +228,20 @@ def main():
         trip_name = trip_path.split('/')[-1]
 
     X_gps_lng_lat, df_xyz, yaw, t_yaw = load_trip_data(trip_path, params['trip_settings']['data_ds_factor'])
-    x_ego = df_xyz['x']
-    y_ego = df_xyz['y']
-    t_ego = df_xyz['time_stamp']
-    x_path, y_path, t_path, v_ego = read_path_data(trip_path)
+
+    
+    df_car_pose = dp.prepare_car_pose_data(trip_path)
+    x_ego = df_car_pose['cp_x']
+    y_ego = df_car_pose['cp_y']
+    yaw   = df_car_pose['cp_yaw_deg']
+    t_ego = df_car_pose['timestamp']    
+        
+    PathObj = dp.prepare_path_data(trip_path)
+    path_xy = PathObj.df_path_xy
+      
+    x_path = path_xy['path_x_data']
+    y_path = path_xy['path_y_data']
+    t_path = PathObj.time_data
 
     if params['plot_settings']['print_trip_map']:
         plot_trip_map(X_gps_lng_lat, trip_name)

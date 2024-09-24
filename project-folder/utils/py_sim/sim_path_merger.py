@@ -6,7 +6,8 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.insert(0, parent_dir)
 
-from utils.path_aux_utils import *
+from path_aux_utils import *
+from init_utils import pre_required_install_check
 # check if the required packages are installed and install them if not
 pre_required_install_check()
 
@@ -17,10 +18,10 @@ matplotlib.use('TkAgg')  # or another GUI backend like 'Qt5Agg'
 import numpy as np
 from spatialmath import SE2
 import matplotlib.pyplot as plt
-from utils.se2_function import *
-from utils.path_aux_utils import *
+from se2_function import *
+from path_aux_utils import *
 from path_merger.path_merger_utils import * 
-from utils.plot_helpers import * 
+from plot_helpers import * 
 from path_merger.PathMerger import PathMerger
 
 #%% test_path_merger_wrapper

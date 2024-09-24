@@ -8,6 +8,7 @@ parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.insert(0, parent_dir)
 
 from utils.path_aux_utils import *
+from utils.init_utils import pre_required_install_check
 # check if the required packages are installed and install them if not
 pre_required_install_check()
 
