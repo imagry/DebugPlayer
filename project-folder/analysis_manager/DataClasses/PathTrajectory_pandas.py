@@ -99,5 +99,28 @@ class PathTrajectory:
         """
         path, car_pose = self.find_path_and_car_pose(timestamp)
         path_world = self.transform_to_world_coordinates(path, car_pose)
-        return path_world
+        return path_world, car_pose
+    
+    
+    def get_current_speed(self, timestamp):
+        """
+        Gets the current speed for a given timestamp.
+
+        Parameters:
+        timestamp (float): The timestamp to get the speed for.
+
+        Returns:
+        float: The current speed.
+        """      
+        # Find the row index of the entry closest to the given timestamp
+        row_ind = self.find_min_index(np.abs(self.time_data - timestamp))
+        row = self.df_path.loc[row_ind]
+        
+        if row.empty:
+            raise ValueError(f"No data found for timestamp {timestamp}")
+
+        # Extract the speed
+        speed = self.df_path.loc[row_ind, "current_speed_mps"]
+
+        return speed
 

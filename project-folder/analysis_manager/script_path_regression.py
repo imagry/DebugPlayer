@@ -12,19 +12,35 @@ import numpy as np
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.insert(0, parent_dir)
+
 from init_utils import initialize_environment
 # Initialize the environment
 initialize_environment()
+
+# Adjust the path to import init_utils
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.insert(0, parent_dir)
+
+# Ensure the DataClasses directory is in the path
+data_classes_dir = os.path.abspath(os.path.join(parent_dir, 'DataClasses'))
+sys.path.insert(0, data_classes_dir)
+
+
+# Ensure the utils directory is in the path
+utils_dir = os.path.abspath(os.path.join(parent_dir, 'utils'))
+sys.path.insert(0, utils_dir)
+
+
 import data_preparation as dp 
 import utils.plot_helpers as plt_helper
-from DataClasses.PathTrajectory_pandas import PathTrajectory
+from analysis_manager.DataClasses.PathTrajectory_pandas import PathTrajectory
 from typing import TypeAlias
 import pickle
 
 # Custom type alias for DataFrame with specific columns
 PathDataFrame: TypeAlias = pd.DataFrame
 CACHE_DIR = "cache"
-CACHE_FILE_PATH = os.path.join(CACHE_DIR, "trip_data.pkl")
 
 def get_color_list(n_colors):
     # Generate n_colors distinct colors
@@ -53,6 +69,11 @@ def load_data(trip_path):
     Returns:
         tuple: PathObj and df_car_pose DataFrames.
     """
+    
+    # Extract trip name
+    trip_name = os.path.basename(os.path.normpath(trip_path))
+    CACHE_FILE_PATH = f"{CACHE_DIR}/{trip_name}.pkl"
+
     # Ensure the cache directory exists
     if not os.path.exists(CACHE_DIR):
         os.makedirs(CACHE_DIR)
@@ -75,15 +96,7 @@ def load_data(trip_path):
 
     return PathObj, df_car_pose
 
-# def load_data(trip_path):         
-#     '''Run the path regression analysis'''
-#     # Load the data    
-#     PathObj = dp.prepare_path_data(trip_path, interpolation=False) 
-#     df_car_pose = dp.prepare_car_pose_data(trip_path, interpolation=False)     
-#     return PathObj, df_car_pose
-
-
-def extract_path_points_at_timestamp(path: PathDataFrame, timestamp: float, speed: float, delta_t_sec: float = 0.1, pts_before: int = 0, pts_after: int = 0):
+def extract_path_points_at_timestamp(path, timestamp: float, speed: float, delta_t_sec: float = 0.1, pts_before: int = 0, pts_after: int = 0):
     """
     Extract path points at a specific timestamp.
 
@@ -98,23 +111,15 @@ def extract_path_points_at_timestamp(path: PathDataFrame, timestamp: float, spee
     Algorithm Description:
         Based on delta_t_sec*v you find the midpoint that is closest to that arc_length distance, and then create a vector of path points from the indexes [mid_point_index - pts_before, mid_point_index, mid_point_index+pts_after].
     """
-    # Ensure the DataFrame has the expected columns
-    if not all(col in path.columns for col in ["timestamp", "path_x_data", "path_y_data"]):
-        raise ValueError("DataFrame must contain 'timestamp', 'path_x_data', and 'path_y_data' columns")
-
-    # Extract the path at the given timestamp
-    path_at_timestamp = path[path['timestamp'] == timestamp]
-    if path_at_timestamp.empty:
-        raise ValueError(f"No path data available for timestamp {timestamp}")
-
-    # Get the path points
-    x_data = path_at_timestamp['path_x_data'].values[0]
-    y_data = path_at_timestamp['path_y_data'].values[0]
-
-    # Convert to numpy arrays
-    x_data = np.array(x_data)
-    y_data = np.array(y_data)
-
+    if path.shape[0] == 2:
+        x_data = path[0].T
+        y_data = path[1].T
+    elif path.shape[1] == 2:
+        x_data = path[:,0]
+        y_data = path[:,1]
+    else:
+        raise ValueError("Invalid path dimensions")
+                         
     # Compute cumulative distances along the path
     distances = np.sqrt(np.diff(x_data)**2 + np.diff(y_data)**2)
     cumulative_distances = np.insert(np.cumsum(distances), 0, 0)
@@ -137,7 +142,7 @@ def extract_path_points_at_timestamp(path: PathDataFrame, timestamp: float, spee
 
     return extracted_points
 
-def extract_virtual_path(path: PathTrajectory, df_car_pose: pd.DataFrame, delta_t_sec: float = 0.1, pts_before: int = 0, pts_after: int = 0):
+def extract_virtual_path(path_obj: PathTrajectory, df_car_pose: pd.DataFrame, delta_t_sec: float = 0.1, pts_before: int = 0, pts_after: int = 0):
     """ 
     Go over the entire trip, for example, enumerating by timestamps, at each timestamp, obtain the relevant path, look at what the speed at that timepoint, and then extract the path points at that timepoint. Use the function extract_path_points_at_timestamp to extract path points for each timestamp in the path.
 
@@ -151,24 +156,19 @@ def extract_virtual_path(path: PathTrajectory, df_car_pose: pd.DataFrame, delta_
     v_p_list = []
     df_virt_path_list = []
 
-    # Get all timestamps from df_car_pose
-    if 'timestamp' not in df_car_pose.columns and df_car_pose.index.name == 'timestamp':
-         timestamps = df_car_pose.index
-    elif 'timestamp' in df_car_pose.columns:
-        timestamps = df_car_pose['timestamp'].unique()
-    else:
-        raise ValueError("No timestamp column found in df_car_pose")
-
+    # Get all timestamps from PathTrajectory
+    timestamps = path_obj.time_data
+     
+    
     # Loop over each timestamp
     for idx, timestamp in enumerate(timestamps):
         # Get speed and other parameters at the timestamp
-        car_pose_row = df_car_pose[df_car_pose['timestamp'] == timestamp]
-        if car_pose_row.empty:
-            continue
-        speed = car_pose_row['speed'].values[0]  # Assuming 'speed' column exists
+        cur_path, carpose_path = path_obj.get_path_in_world_coordinates(timestamp)
+              
+        speed = path_obj.get_current_speed(timestamp)
 
         # Extract path points at the timestamp
-        extracted_points = extract_path_points_at_timestamp(path, timestamp, speed, delta_t_sec, pts_before, pts_after)
+        extracted_points = extract_path_points_at_timestamp(cur_path, timestamp, speed, delta_t_sec, pts_before, pts_after)
         if extracted_points.empty:
             continue
 
@@ -177,14 +177,14 @@ def extract_virtual_path(path: PathTrajectory, df_car_pose: pd.DataFrame, delta_
             x = extracted_points.iloc[i]['x']
             y = extracted_points.iloc[i]['y']
             # Collect other data (some of these might not be directly available)
-            yaw_angle = car_pose_row['yaw_angle'].values[0] if 'yaw_angle' in car_pose_row.columns else np.nan
-            curvature = car_pose_row['curvature'].values[0] if 'curvature' in car_pose_row.columns else np.nan
-            acceleration = car_pose_row['acceleration'].values[0] if 'acceleration' in car_pose_row.columns else np.nan
-            jerk = car_pose_row['jerk'].values[0] if 'jerk' in car_pose_row.columns else np.nan
+            yaw_angle_rad = carpose_path.theta() 
+            curvature = np.nan    
+            acceleration = np.nan 
+            jerk = np.nan 
             # ... and so on for other quantities
 
             v_p_entry = [
-                x, y, idx, timestamp, speed, yaw_angle, curvature, acceleration,
+                x, y, idx, timestamp, speed, yaw_angle_rad, curvature, acceleration,
                 jerk,  # jerk
                 np.nan,  # longitudinal jerk
                 np.nan,  # lateral jerk
@@ -272,7 +272,8 @@ pg.setConfigOptions(antialias=True)
 # Parse the command-line arguments
 trip_path = parse_arguments()
 PathObj, df_car_pose = load_data(trip_path)
-# Create a figure and axis and plot in it the trajectory of the car
+
+
 cp_x = df_car_pose['cp_x']
 cp_y = df_car_pose['cp_y']
 
@@ -285,7 +286,7 @@ def initial_plot():
     delta_t_sec_val = float(delta_t_input.text())
     pts_before_val = pts_before_spin.value()
     pts_after_val = pts_after_spin.value()
-
+    
     df_virt_path, v_p = extract_virtual_path(PathObj, df_car_pose, delta_t_sec_val, pts_before_val, pts_after_val)
 
     # Virtual path plot (v_p): plot on the same figure with the car pose trajectory drawn
@@ -295,13 +296,16 @@ def initial_plot():
         y_vp = v_p[:,1]
         timestamp_idxs = v_p[:,2]
 
-        # Create a color map
-        unique_idxs = np.unique(timestamp_idxs)
-        colors = plt_helper.get_color_list(len(unique_idxs))
+        # plt.scatter(x_vp, y_vp, pen=None, symbol='o', symbolBrush='r')  
+        # Plot all points at once
+        plt.plot(x_vp, y_vp, pen=None, symbol='o', symbolBrush='r')
 
-        for idx, color in zip(unique_idxs, colors):
-            mask = timestamp_idxs == idx
-            plt.plot(x_vp[mask], y_vp[mask], pen=None, symbol='o', symbolBrush=color)
+        # Create a color map
+        # unique_idxs = np.unique(timestamp_idxs)
+        # colors = plt_helper.get_color_list(len(unique_idxs))
+        # for idx, color in zip(unique_idxs, colors):
+        #     mask = timestamp_idxs == idx
+        #     plt.plot(x_vp[mask], y_vp[mask], pen=None, symbol='o', symbolBrush=color)
 
 # Initial plot
 initial_plot()

@@ -15,7 +15,7 @@ p4 = win.addPlot(title="Parametric, grid enabled")
 
 
 
-p4.plot(x, y)
+# p4.plot(x, y)
 p4.showGrid(x=True, y=True)
 
 if __name__ == '__main__':

@@ -2,7 +2,13 @@
 import numpy as np
 import pandas as pd
 import os
-from utils.aidriver_logs_readers.path_loader import read_nissan_imu_data, read_path_data
+import sys
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
+sys.path.insert(0, f"{parent_dir}/utils")
+
+from aidriver_logs_readers.path_loader import read_nissan_imu_data, read_path_data
 
 def general_read_dynamic_path_data_by_rows(filepath, columns=None):
     """
