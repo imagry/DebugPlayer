@@ -304,3 +304,20 @@ def plot_trip_map(X_gps_lng_lat, trip_name):
     map_name = 'map_' + trip_name
     m, map_nampe = trip_view_on_map(trip_latlong, map_name)
     webbrowser.open_new_tab(map_nampe)    
+    
+    
+def get_color_list(n_colors):
+    """
+    Generate a list of distinct colors.
+    
+    Parameters:
+    n_colors (int): Number of distinct colors to generate.
+    
+    Returns:
+    list: List of color codes.
+    """
+    # Use a colormap to generate distinct colors
+    cmap = plt.get_cmap('hsv')
+    colors = [cmap(i / n_colors) for i in range(n_colors)]
+    return colors
+  

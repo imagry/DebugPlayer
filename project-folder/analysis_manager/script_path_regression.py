@@ -5,7 +5,6 @@ import argparse
 import os
 import sys
 import pyqtgraph as pg
-
 from pyqtgraph.Qt import QtCore, QtWidgets
 import pandas as pd
 import numpy as np
@@ -20,9 +19,18 @@ import data_preparation as dp
 import utils.plot_helpers as plt_helper
 from DataClasses.PathTrajectory_pandas import PathTrajectory
 from typing import TypeAlias
+import pickle
 
 # Custom type alias for DataFrame with specific columns
 PathDataFrame: TypeAlias = pd.DataFrame
+CACHE_DIR = "cache"
+CACHE_FILE_PATH = os.path.join(CACHE_DIR, "trip_data.pkl")
+
+def get_color_list(n_colors):
+    # Generate n_colors distinct colors
+    import matplotlib.pyplot as plt
+    cmap = plt.get_cmap('hsv')
+    return [pg.mkColor(cmap(i / n_colors)) for i in range(n_colors)]
 
 def parse_arguments():
     # Create an argument parser
@@ -37,12 +45,43 @@ def parse_arguments():
     else:
         raise ValueError("Please provide the path to the trip file using the --trip flag")
 
-def load_data(trip_path):         
-    '''Run the path regression analysis'''
-    # Load the data    
-    PathObj = dp.prepare_path_data(trip_path, interpolation=False) 
-    df_car_pose = dp.prepare_car_pose_data(trip_path, interpolation=False)     
+def load_data(trip_path):
+    """
+    Load data from the trip file or from cached files if available.
+    Args:
+        trip_path (str): Path to the trip file.
+    Returns:
+        tuple: PathObj and df_car_pose DataFrames.
+    """
+    # Ensure the cache directory exists
+    if not os.path.exists(CACHE_DIR):
+        os.makedirs(CACHE_DIR)
+
+    # Check if the cached file exists
+    if os.path.exists(CACHE_FILE_PATH):
+        with open(CACHE_FILE_PATH, 'rb') as cache_file:
+            PathObj, df_car_pose = pickle.load(cache_file)
+            print("Loaded data from cache.")
+            return PathObj, df_car_pose
+
+    # Load data from the trip file
+    PathObj = dp.prepare_path_data(trip_path, interpolation=False)
+    df_car_pose = dp.prepare_car_pose_data(trip_path, interpolation=False)
+
+    # Save the data to the cache file
+    with open(CACHE_FILE_PATH, 'wb') as cache_file:
+        pickle.dump((PathObj, df_car_pose), cache_file)
+        print("Saved data to cache.")
+
     return PathObj, df_car_pose
+
+# def load_data(trip_path):         
+#     '''Run the path regression analysis'''
+#     # Load the data    
+#     PathObj = dp.prepare_path_data(trip_path, interpolation=False) 
+#     df_car_pose = dp.prepare_car_pose_data(trip_path, interpolation=False)     
+#     return PathObj, df_car_pose
+
 
 def extract_path_points_at_timestamp(path: PathDataFrame, timestamp: float, speed: float, delta_t_sec: float = 0.1, pts_before: int = 0, pts_after: int = 0):
     """
@@ -113,7 +152,12 @@ def extract_virtual_path(path: PathTrajectory, df_car_pose: pd.DataFrame, delta_
     df_virt_path_list = []
 
     # Get all timestamps from df_car_pose
-    timestamps = df_car_pose['timestamp'].unique()
+    if 'timestamp' not in df_car_pose.columns and df_car_pose.index.name == 'timestamp':
+         timestamps = df_car_pose.index
+    elif 'timestamp' in df_car_pose.columns:
+        timestamps = df_car_pose['timestamp'].unique()
+    else:
+        raise ValueError("No timestamp column found in df_car_pose")
 
     # Loop over each timestamp
     for idx, timestamp in enumerate(timestamps):
@@ -165,51 +209,64 @@ def extract_virtual_path(path: PathTrajectory, df_car_pose: pd.DataFrame, delta_
 
     return df_virt_path, v_p
 
-# Set pyqtgraph GUI environment
+# Set up the application and main window
 app = pg.mkQApp("Path Regression Analysis")
-win = pg.GraphicsLayoutWidget(show=True, title="2D Trajectory Plot")
-win.resize(1000,600)
-win.setWindowTitle('pyqtgraph example: 2D Trajectory Plot')
+
+# Create the main window widget
+main_win = QtWidgets.QWidget()
+main_layout = QtWidgets.QVBoxLayout()
+main_win.setLayout(main_layout)
+main_win.setWindowTitle('Path Regression Analysis')
+main_win.resize(1000, 600)
+
+# Create a horizontal layout for controls and plot
+h_layout = QtWidgets.QHBoxLayout()
+main_layout.addLayout(h_layout)
+
+# Create a vertical layout for controls
+controls_layout = QtWidgets.QVBoxLayout()
+h_layout.addLayout(controls_layout)
 
 # Add buttons and controls
-layout = QtWidgets.QGridLayout()
-widget = QtWidgets.QWidget()
-widget.setLayout(layout)
-win.addItem(widget)
-
 # Controls for delta_t_sec
 delta_t_label = QtWidgets.QLabel('delta_t_sec:')
 delta_t_input = QtWidgets.QLineEdit('0.1')
-layout.addWidget(delta_t_label, 0, 0)
-layout.addWidget(delta_t_input, 0, 1)
+controls_layout.addWidget(delta_t_label)
+controls_layout.addWidget(delta_t_input)
 
 # Controls for pts_before
 pts_before_label = QtWidgets.QLabel('pts_before:')
 pts_before_spin = QtWidgets.QSpinBox()
 pts_before_spin.setRange(0, 100)
 pts_before_spin.setValue(0)
-layout.addWidget(pts_before_label, 1, 0)
-layout.addWidget(pts_before_spin, 1, 1)
+controls_layout.addWidget(pts_before_label)
+controls_layout.addWidget(pts_before_spin)
 
 # Controls for pts_after
 pts_after_label = QtWidgets.QLabel('pts_after:')
 pts_after_spin = QtWidgets.QSpinBox()
 pts_after_spin.setRange(0, 100)
 pts_after_spin.setValue(0)
-layout.addWidget(pts_after_label, 2, 0)
-layout.addWidget(pts_after_spin, 2, 1)
+controls_layout.addWidget(pts_after_label)
+controls_layout.addWidget(pts_after_spin)
 
 # File load button
 load_button = QtWidgets.QPushButton('Load Trip Path')
-layout.addWidget(load_button, 3, 0)
+controls_layout.addWidget(load_button)
 
 # Save figure button
 save_button = QtWidgets.QPushButton('Save Figure')
-layout.addWidget(save_button, 3, 1)
+controls_layout.addWidget(save_button)
+
+# Add spacer to push widgets to the top
+controls_layout.addStretch()
+
+# Create the pyqtgraph plot widget
+plt = pg.PlotWidget(title="2D Trajectory Plot")
+h_layout.addWidget(plt)
 
 # Enable antialiasing for prettier plots
 pg.setConfigOptions(antialias=True)
-plt = win.addPlot(title="Parametric, grid enabled")
 
 # Data Handling
 # Parse the command-line arguments
@@ -220,29 +277,34 @@ cp_x = df_car_pose['cp_x']
 cp_y = df_car_pose['cp_y']
 
 # Plot Trajectory: Plot the entire path with line and markers that shows the data points
-plt.plot(cp_x, cp_y, pen=pg.mkPen('b', width=2), symbol='o', symbolBrush='b')
+def initial_plot():
+    plt.clear()
+    plt.plot(cp_x, cp_y, pen=pg.mkPen('b', width=2), symbol='o', symbolBrush='b')
 
-# Evaluate extract_virtual_path function and plot the results
-delta_t_sec = float(delta_t_input.text())
-pts_before = pts_before_spin.value()
-pts_after = pts_after_spin.value()
+    # Evaluate extract_virtual_path function and plot the results
+    delta_t_sec_val = float(delta_t_input.text())
+    pts_before_val = pts_before_spin.value()
+    pts_after_val = pts_after_spin.value()
 
-df_virt_path, v_p = extract_virtual_path(PathObj, df_car_pose, delta_t_sec, pts_before, pts_after)
+    df_virt_path, v_p = extract_virtual_path(PathObj, df_car_pose, delta_t_sec_val, pts_before_val, pts_after_val)
 
-# Virtual path plot (v_p): plot on the same figure with the car pose trajectory drawn
-# Use different colors per the indexes of v_p[:,2] to show the path points extracted at each timepoint
-if v_p.size > 0:
-    x_vp = v_p[:,0]
-    y_vp = v_p[:,1]
-    timestamp_idxs = v_p[:,2]
+    # Virtual path plot (v_p): plot on the same figure with the car pose trajectory drawn
+    # Use different colors per the indexes of v_p[:,2] to show the path points extracted at each timepoint
+    if v_p.size > 0:
+        x_vp = v_p[:,0]
+        y_vp = v_p[:,1]
+        timestamp_idxs = v_p[:,2]
 
-    # Create a color map
-    unique_idxs = np.unique(timestamp_idxs)
-    colors = plt_helper.get_color_list(len(unique_idxs))
+        # Create a color map
+        unique_idxs = np.unique(timestamp_idxs)
+        colors = plt_helper.get_color_list(len(unique_idxs))
 
-    for idx, color in zip(unique_idxs, colors):
-        mask = timestamp_idxs == idx
-        plt.plot(x_vp[mask], y_vp[mask], pen=None, symbol='o', symbolBrush=color)
+        for idx, color in zip(unique_idxs, colors):
+            mask = timestamp_idxs == idx
+            plt.plot(x_vp[mask], y_vp[mask], pen=None, symbol='o', symbolBrush=color)
+
+# Initial plot
+initial_plot()
 
 # Function to update the plot when controls change
 def update_plot():
@@ -251,12 +313,12 @@ def update_plot():
     plt.plot(cp_x, cp_y, pen=pg.mkPen('b', width=2), symbol='o', symbolBrush='b')
 
     # Get updated values
-    delta_t_sec = float(delta_t_input.text())
-    pts_before = pts_before_spin.value()
-    pts_after = pts_after_spin.value()
+    delta_t_sec_val = float(delta_t_input.text())
+    pts_before_val = pts_before_spin.value()
+    pts_after_val = pts_after_spin.value()
 
     # Recalculate virtual path
-    df_virt_path, v_p = extract_virtual_path(PathObj, df_car_pose, delta_t_sec, pts_before, pts_after)
+    df_virt_path, v_p = extract_virtual_path(PathObj, df_car_pose, delta_t_sec_val, pts_before_val, pts_after_val)
 
     # Re-plot virtual path points
     if v_p.size > 0:
@@ -297,154 +359,15 @@ def save_figure():
 
 save_button.clicked.connect(save_figure)
 
+# Show the main window
+main_win.show()
+
 # Start the Qt event loop
-if __name__ == '__main__':       
+if __name__ == '__main__':
     pg.exec()
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# # main_analysis_manager.py
-
-# # TBD: Go over all TBG, validate and remove
-# # TBG = To be Filled by ChatGPT
-
-# import argparse
-# # %% Import libraries
-# import os
-# import sys
-# import pyqtgraph as pg
-# from pyqtgraph.Qt import QtCore
-# import pandas as pd
-# # Adjust the path to import init_utils
-# current_dir = os.path.dirname(os.path.abspath(__file__))
-# parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
-# sys.path.insert(0, parent_dir)
-# from init_utils import initialize_environment
-# # Initialize the environment
-# initialize_environment()
-# import data_preparation as dp 
-# import utils.plot_helpers as plt_helper
-# from DataClasses.PathTrajectory_pandas import PathTrajectory
-# from typing import TypeAlias
-
-
-# # Custom type alias for DataFrame with specific columns
-# PathDataFrame: TypeAlias = pd.DataFrame
-
-# def parse_arguments():
-#     # Create an argument parser
-#     parser = argparse.ArgumentParser(description="Main Analysis Manager")    
-#     # Add the --trip argument
-#     parser.add_argument('--trip', type=str, help='Path to the trip file')    
-#     # Parse the command-line arguments
-#     args = parser.parse_args()    
-#     # Check if the --trip flag is provided
-#     if args.trip:
-#         return args.trip   
-#     else:
-#         raise ValueError("Please provide the path to the trip file using the --trip flag")
-            
-
-# def load_data(trip_path):         
-#     '''Run the path regression analysis'''
-#     # # Load the data    
-#     PathObj = dp.prepare_path_data(trip_path, interpolation=False) 
-#     df_car_pose = dp.prepare_car_pose_data(trip_path, interpolation=False)     
-    
-#     return PathObj, df_car_pose
-
-   
-# def extract_path_points_at_timestamp(path: PathDataFrame, timestamp: float, delta_t_sec: float = 0.1, pts_before: int = 0, pts_after: int = 0):
-#     """
-#     Extract path points at a specific timestamp.
-
-#     Args:
-#         path (pd.DataFrame): A DataFrame with columns 'path_x_data' and 'path_y_data'.
-#         timestamp (float): The timestamp at which to extract the path points.
-
-#     Returns:
-#         pd.DataFrame: A DataFrame with the extracted path points.
-    
-#     Algorithm Description:
-#         Based on delta_t_sec*v you find the midpoint that is closest to that arc_length distance, and then create a vector of path poitns form the indexes [mid_point_index - pts_before, mid_point_index, mid_point_index+pts_after].
-    
-#     """
-#     # Ensure the DataFrame has the expected columns
-#     if not all(col in path.columns for col in ["path_x_data", "path_y_data"]):
-#         raise ValueError("DataFrame must contain 'path_x_data' and 'path_y_data' columns")
-
-#     # Your function implementation here
-#     # # For example, filter the DataFrame based on the timestamp
-#     # extracted_points = path[path['timestamp'] == timestamp]
-#     TBG - Implement the function to extract path points at a specific timestamp
-
-#     return extracted_points
-
-# def extract_virtual_path(path: PathTrajectory, delta_t_sec: float = 0.1, pts_before: int = 0, pts_after: int = 0, TBG - additional inputs):
-#     """ Go over the entire trip, for example, enumerating by timestamps, at each time stamp, obtain the relevant path, look at what the speed at that timepoint, and then extract the path points at that timepoint. Use the function extract_path_points_at_timestamp to extract path points for each timestamp in the path.
-#     Returns:
-#         pd.DataFrame df_virt_path: A DataFrame with the extracted path points per time stamp.
-#         np.array v_p: A Nx18 array of all the coolected points concatenated, such that v_p[:,0] is the x coordinate, v_p[:,1] is the y coordinate, v_p[:,2] is an index to the timestamp, v_p[:,3] is the timestamp, v_p[:,4] is the speed at that timepoint, v_p[:,5] is the yaw angle at that timepoint, v_p[:,6] is the curvature at that timepoint, v_p[:,7] is the acceleration at that timepoint, v_p[:,8] is the jerk at that timepoint, v_p[:,9] is the longitudinal jerk at that timepoint, v_p[:,10] is the lateral jerk at that timepoint, v_p[:,11] is the longitudinal acceleration at that timepoint, v_p[:,12] is the lateral acceleration at that timepoint, v_p[:,13] is the longitudinal velocity at that timepoint, v_p[:,14] is the lateral velocity at that timepoint, v_p[:,15] is the longitudinal position at that timepoint, v_p[:,16] is the lateral position at that timepoint, v_p[:,17] is the longitudinal velocity at that timepoint. 
-        
-#     """
-#     TBG - Implement the function here
-
-# # Set pgqt gui envrionment
-# app = pg.mkQApp("Path Regression Analysis")
-# win = pg.GraphicsLayoutWidget(show=True, title="2D Trajectory Plot")
-# win.resize(1000,600)
-# win.setWindowTitle('pyqtgraph example: 2D Trajectory Plot')
-
-# Add Buttons to support:
-#     delta_t_sec - free text (float)
-#     pts_before - up-down in [0, max_off_set_pots]- integer 
-#     pts_after -  up-down in [0, max_off_set_pots]- integer 
-#     File - load trip_path
-#     Save - save current figure as jpg  
-    
-
-# # Enable antialiasing for prettier plots
-# pg.setConfigOptions(antialias=True)
-# plt = win.addPlot(title="Parametric, grid enabled")
-
-# # Data Handling
-# # Parse the command-line arguments
-# trip_path = parse_arguments()
-# PathObj, df_car_pose = load_data(trip_path)
-# # Create a figure and axis and plot in it the trajectory of the car
-# cp_x = df_car_pose['cp_x']
-# cp_y = df_car_pose['cp_y']
-
-
-# # Plot the entire car pose trajectory with line and markers that shows the data poitns
-# TBG - Plot Trajectory: Plot the entire path with line and markers that shows the data poitns
-
-
-# TBG - Evaluate extract_virtual_path function and plot the results
-
-# TBG - virtual path plot (v_p):  plot on the same figure with the car pose trajectory drawn. Use different colors per the indexes of v_p[:,2] to show the path points extracted at each timepoint.
-
-# On buttons chaneg - reevaluate v_p and update the plot
-
-# # Start the Qt event loop
-# if __name__ == '__main__':       
-#     pg.exec()
-    
-    
+# Todo:
+# - Add saving to pickle files 
