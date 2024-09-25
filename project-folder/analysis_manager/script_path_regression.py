@@ -8,10 +8,14 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtWidgets
 import pandas as pd
 import numpy as np
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import multiprocessing
 # Adjust the path to import init_utils
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
 sys.path.insert(0, parent_dir)
+
+
 
 from init_utils import initialize_environment
 # Initialize the environment
@@ -31,6 +35,8 @@ sys.path.insert(0, data_classes_dir)
 utils_dir = os.path.abspath(os.path.join(parent_dir, 'utils'))
 sys.path.insert(0, utils_dir)
 
+cpu_num = multiprocessing.cpu_count() 
+MAX_WORKERS = np.floor(cpu_num * 0.8)
 
 import data_preparation as dp 
 import utils.plot_helpers as plt_helper
@@ -142,6 +148,84 @@ def extract_path_points_at_timestamp(path, timestamp: float, speed: float, delta
 
     return extracted_points
 
+def extract_virtual_path_parallel(path_obj, df_car_pose, delta_t_sec=0.1, pts_before=0, pts_after=0, max_workers= MAX_WORKERS):
+    """
+    Parallel version of extract_virtual_path using concurrent.futures for improved performance.
+    """
+    def process_timestamp(idx, timestamp):
+        """
+        Process a single timestamp: extract path points, compute speed and other metrics.
+        Returns v_p_entry list and a DataFrame for the timestamp.
+        """
+        cur_path, carpose_path = path_obj.get_path_in_world_coordinates(timestamp)
+        speed = path_obj.get_current_speed(timestamp)
+        
+        # Extract path points at the timestamp
+        extracted_points = extract_path_points_at_timestamp(cur_path, timestamp, speed, delta_t_sec, pts_before, pts_after)
+        if extracted_points.empty:
+            return None, None
+
+        v_p_entries = []
+        for i in range(len(extracted_points)):
+            x = extracted_points.iloc[i]['x']
+            y = extracted_points.iloc[i]['y']
+            # Collect other data (some of these might not be directly available)
+            yaw_angle_rad = carpose_path.theta() 
+            curvature = np.nan    
+            acceleration = np.nan 
+            jerk = np.nan 
+            # ... and so on for other quantities
+
+            v_p_entry = [
+                x, y, idx, timestamp, speed, yaw_angle_rad, curvature, acceleration,
+                jerk,  # jerk
+                np.nan,  # longitudinal jerk
+                np.nan,  # lateral jerk
+                np.nan,  # longitudinal acceleration
+                np.nan,  # lateral acceleration
+                np.nan,  # longitudinal velocity
+                np.nan,  # lateral velocity
+                np.nan,  # longitudinal position
+                np.nan,  # lateral position
+                np.nan,  # longitudinal velocity (again?)
+            ]
+            v_p_entries.append(v_p_entry)
+
+        # Add timestamp index to extracted_points
+        extracted_points['timestamp_idx'] = idx
+        extracted_points['timestamp'] = timestamp
+
+        return v_p_entries, extracted_points
+
+    # Initialize lists to collect data
+    v_p_list = []
+    df_virt_path_list = []
+
+    # Get all timestamps from PathTrajectory
+    timestamps = path_obj.time_data
+
+    # Use ThreadPoolExecutor for parallel processing
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        # Submit tasks for each timestamp
+        future_to_timestamp = {executor.submit(process_timestamp, idx, timestamp): timestamp for idx, timestamp in enumerate(timestamps)}
+        
+        # Process the results as they complete
+        for future in as_completed(future_to_timestamp):
+            result = future.result()
+            if result is not None:
+                v_p_entries, extracted_points = result
+                if v_p_entries:
+                    v_p_list.extend(v_p_entries)
+                if not extracted_points.empty:
+                    df_virt_path_list.append(extracted_points)
+
+    # Convert lists to DataFrame and array
+    df_virt_path = pd.concat(df_virt_path_list, ignore_index=True) if df_virt_path_list else pd.DataFrame()
+    v_p = np.array(v_p_list) if v_p_list else np.array([])
+
+    return df_virt_path, v_p
+
+
 def extract_virtual_path(path_obj: PathTrajectory, df_car_pose: pd.DataFrame, delta_t_sec: float = 0.1, pts_before: int = 0, pts_after: int = 0):
     """ 
     Go over the entire trip, for example, enumerating by timestamps, at each timestamp, obtain the relevant path, look at what the speed at that timepoint, and then extract the path points at that timepoint. Use the function extract_path_points_at_timestamp to extract path points for each timestamp in the path.
@@ -209,6 +293,41 @@ def extract_virtual_path(path_obj: PathTrajectory, df_car_pose: pd.DataFrame, de
 
     return df_virt_path, v_p
 
+
+def prepare_plot_data(idx, timestamp_idx, x_vp, y_vp, color):
+    """
+    Prepare the data for a given timestamp index.
+    This function returns the mask and the color.
+    """
+    mask = timestamp_idx == idx
+    return (x_vp[mask], y_vp[mask], color)
+
+def plot_virtual_path_parallel(x_vp, y_vp, timestamp_idxs):
+    """
+    Parallelized data preparation for plotting and then plotting in the main thread.
+    """
+    # Create a color map
+    unique_idxs = np.unique(timestamp_idxs)
+    colors = get_color_list(len(unique_idxs))
+    
+    # Parallel preparation of plot data
+    plot_data = []
+    with ThreadPoolExecutor(max_workers=4) as executor:  # Adjust max_workers as needed
+        futures = [
+            executor.submit(prepare_plot_data, idx, timestamp_idxs, x_vp, y_vp, color)
+            for idx, color in zip(unique_idxs, colors)
+        ]
+        
+        # Collect the prepared data
+        for future in futures:
+            plot_data.append(future.result())
+
+    # Plot the data sequentially in the main thread
+    for x_data, y_data, color in plot_data:
+        plt.plot(x_data, y_data, linestyle='-', marker='o', color=color)
+
+
+    
 # Set up the application and main window
 app = pg.mkQApp("Path Regression Analysis")
 
@@ -280,14 +399,14 @@ cp_y = df_car_pose['cp_y']
 # Plot Trajectory: Plot the entire path with line and markers that shows the data points
 def initial_plot():
     plt.clear()
-    plt.plot(cp_x, cp_y, pen=pg.mkPen('b', width=2), symbol='o', symbolBrush='b')
+    plt.plot(cp_x, cp_y, pen=None, symbol='o', symbolBrush='b')
 
     # Evaluate extract_virtual_path function and plot the results
     delta_t_sec_val = float(delta_t_input.text())
     pts_before_val = pts_before_spin.value()
     pts_after_val = pts_after_spin.value()
-    
-    df_virt_path, v_p = extract_virtual_path(PathObj, df_car_pose, delta_t_sec_val, pts_before_val, pts_after_val)
+
+    df_virt_path, v_p = extract_virtual_path_parallel(PathObj, df_car_pose, delta_t_sec_val, pts_before_val, pts_after_val, max_workers= MAX_WORKERS)
 
     # Virtual path plot (v_p): plot on the same figure with the car pose trajectory drawn
     # Use different colors per the indexes of v_p[:,2] to show the path points extracted at each timepoint
@@ -295,17 +414,11 @@ def initial_plot():
         x_vp = v_p[:,0]
         y_vp = v_p[:,1]
         timestamp_idxs = v_p[:,2]
-
-        # plt.scatter(x_vp, y_vp, pen=None, symbol='o', symbolBrush='r')  
-        # Plot all points at once
+        
         plt.plot(x_vp, y_vp, pen=None, symbol='o', symbolBrush='r')
+        # plot_virtual_path_parallel(x_vp, y_vp, timestamp_idxs)
 
-        # Create a color map
-        # unique_idxs = np.unique(timestamp_idxs)
-        # colors = plt_helper.get_color_list(len(unique_idxs))
-        # for idx, color in zip(unique_idxs, colors):
-        #     mask = timestamp_idxs == idx
-        #     plt.plot(x_vp[mask], y_vp[mask], pen=None, symbol='o', symbolBrush=color)
+        
 
 # Initial plot
 initial_plot()
@@ -314,7 +427,7 @@ initial_plot()
 def update_plot():
     plt.clear()
     # Re-plot the car pose trajectory
-    plt.plot(cp_x, cp_y, pen=pg.mkPen('b', width=2), symbol='o', symbolBrush='b')
+    plt.plot(cp_x, cp_y, pen=None, symbol='o', symbolBrush='b')
 
     # Get updated values
     delta_t_sec_val = float(delta_t_input.text())
@@ -322,20 +435,16 @@ def update_plot():
     pts_after_val = pts_after_spin.value()
 
     # Recalculate virtual path
-    df_virt_path, v_p = extract_virtual_path(PathObj, df_car_pose, delta_t_sec_val, pts_before_val, pts_after_val)
+    df_virt_path, v_p = extract_virtual_path_parallel(PathObj, df_car_pose, delta_t_sec_val, pts_before_val, pts_after_val, max_workers= MAX_WORKERS)
 
     # Re-plot virtual path points
     if v_p.size > 0:
         x_vp = v_p[:,0]
         y_vp = v_p[:,1]
         timestamp_idxs = v_p[:,2]
-
-        unique_idxs = np.unique(timestamp_idxs)
-        colors = plt_helper.get_color_list(len(unique_idxs))
-
-        for idx, color in zip(unique_idxs, colors):
-            mask = timestamp_idxs == idx
-            plt.plot(x_vp[mask], y_vp[mask], pen=None, symbol='o', symbolBrush=color)
+        
+        plt.plot(x_vp, y_vp, pen=None, symbol='o', symbolBrush='r')
+        # plot_virtual_path_parallel(x_vp, y_vp, timestamp_idxs)
 
 # Connect signals to update the plot
 delta_t_input.editingFinished.connect(update_plot)
