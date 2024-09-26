@@ -40,7 +40,12 @@ Go to File > Open Workspace and select your DebugPlayer.code-workspace
 
 Install the necessary Python packages:
 ```bash
-pip install pyside6 matplotlib pyqtgraph SciPy NumPy spatialmath-python polars pandas
+pip install pyside6 matplotlib pyqtgraph SciPy NumPy spatialmath-python polars pandas 
+```
+
+Optional Installs
+```bash
+pip install "dask[complete]" json5
 ```
 
 ### Install `libxcb` Dependencies
