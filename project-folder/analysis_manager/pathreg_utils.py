@@ -22,17 +22,7 @@ from typing import TypeAlias
 from analysis_manager.DataClasses.PathRegressor import PathRegressor
 
 
-# Function to handle file loading
-def load_trip_path():
-    global trip_path, PathObj, df_car_pose, cp_x, cp_y
-    file_dialog = QtWidgets.QFileDialog()
-    trip_path, _ = file_dialog.getOpenFileName(None, 'Open Trip File', '', 'Trip Files (*.trip)')
-    if trip_path:
-        PathObj, df_car_pose = load_data(trip_path)
-        cp_x = df_car_pose['cp_x']
-        cp_y = df_car_pose['cp_y']
-        update_plot()
-        
+
 # Some general helper functions
 def get_color_list(n_colors):
     # Generate n_colors distinct colors
@@ -97,6 +87,8 @@ def prepare_plot_data(idx, timestamp_idx, x_vp, y_vp, color):
     mask = timestamp_idx == idx
     return (x_vp[mask], y_vp[mask], color)
 
+    
+    
 
 
 

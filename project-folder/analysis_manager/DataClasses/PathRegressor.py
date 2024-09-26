@@ -35,9 +35,9 @@ class PathRegressor:
         self.pts_before = pts_before  # New attribute to store the number of points
         self.pts_after = pts_after  # New attribute to store the number of points
         self.delta_t_sec = delta_t_sec
-        self.max_workers = max_workers
-        
-        self.df_path_xy = self.df_path_xy
+        self.max_workers = max_workers        
+        self.v_p = None            # New attribute to store the virtual path
+        self.df_virt_path = None   # New attribute to store the virtual path
         self.df_key_points = None   # New attribute to store the key points
         self.df_trajectory = None   # New attribute to store the trajectory
         self.kpi = None            # New attribute to store the KPI
@@ -144,7 +144,7 @@ class PathRegressor:
             speed = self.pathobj.get_current_speed(timestamp)
             
             # Extract path points at the timestamp
-            extracted_points = self.extract_path_points_at_timestamp(cur_path, timestamp, speed, self.delta_t_sec, self.pts_before, self.pts_after)
+            extracted_points = self.extract_path_points_at_timestamp(cur_path, timestamp, speed)
             if extracted_points.empty:
                 return None, None
 
@@ -245,18 +245,21 @@ class PathRegressor:
         
         return self.df_key_points, self.df_trajectory, self.kpi
 
+    def eval(self):
+        """ calculate the virtual path and store it in the cache. """        
+        self.df_virt_path, self.v_p = self.extract_virtual_path_parallel()                      
+        return
+    
     def get_virtual_path(self):
         """ Get the virtual path. """
-        # Extract path points at each timestamp in parallel
-        df_virt_path, v_p = self.extract_virtual_path_parallel()
-        
-        return df_virt_path, v_p
+        # Extract path points at each timestamp in parallel        
+        return self.df_virt_path, self.v_p
     
     def __repr__(self):
-        return f'PathRegressor(path_trajectory={self.pathobj}, carpose={self.carpose}, CACHE_DIR={self.CACHE_DIR}, num_points={self.num_points})'
+        return f'PathRegressor(path_trajectory={self.pathobj}, carpose={self.carpose}, CACHE_DIR={self.CACHE_DIR}, delta_t_sec={self.delta_t_sec}, pts_before={self.pts_before}, pts_after={self.pts_after})'
     
     def __str__(self):
-        return f'PathRegressor(path_trajectory={self.pathobj}, carpose={self.carpose}, CACHE_DIR={self.CACHE_DIR}, num_points={self.num_points})'
+        return f'PathRegressor(path_trajectory={self.pathobj}, carpose={self.carpose}, CACHE_DIR={self.CACHE_DIR}, delta_t_sec={self.delta_t_sec}, pts_before={self.pts_before}, pts_after={self.pts_after})'
     
     def plot(self):
         """ Plot the path regressor. """
@@ -264,12 +267,4 @@ class PathRegressor:
         self.pathobj.plot(self.df_key_points, self.df_trajectory)
         
         return self.df_key_points, self.df_trajectory, self.kpi 
-    
-    def __repr__(self):
-        return f'PathRegressor(path_trajectory={self.pathobj}, carpose={self.carpose}, CACHE_DIR={self.CACHE_DIR})'
-    
-    def __str__(self):
-        return f'PathRegressor(path_trajectory={self.pathobj}, carpose={self.carpose}, CACHE_DIR={self.CACHE_DIR})' 
-    
-    
     
