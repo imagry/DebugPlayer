@@ -1,4 +1,4 @@
-# main_analysis_manager.py
+# script_path_regression.py
 import os
 import sys
 from init_utils import initialize_environment
