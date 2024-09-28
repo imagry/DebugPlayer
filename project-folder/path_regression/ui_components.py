@@ -10,7 +10,7 @@ def create_main_window():
     main_layout = QtWidgets.QVBoxLayout()
     main_win.setLayout(main_layout)
     main_win.setWindowTitle('Path Regression Analysis')
-    main_win.resize(1000, 600)
+    main_win.resize(1200, 600)  # Increased size to accommodate additional controls
 
     # Create a horizontal layout for controls and plot
     h_layout = QtWidgets.QHBoxLayout()
@@ -20,6 +20,21 @@ def create_main_window():
     controls_layout = QtWidgets.QVBoxLayout()
     h_layout.addLayout(controls_layout)
 
+    # Add UI elements for the first trip
+    controls_layout.addWidget(QtWidgets.QLabel('Trip 1 Settings'))
+    load_button1 = QtWidgets.QPushButton('Load Trip 1 Path')
+    controls_layout.addWidget(load_button1)
+
+    # Add UI elements for the second trip
+    controls_layout.addWidget(QtWidgets.QLabel('Trip 2 Settings'))
+    load_button2 = QtWidgets.QPushButton('Load Trip 2 Path')
+    controls_layout.addWidget(load_button2)
+    
+   # Add buttons to perform operations on both paths
+    compare_button = QtWidgets.QPushButton('Compare Paths')
+    controls_layout.addWidget(compare_button)
+    
+    
     # Add control widgets
     plot_settings_label = QtWidgets.QLabel('Plot Settings')
     plot_settings_label.setStyleSheet("font-weight: bold;")
@@ -85,8 +100,8 @@ def create_main_window():
     run_button = QtWidgets.QPushButton('Run')
     controls_layout.addWidget(run_button)
 
-    load_button = QtWidgets.QPushButton('Load Trip Path')
-    controls_layout.addWidget(load_button)
+    # load_button = QtWidgets.QPushButton('Load Trip Path')
+    # controls_layout.addWidget(load_button)
 
     update_plot_button = QtWidgets.QPushButton('Update Plot')
     controls_layout.addWidget(update_plot_button)
@@ -116,15 +131,19 @@ def create_main_window():
         'delta_t_input': delta_t_input,
         'pts_before_spin': pts_before_spin,
         'pts_after_spin': pts_after_spin,
-        'plt': plt
+        'plt': plt,
+        'load_button1': load_button1,
+        'load_button2': load_button2,
+        'compare_button': compare_button
     }
 
-    return main_win, run_button, load_button, update_plot_button, save_button, ui_elements
-
-
-def connect_signals(run_button, load_button, update_plot_button, save_button, prg_obj, ui_elements):
+    return main_win, run_button, load_button1, load_button2, update_plot_button, save_button, ui_elements
+                    
+def connect_signals(run_button, load_button1, load_button2, update_plot_button, save_button, prg_obj1, prg_obj2, ui_elements):
+    
     """Connect UI signals to their respective slots."""
-    run_button.clicked.connect(lambda: calculate_virtual_path(ui_elements, prg_obj))
-    load_button.clicked.connect(lambda: load_trip_path(prg_obj, ui_elements))
-    update_plot_button.clicked.connect(lambda: update_plot(ui_elements, prg_obj))
+    run_button.clicked.connect(lambda: calculate_virtual_path(ui_elements, prg_obj1, prg_obj2))
+    load_button1.clicked.connect(lambda: load_trip_path(prg_obj1, ui_elements))
+    load_button2.clicked.connect(lambda: load_trip_path(prg_obj2, ui_elements))
+    update_plot_button.clicked.connect(lambda: update_plot(ui_elements, prg_obj1, prg_obj2))
     save_button.clicked.connect(lambda: save_figure(ui_elements))

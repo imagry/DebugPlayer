@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import argparse
 from PySide6 import QtWidgets
+from PySide6.QtWidgets import QFileDialog
 import  pickle
 # add project-folder to path
 import sys
@@ -10,6 +11,23 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
                 
 from plot_functions import update_plot
 import analysis_manager.data_preparation as dp
+from DataClasses.PathRegressor import PathRegressor
+
+def parse_arguments():
+    # Create an argument parser
+    parser = argparse.ArgumentParser(description="Main Analysis Manager")    
+    # Add the --trip argument
+    parser.add_argument('--trip1', type=str, help='Path to the first trip file')
+    parser.add_argument('--trip2', type=str, default=None, help='Path to the second trip file')
+    # Parse the command-line arguments
+    args = parser.parse_args()    
+    # Check if the --trip flag is provided
+    if args.trip1 and args.trip2:
+        return args.trip1, args.trip2
+    elif args.trip1:
+        return args.trip1, None
+    else:
+        raise ValueError("Please provide the paths to both trip files using the --trip1 and --trip2 flags")
 
 
 def load_data(trip_path, caching_mode_enabled, CACHE_DIR ):
@@ -48,31 +66,19 @@ def load_data(trip_path, caching_mode_enabled, CACHE_DIR ):
 
     return PathObj, df_car_pose
 
-def parse_arguments():
-    # Create an argument parser
-    parser = argparse.ArgumentParser(description="Main Analysis Manager")    
-    # Add the --trip argument
-    parser.add_argument('--trip', type=str, help='Path to the trip file')    
-    # Parse the command-line arguments
-    args = parser.parse_args()    
-    # Check if the --trip flag is provided
-    if args.trip:
-        return args.trip   
-    else:
-        raise ValueError("Please provide the path to the trip file using the --trip flag")
+
 
 def load_trip_path(prg_obj, ui_elements):
     """Open a file dialog to load a trip path."""
-    file_dialog = QtWidgets.QFileDialog()
-    file_in_trip_path, _ = file_dialog.getOpenFileName(None, 'Open Trip File', '', 'Trip Files (*.csv)')
-    if file_in_trip_path:
-        reset(prg_obj, ui_elements)
-        trip_dir_path = os.path.dirname(file_in_trip_path)
-        PathObj, df_car_pose = load_data(trip_dir_path, caching_mode_enabled=True, CACHE_DIR="cache")
-        prg_obj.PathObj = PathObj
-        prg_obj.df_car_pose = df_car_pose
-        update_plot(ui_elements, prg_obj)
+    trip_dir_path = QFileDialog.getExistingDirectory(None, 'Open Trip Folder', '') 
 
+    if trip_dir_path:
+        if prg_obj is not None:
+            reset(prg_obj, ui_elements)    
+        PathObj, df_car_pose = load_data(trip_dir_path, caching_mode_enabled=True, CACHE_DIR = ui_elements['CACHE_DIR'] )                
+        prg_obj = PathRegressor(PathObj, df_car_pose, CACHE_DIR = ui_elements['CACHE_DIR'] , 
+                                delta_t_sec= ui_elements['delta_t_input'], pts_before=ui_elements['pts_before_spin'], pts_after=ui_elements['pts_after_spin'], max_workers=ui_elements['MAX_WORKERS']) 
+                                
 
 def reset(prg_obj, ui_elements):
     """Reset the plot and settings to their default values."""

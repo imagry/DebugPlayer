@@ -25,12 +25,14 @@ class PathRegressor:
     - Generate a an equivalent trajectory from the the extracted points. 
     - Evaluate KPI of the generated trajectory.    
     """
-    def __init__(self, pathobj:PathTrajectory , carpose, CACHE_DIR = "cache", delta_t_sec=0.1, pts_before=0, pts_after=0, max_workers= 1):
+    def __init__(self, pathobj:PathTrajectory = None, carpose= None, CACHE_DIR = "cache", delta_t_sec=0.1, pts_before=0, pts_after=0, max_workers= 1):
         self.pathobj = pathobj
-        self.df_path = pathobj.df_path
-        self.df_path_xy = pathobj.df_path_xy
-        self.time_data = pathobj.time_data
-        self.carpose = carpose
+        if pathobj:
+            self.df_path = pathobj.df_path
+            self.df_path_xy = pathobj.df_path_xy
+            self.time_data = pathobj.time_data
+        if carpose is not None:
+            self.carpose = carpose
         self.CACHE_DIR = CACHE_DIR
         self.pts_before = pts_before  # New attribute to store the number of points
         self.pts_after = pts_after  # New attribute to store the number of points

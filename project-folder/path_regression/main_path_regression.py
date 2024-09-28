@@ -37,20 +37,31 @@ caching_mode_enabled = True
 app = pg.mkQApp("Path Regression Analysis")
 
 # Create the main window widget and UI elements
-main_win, run_button, load_button, update_plot_button, save_button, ui_elements = create_main_window()
+main_win, run_button, load_button1, load_button2, update_plot_button, save_button, ui_elements = create_main_window()
 
 # Data Handling
-trip_path = parse_arguments()
-PathObj, df_car_pose = load_data(trip_path, caching_mode_enabled, CACHE_DIR)
+trip_path1, trip_path2 = parse_arguments()
+PathObj1, df_car_pose1 = load_data(trip_path1, caching_mode_enabled, CACHE_DIR)
+if trip_path2 is not None:
+    PathObj2, df_car_pose2 = load_data(trip_path2, caching_mode_enabled, CACHE_DIR)
+else:    
+    PathObj2 = None
+    df_car_pose2 = None
+    print("Only one trip is loaded.")
 
 # Path Regressor
 delta_t_sec = float(ui_elements['delta_t_input'].text())
 pts_before_val = ui_elements['pts_before_spin'].value()
 pts_after_val = ui_elements['pts_after_spin'].value()
-prg_obj = PathRegressor(PathObj, df_car_pose, CACHE_DIR, delta_t_sec, pts_before_val, pts_after_val, max_workers=MAX_WORKERS)
+prg_obj1 = PathRegressor(PathObj1, df_car_pose1, CACHE_DIR, delta_t_sec, pts_before_val, pts_after_val, max_workers=MAX_WORKERS)
+prg_obj2 = PathRegressor(PathObj2, df_car_pose2, CACHE_DIR, delta_t_sec, pts_before_val, pts_after_val, max_workers=MAX_WORKERS)
 
+# add to ui elements the item CACHE_DIR with value CACHE_DIR
+ui_elements['CACHE_DIR'] = CACHE_DIR
+ui_elements['MAX_WORKERS'] = MAX_WORKERS
+  
 # Connect signals to the functions
-connect_signals(run_button, load_button, update_plot_button, save_button, prg_obj, ui_elements)
+connect_signals(run_button, load_button1,load_button2, update_plot_button, save_button, prg_obj1, prg_obj2, ui_elements)
 
 # Show the main window
 main_win.show()
