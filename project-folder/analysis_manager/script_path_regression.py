@@ -30,10 +30,10 @@ sys.path.insert(0, utils_dir)
 
 import data_preparation as dp 
 import utils.plot_helpers as plt_helper
-from analysis_manager.DataClasses.PathTrajectory_pandas import PathTrajectory
+from DataClasses.PathTrajectory_pandas import PathTrajectory
 from typing import TypeAlias
-from analysis_manager.DataClasses.PathRegressor import PathRegressor        
-from analysis_manager.pathreg_utils import get_color_list, parse_arguments, load_data, prepare_plot_data
+from DataClasses.PathRegressor import PathRegressor        
+from pathreg_utils import get_color_list, parse_arguments, load_data, prepare_plot_data
 
 # Global settings
 cpu_num = multiprocessing.cpu_count() 

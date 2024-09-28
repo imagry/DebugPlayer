@@ -6,8 +6,8 @@ import pandas as pd
 import numpy as np
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import data_preparation as dp 
-from analysis_manager.DataClasses.PathTrajectory_pandas import PathTrajectory
+import analysis_manager.data_preparation as dp 
+from DataClasses.PathTrajectory_pandas import PathTrajectory
 from typing import TypeAlias
 
 # Custom type alias for DataFrame with specific columns
@@ -268,3 +268,6 @@ class PathRegressor:
         
         return self.df_key_points, self.df_trajectory, self.kpi 
     
+    def get_carpose(self):
+        """ Get the car pose. """
+        return self.carpose

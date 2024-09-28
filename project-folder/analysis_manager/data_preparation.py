@@ -1,14 +1,24 @@
 # data_preparation.py
-
-import utils.time_series as time_series
+import sys
+import os   
 import pandas as pd
-import os
 import utils.pandas_data_loader as pd_data_loader
 import utils.polars_data_loader as pl_data_loader
 
-from analysis_manager.DataClasses.PathTrajectory_pandas import PathTrajectory
-import analysis_manager.DataClasses.PathTrajectory_pandas as  PathTrajectory_pandas
-import analysis_manager.DataClasses.PathTrajectory_polars as  PathTrajectory_polars
+# Add the parent directory to sys.path
+parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
+
+# Ensure the DataClasses directory is in the path
+data_classes_dir = os.path.abspath(os.path.join(parent_dir, 'DataClasses'))
+sys.path.insert(0, data_classes_dir)
+# Ensure the utils directory is in the path
+utils_dir = os.path.abspath(os.path.join(parent_dir, 'utils'))
+sys.path.insert(0, utils_dir)
+    
+import DataClasses.PathTrajectory_pandas as  PathTrajectory_pandas
+import DataClasses.PathTrajectory_polars as  PathTrajectory_polars
 
 from analysis_manager.config import DataFrameType, ClassObjType
 
@@ -69,7 +79,7 @@ def load_data_for_trip(trip_path):
     
 def merge_and_prepare_data(df_steering, df_car_pose, interpolation=False):
     """Merge the time series data of steering and car pose."""
-    df = time_series.merge_time_series(df_steering, df_car_pose, interpolation=interpolation)
+    df = merge_time_series(df_steering, df_car_pose, interpolation=interpolation)
     return df
 
 def prepare_time_data(df_steering, df_car_pose, zero_time=False):
@@ -253,7 +263,7 @@ def prepare_steering_data(trip_path, interpolation=False, cur_steer_file_name = 
     if df_str is not None:
         if df_cc is not None and 'steer_command' in df_cc.columns:
             # joint the steering data from both dataframes
-            df_steering = time_series.merge_time_series(df_str, df_cc, interpolation=True)
+            df_steering = merge_time_series(df_str, df_cc, interpolation=True)
         else:
             df_steering = df_str
             df_steering.set_index('timestamp', inplace=True)
@@ -265,3 +275,48 @@ def prepare_steering_data(trip_path, interpolation=False, cur_steer_file_name = 
             df_steering = None                     
                    
     return df_steering
+
+
+def merge_time_series(df1, df2, interpolation=False):
+    
+    # If one of the DataFrames is empty, return the other
+    if df1 is None:
+        return df2
+    if df2 is None:
+        return df1  
+    
+    # Check if the index is already set to 'timestamp'
+    if df1.index.name != 'timestamp' and 'timestamp' not in df1.columns:
+        raise ValueError('Timestamp column not found in df1')
+    if df2.index.name != 'timestamp' and 'timestamp' not in df2.columns:
+        raise ValueError('Timestamp column not found in df2')
+    
+    # Todo: fix this check and make sure it is really necessary
+    # if df1['timestamp'].dtype != df2['timestamp'].dtype and df1['timestamp'].dtype != 'datetime64[ns]' and df2['timestamp'].dtype != 'datetime64[ns]':
+    #     raise ValueError('Timestamp column data type mismatch')
+    
+    
+    # Set the index if not already set
+    if df1.index.name != 'timestamp':        
+        df1 = df1.drop_duplicates(subset='timestamp')        
+        df1.set_index('timestamp', inplace=True)
+    if df2.index.name != 'timestamp':
+        df2 = df2.drop_duplicates(subset='timestamp')
+        df2.set_index('timestamp', inplace=True)
+
+    # Create a common time index
+    common_index = df1.index.union(df2.index)
+    
+    # Reindex the DataFrames
+    df1_reindexed = df1.reindex(common_index)
+    df2_reindexed = df2.reindex(common_index)
+    
+    # Interpolate if required
+    if interpolation:
+        df1_reindexed = df1_reindexed.interpolate(method='time')
+        df2_reindexed = df2_reindexed.interpolate(method='time')
+
+    # Merge the DataFrames
+    df_combined = pd.concat([df1_reindexed, df2_reindexed], axis=1)
+
+    return df_combined

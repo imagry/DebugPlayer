@@ -17,9 +17,9 @@ from pyqtgraph.Qt import QtCore, QtWidgets
 
 import data_preparation as dp 
 import utils.plot_helpers as plt_helper
-from analysis_manager.DataClasses.PathTrajectory_pandas import PathTrajectory
+from DataClasses.PathTrajectory_pandas import PathTrajectory
 from typing import TypeAlias
-from analysis_manager.DataClasses.PathRegressor import PathRegressor
+from DataClasses.PathRegressor import PathRegressor
 
 
 

@@ -10,9 +10,9 @@ sys.path.insert(0, parent_dir)
 import numpy as np
 import matplotlib.pyplot as plt
 import utils.plot_helpers as plt_helper
-import analysis_manager.DataClasses.PathTrajectory_pandas as  PathTrajectory
-import analysis_manager.DataClasses.PathTrajectory_pandas as  PathTrajectory_pandas
-import analysis_manager.DataClasses.PathTrajectory_polars as  PathTrajectory_polars
+import DataClasses.PathTrajectory_pandas as  PathTrajectory
+import DataClasses.PathTrajectory_pandas as  PathTrajectory_pandas
+import DataClasses.PathTrajectory_polars as  PathTrajectory_polars
 from config import ClassObjType
 
 def update_plots(slider_val, cp_time_seconds, str_time_seconds, df_steering, ax_pose, marker_steering, marker_steering_rate, cp_x, cp_y, cp_yaw_deg, PathObj: PathTrajectory, PathExtractionObj: PathTrajectory, PathAdjustmentObj: PathTrajectory):
