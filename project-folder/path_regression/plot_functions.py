@@ -85,6 +85,8 @@ def calculate_virtual_path(ui_elements, prg_obj1: PathRegressor, prg_obj2: PathR
         v_p2 = prg_obj2.get_virtual_path()
     
     update_plot(ui_elements, prg_obj1, prg_obj2)
+    
+    return prg_obj1, prg_obj2
 
 def save_figure(ui_elements):
     """Save the current plot to a file."""

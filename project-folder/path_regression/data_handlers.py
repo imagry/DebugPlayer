@@ -78,7 +78,7 @@ def load_trip_path(prg_obj, ui_elements):
         PathObj, df_car_pose = load_data(trip_dir_path, caching_mode_enabled=True, CACHE_DIR = ui_elements['CACHE_DIR'] )                
         prg_obj = PathRegressor(PathObj, df_car_pose, CACHE_DIR = ui_elements['CACHE_DIR'] , 
                                 delta_t_sec= ui_elements['delta_t_input'], pts_before=ui_elements['pts_before_spin'], pts_after=ui_elements['pts_after_spin'], max_workers=ui_elements['MAX_WORKERS']) 
-                                
+    return prg_obj
 
 def reset(prg_obj, ui_elements):
     """Reset the plot and settings to their default values."""

@@ -168,12 +168,34 @@ def create_main_window():
 
     return main_win, run_button, load_button1, load_button2, update_plot_button, save_button, ui_elements
                     
-def connect_signals(run_button, load_button1, load_button2, update_plot_button, save_button, prg_obj1, prg_obj2, ui_elements):
-    
+# def connect_signals(run_button, load_button1, load_button2, update_plot_button, save_button, prg_obj1, prg_obj2, ui_elements):    
+#     """Connect UI signals to their respective slots."""
+#     run_button.clicked.connect(lambda: calculate_virtual_path(ui_elements, prg_obj1, prg_obj2))
+#     # load_button1.clicked.connect(lambda: load_trip_path(prg_obj1, ui_elements))
+#     # load_button2.clicked.connect(lambda: load_trip_path(prg_obj2, ui_elements))
+#     update_plot_button.clicked.connect(lambda: update_plot(ui_elements, prg_obj1, prg_obj2))
+#     save_button.clicked.connect(lambda: save_figure(ui_elements))
+
+from functools import partial
+
+
+def connect_signals(run_button, load_button1, load_button2, update_plot_button, save_button, ui_elements, main_scope):
     """Connect UI signals to their respective slots."""
-    run_button.clicked.connect(lambda: calculate_virtual_path(ui_elements, prg_obj1, prg_obj2))
-    # load_button1.clicked.connect(lambda: load_trip_path(prg_obj1, ui_elements))
-    # load_button2.clicked.connect(lambda: load_trip_path(prg_obj2, ui_elements))
-    update_plot_button.clicked.connect(lambda: update_plot(ui_elements, prg_obj1, prg_obj2))
-    save_button.clicked.connect(lambda: save_figure(ui_elements))
+    run_button.clicked.connect(partial(handle_calculate_virtual_path, ui_elements, main_scope))
+    load_button1.clicked.connect(partial(handle_load_trip_path1, ui_elements, main_scope))    
+    load_button2.clicked.connect(partial(handle_load_trip_path2, ui_elements, main_scope))
+    update_plot_button.clicked.connect(partial(update_plot, ui_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
+    save_button.clicked.connect(partial(save_figure, ui_elements))
+        
+def handle_load_trip_path1(ui_elements, main_scope):
+    prg_obj1 = load_trip_path(main_scope.get('prg_obj1'), ui_elements)
+    main_scope['prg_obj1'] =  prg_obj1
     
+def handle_load_trip_path2(ui_elements, main_scope):
+    prg_obj2 = load_trip_path(main_scope.get('prg_obj2'), ui_elements)
+    main_scope['prg_obj2'] =  prg_obj2    
+            
+def handle_calculate_virtual_path(ui_elements, main_scope):
+    result = calculate_virtual_path(ui_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2'))    
+    # unpack results 
+    main_scope['prg_obj1'], main_scope['prg_obj2'] = result
