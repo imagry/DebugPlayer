@@ -3,22 +3,26 @@ import pyqtgraph as pg
 import numpy as np
 from prg_utils import get_color_list
 from DataClasses.PathRegressor import PathRegressor
-
+from PySide6 import QtCore
 
 # Function to update the plot when controls change
 def update_plot(ui_elements , prg_obj1: PathRegressor, prg_obj2: PathRegressor = None):
     plt = ui_elements['plt']
     plt.clear()
-    # Re-plot the car pose trajectory
-    df_car_pose = prg_obj1.get_carpose()
-    plt.plot(df_car_pose['cp_x'].T, df_car_pose['cp_y'].T, pen=pg.mkPen(width=1), symbol='star', symbolBrush='b', symbolSize= 2)
-
     # Get plot settings 
     line_width = ui_elements['line_width_spin'].value()
     marker_size = ui_elements['marker_size_spin'].value()
     colors_num = ui_elements['colors_num_spin'].value()  
     colors_palette_list = ui_elements['colors_palette_list']
+    display_trips1_checkbox = ui_elements['display_trips1_checkbox']
+    display_trips2_checkbox = ui_elements['display_trips2_checkbox']
+    display_carpose_checkbox = ui_elements['display_carpose_checkbox']
     
+    # Re-plot the car pose trajectory
+    if display_carpose_checkbox.isChecked():
+        df_car_pose = prg_obj1.get_carpose()
+        plt.plot(df_car_pose['cp_x'].T, df_car_pose['cp_y'].T, pen=pg.mkPen(width=1), symbol='star', symbolBrush='b', symbolSize= 2)
+
     # Get the selected colors palette         
     palette = [item.text() for item in colors_palette_list.selectedItems()]
     if len(palette) == 0:
@@ -36,28 +40,29 @@ def update_plot(ui_elements , prg_obj1: PathRegressor, prg_obj2: PathRegressor =
         y1_vp = v_p1[:,1]
         timestamp_idxs1 = v_p1[:,2]
 
-    # Plot v_p1
-    plot_path_with_colors(x1_vp, y1_vp, ui_elements, path_symbol='o')
-    
+    if display_trips1_checkbox.isChecked():
+        # Plot v_p1
+        plot_path_with_colors(x1_vp, y1_vp, ui_elements, path_symbol='o')
+        # adding thin line to connect the virtual path points     
+        plt.plot(x1_vp, y1_vp, pen=pg.mkPen(color='r', width=line_width, style=QtCore.Qt.DashLine))
+   
     if prg_obj2 is None:
         return
     
-    df_virt_path2, v_p2 = prg_obj2.get_virtual_path()
-    if v_p2 is None:
-        return
-    
-    if v_p2.size > 0:
-        x2_vp = v_p2[:,0]
-        y2_vp = v_p2[:,1]
-        timestamp_idxs2 = v_p2[:,2]
+    if display_trips2_checkbox.isChecked():
+        df_virt_path2, v_p2 = prg_obj2.get_virtual_path()
+        if v_p2 is None:
+            return
         
-    # Plot v_p2
-    plot_path_with_colors(x2_vp, y2_vp, ui_elements, path_symbol='x')
-    
-    
-    
-    
-        
+        if v_p2.size > 0:
+            x2_vp = v_p2[:,0]
+            y2_vp = v_p2[:,1]
+            timestamp_idxs2 = v_p2[:,2]
+            
+        # Plot v_p2
+        plot_path_with_colors(x2_vp, y2_vp, ui_elements, path_symbol='x')
+        # adding thin line to connect the virtual path points     
+        plt.plot(x2_vp, y2_vp, pen=pg.mkPen(color='g', width=line_width, style=QtCore.Qt.DashLine))
 
 def calculate_virtual_path(ui_elements, prg_obj1: PathRegressor, prg_obj2: PathRegressor = None):
     # Get updated values
@@ -81,9 +86,6 @@ def calculate_virtual_path(ui_elements, prg_obj1: PathRegressor, prg_obj2: PathR
     
     update_plot(ui_elements, prg_obj1, prg_obj2)
 
-    
-    
-    
 def save_figure(ui_elements):
     """Save the current plot to a file."""
     plt = ui_elements['plt']
@@ -108,7 +110,6 @@ def plot_path_with_colors(x, y, ui_elements, path_symbol='o'):
 def get_color_list(colors_num, palette):
     """Generate a list of colors based on the number and palette."""
     return palette[:colors_num]
-
 
 def prepare_plot_data(idx, timestamp_idx, x_vp, y_vp, color):
     """

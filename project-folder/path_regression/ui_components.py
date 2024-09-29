@@ -63,6 +63,29 @@ def create_main_window():
     colors_num_spin.setValue(1)
     controls_layout.addWidget(colors_num_label)
     controls_layout.addWidget(colors_num_spin)
+    
+    # Controls for turning on/off displaying of trips1 and trips2 patt, one per trip
+    display_trips1_label = QtWidgets.QLabel('Display Trip 1:')
+    display_trips1_checkbox = QtWidgets.QCheckBox()
+    display_trips1_checkbox.setChecked(True)
+    controls_layout.addWidget(display_trips1_label)
+    controls_layout.addWidget(display_trips1_checkbox)
+    
+    display_trips2_label = QtWidgets.QLabel('Display Trip 2:')
+    display_trips2_checkbox = QtWidgets.QCheckBox()
+    display_trips2_checkbox.setChecked(True)
+    controls_layout.addWidget(display_trips2_label)
+    controls_layout.addWidget(display_trips2_checkbox)
+
+    # control for display car_pose path
+    display_carpose_label = QtWidgets.QLabel('Display Car Pose:')
+    display_carpose_checkbox = QtWidgets.QCheckBox()
+    display_carpose_checkbox.setChecked(True)
+    controls_layout.addWidget(display_carpose_label)
+    controls_layout.addWidget(display_carpose_checkbox)
+    
+    
+    
 
     # Add option to choose colors in the palette per the number of colors selected
     colors_palette_label = QtWidgets.QLabel('Colors Palette:')
@@ -134,7 +157,13 @@ def create_main_window():
         'plt': plt,
         'load_button1': load_button1,
         'load_button2': load_button2,
-        'compare_button': compare_button
+        'compare_button': compare_button,
+        'display_trips1_checkbox': display_trips1_checkbox,
+        'display_trips2_checkbox': display_trips2_checkbox,
+        'display_carpose_checkbox': display_carpose_checkbox,
+        'run_button': run_button,
+        'update_plot_button': update_plot_button,
+        'save_button': save_button        
     }
 
     return main_win, run_button, load_button1, load_button2, update_plot_button, save_button, ui_elements
@@ -143,7 +172,8 @@ def connect_signals(run_button, load_button1, load_button2, update_plot_button, 
     
     """Connect UI signals to their respective slots."""
     run_button.clicked.connect(lambda: calculate_virtual_path(ui_elements, prg_obj1, prg_obj2))
-    load_button1.clicked.connect(lambda: load_trip_path(prg_obj1, ui_elements))
-    load_button2.clicked.connect(lambda: load_trip_path(prg_obj2, ui_elements))
+    # load_button1.clicked.connect(lambda: load_trip_path(prg_obj1, ui_elements))
+    # load_button2.clicked.connect(lambda: load_trip_path(prg_obj2, ui_elements))
     update_plot_button.clicked.connect(lambda: update_plot(ui_elements, prg_obj1, prg_obj2))
     save_button.clicked.connect(lambda: save_figure(ui_elements))
+    

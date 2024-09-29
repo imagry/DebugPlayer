@@ -249,7 +249,13 @@ class PathRegressor:
 
     def eval(self):
         """ calculate the virtual path and store it in the cache. """        
-        self.df_virt_path, self.v_p = self.extract_virtual_path_parallel()                      
+    def eval(self):
+        """ calculate the virtual path and store it in the cache. """        
+        df_virt_path, v_p = self.extract_virtual_path_parallel()                     
+        
+        # sort df_virt_path and v_p by timestamp
+        self.df_virt_path = df_virt_path.sort_values(by=['timestamp'])
+        self.v_p = v_p[v_p[:, 3].argsort()]
         return
     
     def get_virtual_path(self):
