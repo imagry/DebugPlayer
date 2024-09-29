@@ -3,7 +3,7 @@ import os
 import sys
 from init_utils import initialize_environment
 # Initialize the environment
-initialize_environment()
+# initialize_environment()
 import argparse
 import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtWidgets
@@ -14,19 +14,6 @@ import multiprocessing
 import pickle
 
 # Adjust the path to import init_utils
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
-sys.path.insert(0, parent_dir)
-# Adjust the path to import init_utils
-current_dir = os.path.dirname(os.path.abspath(__file__))
-parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
-sys.path.insert(0, parent_dir)
-# Ensure the DataClasses directory is in the path
-data_classes_dir = os.path.abspath(os.path.join(parent_dir, 'DataClasses'))
-sys.path.insert(0, data_classes_dir)
-# Ensure the utils directory is in the path
-utils_dir = os.path.abspath(os.path.join(parent_dir, 'utils'))
-sys.path.insert(0, utils_dir)
 
 import data_preparation as dp 
 import utils.plot_helpers as plt_helper

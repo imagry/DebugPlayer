@@ -2,24 +2,17 @@
 import sys
 import os   
 import pandas as pd
-import utils.pandas_data_loader as pd_data_loader
-import utils.polars_data_loader as pl_data_loader
-
 # Add the parent directory to sys.path
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.append(parent_dir)
-
 # Ensure the DataClasses directory is in the path
 data_classes_dir = os.path.abspath(os.path.join(parent_dir, 'DataClasses'))
-sys.path.insert(0, data_classes_dir)
-# Ensure the utils directory is in the path
-utils_dir = os.path.abspath(os.path.join(parent_dir, 'utils'))
-sys.path.insert(0, utils_dir)
-    
+sys.path.insert(0, data_classes_dir)   
 import DataClasses.PathTrajectory_pandas as  PathTrajectory_pandas
 import DataClasses.PathTrajectory_polars as  PathTrajectory_polars
-
+import utils.pandas_data_loader as pd_data_loader
+import utils.polars_data_loader as pl_data_loader
 from analysis_manager.config import DataFrameType, ClassObjType
 
 
