@@ -25,8 +25,9 @@ class PathRegressor:
     - Generate a an equivalent trajectory from the the extracted points. 
     - Evaluate KPI of the generated trajectory.    
     """
-    def __init__(self, pathobj:PathTrajectory = None, carpose= None, CACHE_DIR = "cache", delta_t_sec=0.1, pts_before=0, pts_after=0, max_workers= 1):
+    def __init__(self, pathobj:PathTrajectory = None, trip_name = None, carpose= None, CACHE_DIR = "cache", delta_t_sec=0.1, pts_before=0, pts_after=0, max_workers= 1):
         self.pathobj = pathobj
+        self.trip_name = trip_name
         if pathobj:
             self.df_path = pathobj.df_path
             self.df_path_xy = pathobj.df_path_xy
@@ -225,38 +226,51 @@ class PathRegressor:
     
     def save(self):
             """ Save the path regressor. """
-            repr_str = repr(self).replace(" ", "_").replace(",", "").replace("=", "_").replace("(", "").replace(")", "")
-            with open(os.path.join(self.CACHE_DIR, f'df_key_points_{repr_str}.pkl'), 'wb') as f:
-                pickle.dump(self.df_key_points, f)
-            with open(os.path.join(self.CACHE_DIR, f'df_trajectory_{repr_str}.pkl'), 'wb') as f:
-                pickle.dump(self.df_trajectory, f)
-            with open(os.path.join(self.CACHE_DIR, f'kpi_{repr_str}.pkl'), 'wb') as f:
-                pickle.dump(self.kpi, f)
+            # Compose reo_str string made of trip_name, delta_t_sec, pts_before, pts_after
+            repr_str = f'{self.trip_name}_{self.delta_t_sec}_{self.pts_before}_{self.pts_after}'
+                    # Save the data to the cache file
             
-            return self.df_key_points, self.df_trajectory, self.kpi
+            CACHE_FILE_PATH = f"{self.CACHE_DIR}/{repr_str}.pkl"
+
+            with open(CACHE_FILE_PATH, 'wb') as cache_file:
+                pickle.dump((self.df_virt_path, self.v_p), cache_file)
+                print(f'Saved virtual points data to cache at {repr_str}.')            
+            
+            return
 
     def load(self):
         """ Load the path regressor. """
-        repr_str = repr(self).replace(" ", "_").replace(",", "").replace("=", "_").replace("(", "").replace(")", "")
-        with open(os.path.join(self.CACHE_DIR, f'df_key_points_{repr_str}.pkl'), 'rb') as f:
-            self.df_key_points = pickle.load(f)
-        with open(os.path.join(self.CACHE_DIR, f'df_trajectory_{repr_str}.pkl'), 'rb') as f:
-            self.df_trajectory = pickle.load(f)
-        with open(os.path.join(self.CACHE_DIR, f'kpi_{repr_str}.pkl'), 'rb') as f:
-            self.kpi = pickle.load(f)
-        
-        return self.df_key_points, self.df_trajectory, self.kpi
+        # Compose reo_str string made of trip_name, delta_t_sec, pts_before, pts_after
+        repr_str = f'{self.trip_name}_{self.delta_t_sec}_{self.pts_before}_{self.pts_after}'
 
+        CACHE_FILE_PATH = f"{self.CACHE_DIR}/{repr_str}.pkl"
+        # check if the cache file exists            
+        if os.path.exists(CACHE_FILE_PATH):
+            with open(CACHE_FILE_PATH, 'rb') as cache_file:
+                df_virt_path, v_p= pickle.load(cache_file)
+                print("Loaded data from cache.")
+                return df_virt_path, v_p
+        else:
+            return None
+            
     def eval(self):
-        """ calculate the virtual path and store it in the cache. """        
-    def eval(self):
-        """ calculate the virtual path and store it in the cache. """        
-        df_virt_path, v_p = self.extract_virtual_path_parallel()                     
-        
-        # sort df_virt_path and v_p by timestamp
-        self.df_virt_path = df_virt_path.sort_values(by=['timestamp'])
-        self.v_p = v_p[v_p[:, 3].argsort()]
-        return
+        """ calculate the virtual path and store it in the cache. """                
+        # try to load virtual path from cache        
+        results = self.load()
+        if results is not None:
+            df_virt_path, v_p = results
+            self.df_virt_path = df_virt_path
+            self.v_p = v_p
+            return 
+        else: 
+            # Extract path points at each timestamp in parallel                    
+            df_virt_path, v_p = self.extract_virtual_path_parallel()  
+            # sort df_virt_path and v_p by timestamp
+            self.df_virt_path = df_virt_path.sort_values(by=['timestamp'])
+            self.v_p = v_p[v_p[:, 3].argsort()]                   
+            # Update the cache
+            self.save() 
+            return                           
     
     def get_virtual_path(self):
         """ Get the virtual path. """

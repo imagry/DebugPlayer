@@ -38,7 +38,7 @@ def main():
     app = pg.mkQApp("Path Regression Analysis")
 
     # Create the main window widget and UI elements
-    main_win, run_button, load_button1, load_button2, update_plot_button, save_button, ui_elements = create_main_window()
+    main_win, run_button, load_button1, load_button2, update_plot_button, save_button, ui_elements, ui_display_elements = create_main_window()
 
     # Data Handling
     trip_path1, trip_path2 = parse_arguments()
@@ -54,8 +54,8 @@ def main():
     delta_t_sec = float(ui_elements['delta_t_input'].text())
     pts_before_val = ui_elements['pts_before_spin'].value()
     pts_after_val = ui_elements['pts_after_spin'].value()
-    prg_obj1 = PathRegressor(PathObj1, df_car_pose1, CACHE_DIR, delta_t_sec, pts_before_val, pts_after_val, max_workers=MAX_WORKERS)
-    prg_obj2 = PathRegressor(PathObj2, df_car_pose2, CACHE_DIR, delta_t_sec, pts_before_val, pts_after_val, max_workers=MAX_WORKERS)
+    prg_obj1 = PathRegressor(PathObj1, os.path.basename(trip_path1) ,df_car_pose1, CACHE_DIR, delta_t_sec, pts_before_val, pts_after_val, max_workers=MAX_WORKERS)
+    prg_obj2 = PathRegressor(PathObj2, os.path.basename(trip_path2) ,df_car_pose2, CACHE_DIR, delta_t_sec, pts_before_val, pts_after_val, max_workers=MAX_WORKERS)
 
     # add to ui elements the item CACHE_DIR with value CACHE_DIR
     ui_elements['CACHE_DIR'] = CACHE_DIR
@@ -65,7 +65,12 @@ def main():
     main_scope = {'prg_obj1': prg_obj1, 'prg_obj2': prg_obj2} 
     
     # Connect signals to the functions
-    connect_signals(run_button, load_button1,load_button2, update_plot_button, save_button, ui_elements, main_scope)
+    display_trips1_checkbox_button = ui_display_elements['display_trips1_checkbox']
+    display_trips2_checkbox_button = ui_display_elements['display_trips2_checkbox']
+    display_carpose_checkbox_button = ui_display_elements['display_carpose_checkbox']
+    
+    connect_signals(run_button, load_button1,load_button2, update_plot_button, save_button, ui_elements,
+                    main_scope, ui_display_elements, display_trips1_checkbox_button, display_trips2_checkbox_button, display_carpose_checkbox_button)
 
     # Show the main window
     main_win.show()

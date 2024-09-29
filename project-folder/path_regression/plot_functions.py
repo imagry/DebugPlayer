@@ -6,7 +6,7 @@ from DataClasses.PathRegressor import PathRegressor
 from PySide6 import QtCore
 
 # Function to update the plot when controls change
-def update_plot(ui_elements , prg_obj1: PathRegressor, prg_obj2: PathRegressor = None):
+def update_plot(ui_elements ,ui_display_elements, prg_obj1: PathRegressor, prg_obj2: PathRegressor = None):
     plt = ui_elements['plt']
     plt.clear()
     # Get plot settings 
@@ -14,9 +14,10 @@ def update_plot(ui_elements , prg_obj1: PathRegressor, prg_obj2: PathRegressor =
     marker_size = ui_elements['marker_size_spin'].value()
     colors_num = ui_elements['colors_num_spin'].value()  
     colors_palette_list = ui_elements['colors_palette_list']
-    display_trips1_checkbox = ui_elements['display_trips1_checkbox']
-    display_trips2_checkbox = ui_elements['display_trips2_checkbox']
-    display_carpose_checkbox = ui_elements['display_carpose_checkbox']
+    
+    display_trips1_checkbox = ui_display_elements['display_trips1_checkbox']
+    display_trips2_checkbox = ui_display_elements['display_trips2_checkbox']
+    display_carpose_checkbox = ui_display_elements['display_carpose_checkbox']
     
     # Re-plot the car pose trajectory
     if display_carpose_checkbox.isChecked():
@@ -64,7 +65,7 @@ def update_plot(ui_elements , prg_obj1: PathRegressor, prg_obj2: PathRegressor =
         # adding thin line to connect the virtual path points     
         plt.plot(x2_vp, y2_vp, pen=pg.mkPen(color='g', width=line_width, style=QtCore.Qt.DashLine))
 
-def calculate_virtual_path(ui_elements, prg_obj1: PathRegressor, prg_obj2: PathRegressor = None):
+def calculate_virtual_path(ui_elements, ui_display_elements,  prg_obj1: PathRegressor, prg_obj2: PathRegressor = None):
     # Get updated values
     delta_t_sec_val = float(ui_elements['delta_t_input'].text())
     pts_before_val = ui_elements['pts_before_spin'].value()
@@ -84,7 +85,7 @@ def calculate_virtual_path(ui_elements, prg_obj1: PathRegressor, prg_obj2: PathR
         prg_obj2.eval()
         v_p2 = prg_obj2.get_virtual_path()
     
-    update_plot(ui_elements, prg_obj1, prg_obj2)
+    update_plot(ui_elements, ui_display_elements, prg_obj1, prg_obj2)
     
     return prg_obj1, prg_obj2
 

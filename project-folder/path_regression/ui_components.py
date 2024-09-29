@@ -158,15 +158,21 @@ def create_main_window():
         'load_button1': load_button1,
         'load_button2': load_button2,
         'compare_button': compare_button,
-        'display_trips1_checkbox': display_trips1_checkbox,
-        'display_trips2_checkbox': display_trips2_checkbox,
-        'display_carpose_checkbox': display_carpose_checkbox,
+        
         'run_button': run_button,
         'update_plot_button': update_plot_button,
         'save_button': save_button        
     }
 
-    return main_win, run_button, load_button1, load_button2, update_plot_button, save_button, ui_elements
+    ui_display_elements = {
+        'display_trips1_checkbox': display_trips1_checkbox,
+        'display_trips2_checkbox': display_trips2_checkbox,
+        'display_carpose_checkbox': display_carpose_checkbox}
+    
+        
+        
+
+    return main_win, run_button, load_button1, load_button2, update_plot_button, save_button, ui_elements, ui_display_elements
                     
 # def connect_signals(run_button, load_button1, load_button2, update_plot_button, save_button, prg_obj1, prg_obj2, ui_elements):    
 #     """Connect UI signals to their respective slots."""
@@ -179,13 +185,18 @@ def create_main_window():
 from functools import partial
 
 
-def connect_signals(run_button, load_button1, load_button2, update_plot_button, save_button, ui_elements, main_scope):
+def connect_signals(run_button, load_button1, load_button2, update_plot_button, save_button, ui_elements,
+                    main_scope, ui_display_elements, display_trips1_checkbox_button, display_trips2_checkbox_button, display_carpose_checkbox_button):
     """Connect UI signals to their respective slots."""
-    run_button.clicked.connect(partial(handle_calculate_virtual_path, ui_elements, main_scope))
+    run_button.clicked.connect(partial(handle_calculate_virtual_path, ui_elements, ui_display_elements, main_scope))
     load_button1.clicked.connect(partial(handle_load_trip_path1, ui_elements, main_scope))    
     load_button2.clicked.connect(partial(handle_load_trip_path2, ui_elements, main_scope))
     update_plot_button.clicked.connect(partial(update_plot, ui_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
     save_button.clicked.connect(partial(save_figure, ui_elements))
+    display_trips1_checkbox_button.clicked.connect(partial(update_plot, ui_elements, ui_display_elements,main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
+    display_trips2_checkbox_button.clicked.connect(partial(update_plot, ui_elements, ui_display_elements,main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
+    display_carpose_checkbox_button.clicked.connect(partial(update_plot, ui_elements, ui_display_elements,main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))       
+    
         
 def handle_load_trip_path1(ui_elements, main_scope):
     prg_obj1 = load_trip_path(main_scope.get('prg_obj1'), ui_elements)
@@ -195,7 +206,7 @@ def handle_load_trip_path2(ui_elements, main_scope):
     prg_obj2 = load_trip_path(main_scope.get('prg_obj2'), ui_elements)
     main_scope['prg_obj2'] =  prg_obj2    
             
-def handle_calculate_virtual_path(ui_elements, main_scope):
-    result = calculate_virtual_path(ui_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2'))    
+def handle_calculate_virtual_path(ui_elements, ui_display_elements,  main_scope):
+    result = calculate_virtual_path(ui_elements, ui_display_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2'))    
     # unpack results 
     main_scope['prg_obj1'], main_scope['prg_obj2'] = result
