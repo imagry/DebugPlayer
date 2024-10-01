@@ -86,3 +86,15 @@ def reset(prg_obj, ui_elements):
     prg_obj.PathObj = None
     prg_obj.df_car_pose = None
     plt.clear()
+    
+def create_path_regressors(ui_elements, PathObj1, trip_path1, df_car_pose1, PathObj2, trip_path2, df_car_pose2, CACHE_DIR, MAX_WORKERS):
+    """Create PathRegressor objects and return them in a dictionary."""
+    delta_t_sec = float(ui_elements['delta_t_input'].text())
+    pts_before_val = ui_elements['pts_before_spin'].value()
+    pts_after_val = ui_elements['pts_after_spin'].value()
+
+    prg_obj1 = PathRegressor(PathObj1, os.path.basename(trip_path1), df_car_pose1, CACHE_DIR, delta_t_sec, pts_before_val, pts_after_val, max_workers=MAX_WORKERS)
+    prg_obj2 = PathRegressor(PathObj2, os.path.basename(trip_path2), df_car_pose2, CACHE_DIR, delta_t_sec, pts_before_val, pts_after_val, max_workers=MAX_WORKERS)
+
+    return {'prg_obj1': prg_obj1, 'prg_obj2': prg_obj2}
+    

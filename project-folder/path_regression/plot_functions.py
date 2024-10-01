@@ -6,9 +6,8 @@ from DataClasses.PathRegressor import PathRegressor
 from PySide6 import QtCore
 
 # Function to update the plot when controls change
-def update_plot(ui_elements ,ui_display_elements, prg_obj1: PathRegressor, prg_obj2: PathRegressor = None):
-    plt = ui_elements['plt']
-    plt.clear()
+def update_plot(plot_widget, ui_elements, ui_display_elements, prg_obj1: PathRegressor, prg_obj2: PathRegressor = None):
+    plot_widget.clear()  # Clear the previous plot
     # Get plot settings 
     line_width = ui_elements['line_width_spin'].value()
     marker_size = ui_elements['marker_size_spin'].value()
@@ -22,7 +21,7 @@ def update_plot(ui_elements ,ui_display_elements, prg_obj1: PathRegressor, prg_o
     # Re-plot the car pose trajectory
     if display_carpose_checkbox.isChecked():
         df_car_pose = prg_obj1.get_carpose()
-        plt.plot(df_car_pose['cp_x'].T, df_car_pose['cp_y'].T, pen=pg.mkPen(width=1), symbol='star', symbolBrush='b', symbolSize= 2)
+        plot_widget.plot(df_car_pose['cp_x'].T, df_car_pose['cp_y'].T, pen=pg.mkPen(width=1), symbol='star', symbolBrush='b', symbolSize= 2)
 
     # Get the selected colors palette         
     palette = [item.text() for item in colors_palette_list.selectedItems()]
@@ -43,9 +42,9 @@ def update_plot(ui_elements ,ui_display_elements, prg_obj1: PathRegressor, prg_o
 
     if display_trips1_checkbox.isChecked():
         # Plot v_p1
-        plot_path_with_colors(x1_vp, y1_vp, ui_elements, path_symbol='o')
+        plot_path_with_colors(plot_widget, x1_vp, y1_vp, ui_elements, path_symbol='o')
         # adding thin line to connect the virtual path points     
-        plt.plot(x1_vp, y1_vp, pen=pg.mkPen(color='r', width=line_width, style=QtCore.Qt.DashLine))
+        plot_widget.plot(x1_vp, y1_vp, pen=pg.mkPen(color='r', width=line_width, style=QtCore.Qt.DashLine))
    
     if prg_obj2 is None:
         return
@@ -61,11 +60,11 @@ def update_plot(ui_elements ,ui_display_elements, prg_obj1: PathRegressor, prg_o
             timestamp_idxs2 = v_p2[:,2]
             
         # Plot v_p2
-        plot_path_with_colors(x2_vp, y2_vp, ui_elements, path_symbol='x')
+        plot_path_with_colors(plot_widget, x2_vp, y2_vp, ui_elements, path_symbol='x')
         # adding thin line to connect the virtual path points     
-        plt.plot(x2_vp, y2_vp, pen=pg.mkPen(color='g', width=line_width, style=QtCore.Qt.DashLine))
+        plot_widget.plot(x2_vp, y2_vp, pen=pg.mkPen(color='g', width=line_width, style=QtCore.Qt.DashLine))
 
-def calculate_virtual_path(ui_elements, ui_display_elements,  prg_obj1: PathRegressor, prg_obj2: PathRegressor = None):
+def calculate_virtual_path(plot_widget, ui_elements, ui_display_elements,  prg_obj1: PathRegressor, prg_obj2: PathRegressor = None):
     # Get updated values
     delta_t_sec_val = float(ui_elements['delta_t_input'].text())
     pts_before_val = ui_elements['pts_before_spin'].value()
@@ -85,7 +84,7 @@ def calculate_virtual_path(ui_elements, ui_display_elements,  prg_obj1: PathRegr
         prg_obj2.eval()
         v_p2 = prg_obj2.get_virtual_path()
     
-    update_plot(ui_elements, ui_display_elements, prg_obj1, prg_obj2)
+    update_plot(plot_widget, ui_elements, ui_display_elements, prg_obj1, prg_obj2)
     
     return prg_obj1, prg_obj2
 
@@ -96,9 +95,8 @@ def save_figure(ui_elements):
     exporter.parameters()['width'] = 1000
     exporter.export('trajectory_plot.png')
 
-def plot_path_with_colors(x, y, ui_elements, path_symbol='o'):
-    """Plot path with colors based on UI inputs."""
-    plt = ui_elements['plt']
+def plot_path_with_colors(plot_widget, x, y, ui_elements, path_symbol='o'):
+    """Plot path with colors based on UI inputs."""    
     line_width = ui_elements['line_width_spin'].value()
     marker_size = ui_elements['marker_size_spin'].value()
     colors_num = ui_elements['colors_num_spin'].value()
@@ -108,7 +106,7 @@ def plot_path_with_colors(x, y, ui_elements, path_symbol='o'):
     colors = get_color_list(colors_num, palette)
     for i in range(colors_num):
         mask = np.arange(i, len(x), colors_num)
-        plt.plot(x[mask], y[mask], pen=None, symbol=path_symbol, symbolSize=marker_size, symbolBrush=colors[i])
+        plot_widget.plot(x[mask], y[mask], pen=None, symbol=path_symbol, symbolSize=marker_size, symbolBrush=colors[i])
 
 def get_color_list(colors_num, palette):
     """Generate a list of colors based on the number and palette."""
