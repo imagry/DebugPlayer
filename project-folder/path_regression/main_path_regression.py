@@ -6,8 +6,9 @@ import sys
 import argparse
 import pyqtgraph as pg
 from PySide6 import QtWidgets, QtCore
-from pyqtgraph.Qt import QtWidgets
+from PySide6.QtGui import QAction  # Import QAction from PySide6.QtGui
 from pyqtgraph.dockarea import DockArea, Dock
+
 
 import pandas as pd
 import numpy as np
@@ -82,6 +83,42 @@ def main():
     win.resize(1000, 600)
     win.setWindowTitle('Path Regression DockArea Interface')
     
+    # Create a menu bar at the top
+    menu_bar = win.menuBar()
+    
+    # Add menus to the menu bar
+    file_menu = menu_bar.addMenu("File")
+    view_menu = menu_bar.addMenu("View")
+    widgets_menu = menu_bar.addMenu("Widgets")
+    help_menu = menu_bar.addMenu("Help")
+    
+    # File menu actions
+    open_action = QAction("Open", win)
+    save_action = QAction("Save", win)
+    exit_action = QAction("Exit", win)
+    file_menu.addAction(open_action)
+    file_menu.addAction(save_action)
+    file_menu.addSeparator()
+    file_menu.addAction(exit_action)
+    
+    # View menu actions
+    toggle_controls_action = QAction("Toggle Controls", win, checkable=True)
+    view_menu.addAction(toggle_controls_action)
+    
+    # Widgets menu
+    show_slider_action = QAction("Show Slider", win, checkable=True)
+    widgets_menu.addAction(show_slider_action)
+
+    # Help menu actions
+    about_action = QAction("About", win)
+    help_menu.addAction(about_action)
+    
+    # Define what happens when actions are triggered
+    exit_action.triggered.connect(app.quit)  # Exit the app when Exit is triggered
+    toggle_controls_action.triggered.connect(lambda: toggle_controls(d1, toggle_controls_action))
+    show_slider_action.triggered.connect(lambda: toggle_slider(d4, show_slider_action))
+
+
     # Create docks
     d1 = Dock("Controls", size=(300, 200))  # Dock for buttons, input fields
     d2 = Dock("Plot 1", size=(500, 400))  # Dock for the first plot
@@ -115,6 +152,35 @@ def main():
 
     # Path Regressor  
     main_scope = create_path_regressors(ui_elements, PathObj1, trip_path1, df_car_pose1, PathObj2, trip_path2, df_car_pose2, CACHE_DIR, MAX_WORKERS)
+    
+      # Add toggle button to show/hide controls dock
+    toggle_button = QtWidgets.QPushButton("Hide Controls")
+    
+    def toggle_controls(dock, action):
+        if dock.isVisible():
+            dock.hide()  # Hide the dock if visible
+            action.setChecked(False)
+        else:
+            dock.show()  # Show the dock if hidden
+            action.setChecked(True)
+    
+    def toggle_slider(dock, action):
+        if dock.isVisible():
+            dock.hide()
+            action.setChecked(False)
+        else:
+            dock.show()
+            action.setChecked(True)
+
+    toggle_button.clicked.connect(lambda: toggle_controls(d1, toggle_controls_action))
+
+    # Add the toggle button to the dock for the controls
+    controls_layout = controls_widget.layout()
+    controls_layout.addWidget(toggle_button)
+                
+    # Add the toggle button to the dock for the controls
+    controls_layout = controls_widget.layout()
+    controls_layout.addWidget(toggle_button)
     
     # add to ui elements the item CACHE_DIR with value CACHE_DIR
     ui_elements['CACHE_DIR'] = CACHE_DIR
