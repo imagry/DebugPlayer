@@ -9,7 +9,7 @@ sys.path.insert(0, parent_dir)
 
 import numpy as np
 import matplotlib.pyplot as plt
-import utils.plot_helpers as plt_helper
+import utils.plotting.plot_helpers as plt_helper
 import data_classes.PathTrajectory_pandas as  PathTrajectory
 import data_classes.PathTrajectory_pandas as  PathTrajectory_pandas
 import data_classes.PathTrajectory_polars as  PathTrajectory_polars

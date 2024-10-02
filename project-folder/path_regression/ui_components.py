@@ -7,32 +7,6 @@ from functools import partial
 from data_handlers import load_trip_path
 from plot_functions import update_plot, save_figure, calculate_virtual_path
 
-class TimestampSlider(QWidget):
-    def __init__(self, min_time, max_time):
-        super().__init__()
-
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setMinimum(min_time)
-        self.slider.setMaximum(max_time)
-        self.label = QLabel(f"Timestamp: {min_time}")
-
-        layout = QVBoxLayout()
-        layout.addWidget(self.slider)
-        layout.addWidget(self.label)
-        self.setLayout(layout)
-
-        self.slider.valueChanged.connect(self.update_label)
-
-    def update_label(self, value):
-        self.label.setText(f"Timestamp: {value}")
-        self.sync_data(value)
-
-    def sync_data(self, timestamp):
-        """This method will sync all the data based on the current timestamp.
-        It can trigger a callback in the main framework to adjust views in the plugins."""
-        # This is where you'd call a method to sync all plugins based on the timestamp.
-        pass
-    
 
 def create_main_window():
     """Create the main window's control UI components, but no window or layout."""

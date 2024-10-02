@@ -3,7 +3,7 @@ import numpy as np
 import polars as pl
 from spatialmath import SE2
 from spatialmath.base import *
-import utils.se2_function as se2lib
+import utils.spatial_poses.se2_function as se2lib
 
 class PathTrajectory:
     """

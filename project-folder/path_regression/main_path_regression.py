@@ -11,18 +11,25 @@ from pyqtgraph.dockarea import DockArea, Dock
 from PySide6.QtMultimedia import QMediaPlayer
 from PySide6.QtMultimediaWidgets import QVideoWidget
 
-
 import pandas as pd
 import numpy as np
 import multiprocessing
 
+# Add the root directory of the project to sys.path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from plugins.main_class import MainPathRegression
 from data_handlers import load_data, parse_arguments, create_path_regressors
-from ui_components import create_main_window, connect_signals, TimestampSlider
+from ui_components import create_main_window, connect_signals
+from slider import TimestampSlider
 from plot_functions import save_figure
 from data_classes.PathRegressor import PathRegressor
-from plugin_registry import PluginRegistry
-from api_interfaces import UserPluginInterface
+from plugins.plugin_registry import PluginRegistry
+from plugins.plugin_api_interfaces import UserPluginInterface
 from plot_functions import calculate_virtual_path
+
+# plugins
+from plugins.path_view_plugin import PathViewPlugin  # Assuming the plugin is in a 'plugins' directory
+
 
 # Add the root directory of the project to sys.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -32,43 +39,6 @@ parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.append(parent_dir)
 
-class MainPathRegression:
-    def __init__(self):
-        # Initialize the plugin registry and backbone data
-        self.plugin_registry = PluginRegistry()
-        self.backbone_data = {}
-
-        # Initialize the slider with a dummy range, min_time and max_time can be adjusted
-        self.timestamp_slider = TimestampSlider(min_time=0, max_time=1000)  
-        # Connect the slider's sync mechanism to the sync function in the backbone
-        self.timestamp_slider.sync_data = self.sync_plugins_with_timestamp
-
-    def load_plugins(self, plugins):
-        """Register user plugins."""
-        for plugin in plugins:
-            self.plugin_registry.register_plugin(plugin)
-            
-    def sync_plugins_with_timestamp(self, timestamp):
-        """Sync all registered plugins with the selected timestamp."""
-        print(f"Syncing all plugins with timestamp {timestamp}")
-        # Sync all registered plugins based on the timestamp
-        for plugin in self.plugin_registry.plugins:
-            plugin.sync_data_with_timestamp(timestamp, self.backbone_data)
-
-
-    def run(self, file_paths: dict, display_options: dict):
-        # Load and sync data
-        print("Loading and syncing data...")
-        self.plugin_registry.load_all_plugins(file_paths)
-        self.plugin_registry.sync_all_plugins(self.backbone_data)
-
-        # Display the GUI components for all plugins
-        self.plugin_registry.display_all_plugins(display_options)
-
-        # Display the timestamp slider
-        self.timestamp_slider.show()
-
-        
         
 def main():    
     # Global settings
@@ -128,32 +98,17 @@ def main():
     d4 = Dock("Slider", size=(500, 200))  # Dock for the timestamp slider
     
     # Add docks to DockArea
-    area.addDock(d1, 'left')
-    area.addDock(d2, 'right')
-    area.addDock(d3, 'bottom', d2)
+    area.addDock(d1, 'left') #con trols
+    area.addDock(d2, 'right') #plot 1
+    area.addDock(d3, 'bottom', d2) #plot 2
     area.addDock(d4, 'bottom', d1)
-    
     
     # Set up UI components and add the controls widget to the controls dock
     controls_widget, ui_elements, ui_display_elements = create_main_window()
-    d1.addWidget(controls_widget)
     
-    # Setup the timestamp slider dock
-    regression_app = MainPathRegression()
-    d4.addWidget(regression_app.timestamp_slider)
-    
-    # Data Handling
-    trip_path1, trip_path2 = parse_arguments()
-    PathObj1, df_car_pose1 = load_data(trip_path1, caching_mode_enabled, CACHE_DIR)
-    if trip_path2 is not None:
-        PathObj2, df_car_pose2 = load_data(trip_path2, caching_mode_enabled, CACHE_DIR)
-    else:    
-        PathObj2 = None
-        df_car_pose2 = None
-        print("Only one trip is loaded.")
 
     # Path Regressor  
-    main_scope = create_path_regressors(ui_elements, PathObj1, trip_path1, df_car_pose1, PathObj2, trip_path2, df_car_pose2, CACHE_DIR, MAX_WORKERS)
+    main_scope = create_path_regressors(ui_elements, caching_mode_enabled, CACHE_DIR, MAX_WORKERS)
     
       # Add toggle button to show/hide controls dock
     toggle_button = QtWidgets.QPushButton("Hide Controls")
@@ -165,7 +120,7 @@ def main():
         else:
             dock.show()  # Show the dock if hidden
             action.setChecked(True)
-    
+
     def toggle_slider(dock, action):
         if dock.isVisible():
             dock.hide()
@@ -178,8 +133,7 @@ def main():
 
     # Add the toggle button to the dock for the controls
     controls_layout = controls_widget.layout()
-    controls_layout.addWidget(toggle_button)
-                
+    controls_layout.addWidget(toggle_button)                
     # Add the toggle button to the dock for the controls
     controls_layout = controls_widget.layout()
     controls_layout.addWidget(toggle_button)
@@ -205,18 +159,36 @@ def main():
                     display_trips2_checkbox_button=display_trips2_checkbox_button, 
                     display_carpose_checkbox_button=display_carpose_checkbox_button)
 
+    # Setup the timestamp slider dock
+    regression_app = MainPathRegression()
+    regression_app.timestamp_slider = TimestampSlider(min_time=0, max_time=1000)
+    regression_app.timestamp_slider.sync_data = regression_app.sync_plugins_with_timestamp
+   
     # Add plots to plot docks
     plot1 = pg.PlotWidget(title="Path Plot 1")
     plot2 = pg.PlotWidget(title="Path Plot 2")
     plot1.plot(np.random.normal(size=100))  # Placeholder plot data
     plot2.plot(np.random.normal(size=100))  # Placeholder plot data
-
     
+    # connect the plots to the main_scope dock
+    d1.addWidget(controls_widget)
     d2.addWidget(plot1)
     d3.addWidget(plot2)
+    d4.addWidget(regression_app.timestamp_slider)
+    
+    # Create an instance of PathViewPlugin with a CSV file path
+    driving_path_view_plugin = PathViewPlugin()
+
+    # Register the plugin with the MainPathRegression instance
+    regression_app.load_plugins([driving_path_view_plugin]) 
+    
+    # Run the application with a given trip path
+    trip_pat1, _ = parse_arguments()
+    regression_app.run(trip_pat1, plot1)
+       
     
     # Update plots based on calculations
-    calculate_virtual_path(plot1, ui_elements, ui_display_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2'))
+    # calculate_virtual_path(plot1, ui_elements, ui_display_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2'))
 
     # Show the main window
     win.show()

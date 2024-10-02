@@ -4,7 +4,7 @@ import pandas as pd
 import os
 import sys
 from data_classes.PathTrajectory_pandas import PathTrajectory
-from 
+import utils.data_loaders.path_handler_loader_pandas as pd_path_loader
 # current_dir = os.path.dirname(os.path.abspath(__file__))
 # parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
 # sys.path.insert(0, f"{parent_dir}/utils")
@@ -32,6 +32,6 @@ def prepare_path_data(trip_path, interpolation=False, path_file_name = 'path_tra
     df_path_data, path_xy = pd_path_loader.read_path_handler_data(filepath)
     
     # convert path_data to pandas dataframe
-    PathObj = PathTrajectory_pandas.PathTrajectory(df_path_data, path_xy)
+    PathObj = PathTrajectory(df_path_data, path_xy)
     
     return PathObj    

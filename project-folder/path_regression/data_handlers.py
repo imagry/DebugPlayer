@@ -87,8 +87,20 @@ def reset(prg_obj, ui_elements):
     prg_obj.df_car_pose = None
     plt.clear()
     
-def create_path_regressors(ui_elements, PathObj1, trip_path1, df_car_pose1, PathObj2, trip_path2, df_car_pose2, CACHE_DIR, MAX_WORKERS):
+def create_path_regressors(ui_elements, caching_mode_enabled, CACHE_DIR, MAX_WORKERS):
     """Create PathRegressor objects and return them in a dictionary."""
+    
+    # Data Handling
+    trip_path1, trip_path2 = parse_arguments()
+    PathObj1, df_car_pose1 = load_data(trip_path1, caching_mode_enabled, CACHE_DIR)
+    if trip_path2 is not None:
+        PathObj2, df_car_pose2 = load_data(trip_path2, caching_mode_enabled, CACHE_DIR)
+    else:    
+        PathObj2 = None
+        df_car_pose2 = None
+        print("Only one trip is loaded.")
+        
+    
     delta_t_sec = float(ui_elements['delta_t_input'].text())
     pts_before_val = ui_elements['pts_before_spin'].value()
     pts_after_val = ui_elements['pts_after_spin'].value()

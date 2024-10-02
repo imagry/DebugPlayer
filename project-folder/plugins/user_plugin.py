@@ -1,6 +1,5 @@
 # user_plugin.py
-from api_interfaces import UserPluginInterface
-from ui_components import DefaultDisplayComponent  # A predefined GUI component
+from plugins.plugin_api_interfaces import UserPluginInterface
 
 
 class UserPlugin(UserPluginInterface):
@@ -11,11 +10,6 @@ class UserPlugin(UserPluginInterface):
     def display_data(self, display_options: dict):
         # User-specific data display logic
         print(f"Displaying data with options {display_options}")
-        
-        if 'custom_gui' in display_options:
-            return display_options['custom_gui']  # Use user's custom GUI
-        else:
-            return DefaultDisplayComponent()  # Use default GUI
 
     def sync_data(self, backbone_data: dict):
         # Sync user data with the backbone data

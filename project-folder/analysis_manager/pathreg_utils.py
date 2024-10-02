@@ -16,7 +16,7 @@ import pyqtgraph as pg
 from pyqtgraph.Qt import QtCore, QtWidgets
 
 import data_preparation as dp 
-import utils.plot_helpers as plt_helper
+import utils.plotting.plot_helpers as plt_helper
 from data_classes.PathTrajectory_pandas import PathTrajectory
 from typing import TypeAlias
 from data_classes.PathRegressor import PathRegressor
