@@ -6,13 +6,14 @@ import pandas as pd
 parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if parent_dir not in sys.path:
     sys.path.append(parent_dir)
-# Ensure the DataClasses directory is in the path
-data_classes_dir = os.path.abspath(os.path.join(parent_dir, 'DataClasses'))
+# Ensure the data_classes directory is in the path
+data_classes_dir = os.path.abspath(os.path.join(parent_dir, 'data_classes'))
 sys.path.insert(0, data_classes_dir)   
-import DataClasses.PathTrajectory_pandas as  PathTrajectory_pandas
-import DataClasses.PathTrajectory_polars as  PathTrajectory_polars
-import utils.pandas_data_loader as pd_data_loader
-import utils.polars_data_loader as pl_data_loader
+import data_classes.PathTrajectory_pandas as  PathTrajectory_pandas
+import data_classes.PathTrajectory_polars as  PathTrajectory_polars
+import utils.data_loaders.misc_data_loader_pandas as misc_data_loader
+import utils.data_loaders.path_handler_loader_pandas as pd_path_loader
+import utils.data_loaders.path_handler_loader_polars as pl_path_loader
 from analysis_manager.config import DataFrameType, ClassObjType
 
 
@@ -38,7 +39,6 @@ def load_data_for_trip(trip_path):
     except:
         print("Car Pose data not found")
         
-    
     # Load steering data
     try:
         df_steering = prepare_steering_data(trip_path, interpolation=False) 
@@ -113,7 +113,7 @@ def prepare_path_data(trip_path, interpolation=False, path_file_name = 'path_tra
     # load path data
     filepath = trip_path + '/' + path_file_name
 
-    df_path_data, path_xy = pd_data_loader.read_path_handler_data(filepath)
+    df_path_data, path_xy = pd_path_loader.read_path_handler_data(filepath)
     
     # convert path_data to pandas dataframe
     PathObj = PathTrajectory_pandas.PathTrajectory(df_path_data, path_xy)
@@ -141,7 +141,7 @@ def prepare_path_extraction_data(trip_path, interpolation=False, path_file_name 
     # load path data
     filepath = trip_path + '/' + path_file_name
 
-    df_path_extraction_data, path_extraction_xy = pd_data_loader.read_path_handler_data(filepath)
+    df_path_extraction_data, path_extraction_xy = misc_data_loader.read_path_handler_data(filepath)
     
     # convert path_data to pandas dataframe
     PathObj_extraction = PathTrajectory_pandas.PathTrajectory(df_path_extraction_data, path_extraction_xy)
@@ -158,7 +158,7 @@ def prepare_car_pose_data(trip, interpolation=False, car_pose_file_name = 'car_p
         file_path = trip + '/' + car_pose_file_name[:-4] + '_offline.csv'
         if not os.path.exists(file_path):
             return None            
-    df_car_pose = pd_data_loader.load_trip_car_pose_data(file_path)
+    df_car_pose = misc_data_loader.load_trip_car_pose_data(file_path)
           
     # change the columns names into: timestamp, cp_x, cp_y, cp_yaw_deg
     df_car_pose.columns = ['timestamp', 'cp_x', 'cp_y', 'cp_yaw_deg']
@@ -183,14 +183,14 @@ def prepare_steering_data(trip_path, interpolation=False, cur_steer_file_name = 
     # Check if steering.csv exist before attempting to read it
     if os.path.exists(os.path.join(trip_path, cur_steer_file_name)):
         str_file_path = os.path.join(trip_path, cur_steer_file_name)
-        df_str = pd_data_loader.load_trip_steering_data(str_file_path)    
+        df_str = misc_data_loader.load_trip_steering_data(str_file_path)    
     else:
         df_str = None
         
    
     # Check if the cruise control data is available at trip_path
     if os.path.exists(os.path.join(trip_path, cc_file_name)):
-        df_cc = pd_data_loader.load_trip_cruise_control_data(trip_path)
+        df_cc = misc_data_loader.load_trip_cruise_control_data(trip_path)
     else :
         df_cc = None
     

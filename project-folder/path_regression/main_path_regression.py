@@ -19,7 +19,7 @@ import multiprocessing
 from data_handlers import load_data, parse_arguments, create_path_regressors
 from ui_components import create_main_window, connect_signals, TimestampSlider
 from plot_functions import save_figure
-from DataClasses.PathRegressor import PathRegressor
+from data_classes.PathRegressor import PathRegressor
 from plugin_registry import PluginRegistry
 from api_interfaces import UserPluginInterface
 from plot_functions import calculate_virtual_path

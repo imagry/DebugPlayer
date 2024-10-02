@@ -7,7 +7,7 @@ import numpy as np
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import analysis_manager.data_preparation as dp 
-from DataClasses.PathTrajectory_pandas import PathTrajectory
+from data_classes.PathTrajectory_pandas import PathTrajectory
 from typing import TypeAlias
 
 # Custom type alias for DataFrame with specific columns

@@ -38,7 +38,7 @@ from utils_geo import trip_view_on_map
 from path_aggregator import PathAggregator
 import pandas_data_loader as data_loader
 import data_preparation as dp
-from DataClasses.PathTrajectory_pandas import PathTrajectory
+from data_classes.PathTrajectory_pandas import PathTrajectory
 #%% Initialize settings and parameters
 def initialize_parameters():
     params = {

@@ -2,7 +2,7 @@
 import pyqtgraph as pg
 import numpy as np
 from prg_utils import get_color_list
-from DataClasses.PathRegressor import PathRegressor
+from data_classes.PathRegressor import PathRegressor
 from PySide6 import QtCore
 
 # Function to update the plot when controls change

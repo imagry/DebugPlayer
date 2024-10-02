@@ -1,0 +1,44 @@
+# path_view_plugin.py
+import pandas as pd
+from path_regression.api_interfaces import UserPluginInterface
+
+
+class PathViewPlugin(UserPluginInterface):
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.data = None  # Placeholder for the loaded CSV data
+        self.current_paths = None  # Current paths at the selected timestamp
+        self.path_obj = None  # Placeholder for the path object
+
+    def load_data(self):
+        """Load the CSV data."""
+        try:
+            self.data = pd.read_csv(self.file_path)
+            # Ensure the data is sorted by timestamp
+            self.data = self.data.sort_values(by='timestamp')
+            PathObj = prepare_path_data(trip_path, interpolation=False) 
+
+            print(f"Loaded data from {self.file_path}")
+        except Exception as e:
+            print(f"Failed to load CSV file: {e}")  
+            
+    def sync_data_with_timestamp(self, timestamp, backbone_data):
+        """Find and store the paths for the given timestamp."""
+        if self.data is not None:
+            # Filter the data for the current timestamp
+            self.current_paths = self.data[self.data['timestamp'] == timestamp]
+        else:
+            print("Data has not been loaded.")      
+            
+    def display(self, plot_widget):
+        """Display the paths on the plot widget."""
+        if self.current_paths is not None and not self.current_paths.empty:
+            # Extract the x and y coordinates
+            x_values = self.current_paths['x']
+            y_values = self.current_paths['y']
+            
+            # Clear the plot and replot the current paths
+            plot_widget.clear()
+            plot_widget.plot(x_values, y_values, pen=None, symbol='o', symbolSize=5, symbolBrush='b')
+        else:
+            print("No paths available for the current timestamp.")

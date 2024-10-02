@@ -11,7 +11,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
                 
 from plot_functions import update_plot
 import analysis_manager.data_preparation as dp
-from DataClasses.PathRegressor import PathRegressor
+from data_classes.PathRegressor import PathRegressor
 
 def parse_arguments():
     # Create an argument parser

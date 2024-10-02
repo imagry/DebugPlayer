@@ -17,9 +17,9 @@ import pickle
 
 import data_preparation as dp 
 import utils.plot_helpers as plt_helper
-from DataClasses.PathTrajectory_pandas import PathTrajectory
+from data_classes.PathTrajectory_pandas import PathTrajectory
 from typing import TypeAlias
-from DataClasses.PathRegressor import PathRegressor        
+from data_classes.PathRegressor import PathRegressor        
 from pathreg_utils import get_color_list, parse_arguments, load_data, prepare_plot_data
 
 # Global settings
