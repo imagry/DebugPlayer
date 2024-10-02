@@ -8,6 +8,8 @@ import pyqtgraph as pg
 from PySide6 import QtWidgets, QtCore
 from PySide6.QtGui import QAction  # Import QAction from PySide6.QtGui
 from pyqtgraph.dockarea import DockArea, Dock
+from PySide6.QtMultimedia import QMediaPlayer
+from PySide6.QtMultimediaWidgets import QVideoWidget
 
 
 import pandas as pd
