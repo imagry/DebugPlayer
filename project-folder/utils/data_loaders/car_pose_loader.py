@@ -66,7 +66,7 @@ class CarPose:
         if self.df_car_pose is not None:
             # Check if the DataFrame index is already in Unix timestamp format
             if self.df_car_pose.index.dtype != 'int64':
-                timestamps = self.df_car_pose.index.view('int64') // 10**6
+                timestamps = self.df_car_pose.index.astype('int64') // 10**6
             else:
                 timestamps = self.df_car_pose.index                      
             # define the interpolation objects
@@ -140,7 +140,7 @@ class CarPose:
         self.df_car_pose = df_car_pose
         # Check if the DataFrame index is already in Unix timestamp format
         if df_car_pose.index.dtype != 'int64':
-            self.timestamps = df_car_pose.index.view('int64') // 10**6
+            self.timestamps = df_car_pose.index.astype('int64') // 10**6
         else:
             self.timestamps = df_car_pose.index
             

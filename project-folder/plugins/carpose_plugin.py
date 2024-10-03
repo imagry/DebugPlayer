@@ -3,7 +3,8 @@ from plugins.plugin_api_interfaces import UserPluginInterface
 from utils.data_loaders.car_pose_loader import prepare_car_pose_data
 from utils.data_loaders.car_pose_loader import CarPose
 import pyqtgraph as pg
-
+import numpy as np
+import pandas as pd
 class CarPosePlugin(UserPluginInterface):
     def __init__(self):
         self.car_pose = None
@@ -15,7 +16,8 @@ class CarPosePlugin(UserPluginInterface):
         df_carpose = prepare_car_pose_data(trip_path)
         self.car_pose = CarPose(df_carpose)   
         self.timestamps = self.car_pose.get_timestamps() 
-             
+
+        self.trajectory = self.car_pose.get_trajectory()             
         print(f"Loaded car pose data from {trip_path}")
 
     def sync_data_with_timestamp(self, timestamp):
@@ -28,7 +30,7 @@ class CarPosePlugin(UserPluginInterface):
             self.update_plot()
 
 
-    def set_display(self, plot_widget, plot_opt_dict=None):
+    def set_display(self, plot_widget, timestamp, plot_opt_dict=None):
         """Store plot widget and plot the full trajectory and current position."""
         self.plot_widget = plot_widget  # Store the plot widget reference
         
@@ -39,16 +41,29 @@ class CarPosePlugin(UserPluginInterface):
             self.plot_handle = lambda x, y: self.plot_widget.plot(x, y, pen=plot_opt_dict.get('pen', None), symbol=plot_opt_dict.get('symbol', 'o'), symbolSize=plot_opt_dict.get('symbolSize', 5), symbolBrush=plot_opt_dict.get('symbolBrush', 'r'))            
         else:
             self.plot_opts_dict = None
-            self.plot_handle = lambda x, y: self.plot_widget.plot(x, y, pen=None, symbol='o', symbolSize=5, symbolBrush='r')
+            self.plot_handle = lambda x, y: self.plot_widget.plot(x, y, pen=pg.mkPen(color='b'), symbol='o', symbolSize=5, symbolBrush='r')
             
             
     def update_plot(self):
         """Update the plot with the vehicle's current position."""
-        if self.current_position is not None and not self.current_position.empty:
-            x = self.current_position['x'].values[0]
-            y = self.current_position['y'].values[0]
-            # self.plot_widget.clear()  # Clear existing plot
+        if self.current_position is not None :
+            x = self.current_position[0]
+            y = self.current_position[1]
+            yaw = self.current_position[2]
             
+            self.plot_widget.clear()  # Clear existing plot
+            # extract the x and y coordinates from the trajectory
+            x_traj = np.asarray(self.trajectory['cp_x'])
+            y_traj = np.asarray(self.trajectory['cp_y'])
+            
+            self.plot_widget.plot(x_traj, y_traj, pen=pg.mkPen(color='b'))  # Plot the full trajectory
+            
+            # Ensure that x and y are arrays or lists            
+            if x.shape == ():
+                x = np.array([x])
+            if y.shape == ():
+                y = np.array([y])
+                        
             if self.plot_widget is not None:
                 # Plot the current position
                 self.plot_handle(x,y)
@@ -62,7 +77,7 @@ class CarPosePlugin(UserPluginInterface):
     
     def get_data_with_timestamp(self, timestamp):
         """Get the car pose data for the given timestamp."""
-        self.car_pose.get_car_pose_at_timestamp(timestamp, interpolation = True)
+        return self.car_pose.get_car_pose_at_timestamp(timestamp, interpolation = True)
 
     def get_car_pose_data(self):
         """Return the car pose data."""

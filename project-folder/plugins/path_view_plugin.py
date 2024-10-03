@@ -18,14 +18,8 @@ class PathViewPlugin(UserPluginInterface):
         self.trip_path = trip_path
         try:
             # Ensure the data is sorted by timestamp
-            self.path_obj = prepare_path_data(trip_path , interpolation=False) 
-            
-            # Check if the DataFrame index is already in Unix timestamp format
-            timestamp_s = pd.to_datetime(self.path_obj.get_timestamps(), unit='s')
-            if self.path_obj.get_timestamps().dtype != 'int64':
-                self.timestamps = timestamp_s.view('int64') // 10**6 
-            else:
-                self.timestamps = self.path_obj.timestamps
+            self.path_obj = prepare_path_data(trip_path , interpolation=False)             
+            self.timestamps = self.path_obj.timestamps
                 
             print(f"Loaded data from {trip_path}")
         except Exception as e:
@@ -65,7 +59,7 @@ class PathViewPlugin(UserPluginInterface):
         """Update the path at current slider timestamp."""
         if self.current_path is not None:
             path = self.current_path
-            if path.shape[0] == 2:
+            if path.shape[1] == 2:
                 path = path.T
             x_data = path[0]
             y_data = path[1]

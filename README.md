@@ -144,7 +144,7 @@ Then, add the two liines by writing two lines under the comment "# REGISTER PLUG
 ```python
 # Check if the DataFrame index is already in Unix timestamp format
 if self.path_obj.timestamps.dtype != 'int64':
-    self.timestamps = self.path_obj.get_timestamps().view('int64') // 10**6 
+    self.timestamps = self.path_obj.get_timestamps().astype('int64') // 10**6 
 else:
     self.timestamps = self.path_obj.timestamps
 ```
@@ -157,8 +157,8 @@ else:
 
 2. **Convert to Unix Timestamp:**
     - If the condition is true (i.e., the timestamps are not in `int64` format), it converts the timestamps to Unix timestamp format.
-    - This is achieved by calling `self.path_obj.get_timestamps().view('int64') // 10**6`.
-    - The `view('int64')` method changes the data type to `int64`, and the division by `10**9` converts the timestamps to seconds.
+    - This is achieved by calling `self.path_obj.get_timestamps().astype('int64') // 10**6`.
+    - The `astype('int64')` method changes the data type to `int64`, and the division by `10**9` converts the timestamps to seconds.
 
 3. **Assign Timestamps:**
     - If the timestamps are already in `int64` format, it directly assigns `self.path_obj.timestamps` to `self.timestamps`.

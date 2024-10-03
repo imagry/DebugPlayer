@@ -20,18 +20,19 @@ class PathTrajectory:
         self.df_path = df_path
         self.df_path_xy = path_xy
         
-        # Extract the time data of the path
-        self.time_data = df_path['data_timestamp_sec']
+        # Extract the time data of the path        
+        timestamp_s = pd.to_datetime(df_path['data_timestamp_sec'], unit='s')        
+        self.time_data_ms = timestamp_s.astype('int64') // 10**6 
     
     def get_timestamps(self):
-        return self.time_data   
+        return self.time_data_ms   
     
     def find_min_index(self, timestamps):
         
-        if isinstance(self.time_data, (pd.Series, pd.DataFrame)):
+        if isinstance(self.time_data_ms, (pd.Series, pd.DataFrame)):
             # If self.time_data is a pandas Series or DataFrame
             min_index = timestamps.idxmin()
-        elif isinstance(self.time_data, (pl.Series, pl.DataFrame)):
+        elif isinstance(self.time_data_ms, (pl.Series, pl.DataFrame)):
             # If self.time_data is a Polars Series or DataFrame
             min_index = timestamps.arg_min()
         else:
@@ -39,7 +40,7 @@ class PathTrajectory:
         
         return min_index
     
-    def find_path_and_car_pose(self, timestamp):
+    def find_path_and_car_pose(self, timestamp_ms):
         """
         Finds the path and car pose at the given timestamp.
 
@@ -50,11 +51,11 @@ class PathTrajectory:
         tuple: A tuple containing the path (as a DataFrame) and the car pose (as an SE2 object).
         """
         # Find the row index of the entry closest to the given timestamp
-        row_ind = self.find_min_index(np.abs(self.time_data - timestamp))
+        row_ind = self.find_min_index(np.abs(self.time_data_ms - timestamp_ms))
         row = self.df_path.loc[row_ind]
         
         if row.empty:
-            raise ValueError(f"No data found for timestamp {timestamp}")
+            raise ValueError(f"No data found for timestamp {timestamp_ms}")
 
         # Extract the car pose
         car_pose_path = self.df_path.loc[row_ind, ["car_pose_now_timestamp", "w_car_pose_image_x", "w_car_pose_image_y", "w_car_pose_image_yaw_rad"]]
@@ -117,7 +118,7 @@ class PathTrajectory:
         float: The current speed.
         """      
         # Find the row index of the entry closest to the given timestamp
-        row_ind = self.find_min_index(np.abs(self.time_data - timestamp))
+        row_ind = self.find_min_index(np.abs(self.time_data_ms - timestamp))
         row = self.df_path.loc[row_ind]
         
         if row.empty:

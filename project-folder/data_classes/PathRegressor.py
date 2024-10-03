@@ -31,7 +31,7 @@ class PathRegressor:
         if pathobj:
             self.df_path = pathobj.df_path
             self.df_path_xy = pathobj.df_path_xy
-            self.time_data = pathobj.time_data
+            self.time_data = pathobj.get_timestamps()
         if carpose is not None:
             self.carpose = carpose
         self.CACHE_DIR = CACHE_DIR

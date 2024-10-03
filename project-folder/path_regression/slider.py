@@ -48,15 +48,7 @@ class TimestampSlider(QWidget):
         # Connect buttons to playback control
         self.play_button.clicked.connect(self.start_playback)
         self.pause_button.clicked.connect(self.pause_playback)
-        self.stop_button.clicked.connect(self.stop_playback)
-        
-        # Debug: Print the parent widget type and attributes
-        parent = self.parent()
-        if parent:
-            print(f"Parent widget type: {type(parent)}")
-            print(f"Parent widget attributes: {dir(parent)}")
-        else:
-            print("No parent widget assigned.")                        
+        self.stop_button.clicked.connect(self.stop_playback)                           
 
     def update_label(self, value):
         """Update the label and sync data based on slider's value."""

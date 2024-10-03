@@ -9,7 +9,7 @@ class PluginRegistry:
         """Register a user plugin."""
         self.plugins.append(plugin)
 
-    def set_display_all_plugins(self, plot_widget, timestamp):
+    def set_display_all_plugins(self, plot_widget, timestamp, disp_opt_dict=None):
         """Display all registered plugins' data in the GUI."""
         for plugin in self.plugins:
             plugin.set_display(plot_widget, timestamp)
