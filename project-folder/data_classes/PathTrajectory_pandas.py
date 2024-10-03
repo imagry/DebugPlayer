@@ -22,6 +22,10 @@ class PathTrajectory:
         
         # Extract the time data of the path
         self.time_data = df_path['data_timestamp_sec']
+    
+    def get_timestamps(self):
+        return self.time_data   
+    
     def find_min_index(self, timestamps):
         
         if isinstance(self.time_data, (pd.Series, pd.DataFrame)):

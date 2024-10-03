@@ -79,3 +79,102 @@ pip install "dask[complete]" json5
 3. **Visualizing Data:** Update the `PlotManager` to plot your specific data.
 4. **Interactive Features:** Verify and customize tooltips, crosshairs, and other features to align with your data structure.
 5. **Testing and Refining:** Test the integration and refine the UI/UX based on your needs.
+
+
+## **Adding a new Plugin**
+1. Step 1: Define the API Interface.
+The first step will be to create a new class that adheres to the ```UserPluginInterface```.
+This class will read the data file, parse the data, and provide functionality for visualizing the data over time.
+
+2. Step 2: Create the NewPlugin Plugin Class
+```python
+import pandas as pd
+from api_interfaces import UserPluginInterface
+
+class NewPlugin(UserPluginInterface):
+    def __init__(self, file_path):
+        self.file_path = file_path
+        self.data = None  # Placeholder for the loaded CSV data
+        self.current_paths = None  # Current paths at the selected timestamp
+
+    def load_data(self):
+        """Load the CSV data."""
+        try:
+            self.data = pd.read_csv(self.file_path)
+            # Ensure the data is sorted by timestamp
+            self.data = self.data.sort_values(by='timestamp')
+            print(f"Loaded data from {self.file_path}")
+        except Exception as e:
+            print(f"Failed to load CSV file: {e}")
+
+    def set_display(self, plot_widget):
+        """Display the paths on the plot widget."""
+        if self.current_paths is not None and not self.current_paths.empty:
+            # Extract the x and y coordinates
+            x_values = self.current_paths['x']
+            y_values = self.current_paths['y']
+            
+            # Clear the plot and replot the current paths
+            plot_widget.clear()
+            plot_widget.plot(x_values, y_values, pen=None, symbol='o', symbolSize=5, symbolBrush='b')
+        else:
+            print("No paths available for the current timestamp.")
+```
+### Explanation:
+#### load_data: Loads the CSV file and stores the data in a Pandas DataFrame.
+#### sync_data_with_timestamp: Filters the data for the given timestamp and extracts the corresponding paths.
+#### display: Displays the paths on the provided plot widget.
+
+3. Step 3: Register the Plugin
+Once we have the NewPlugin class, we need to register it in the main application.
+
+we do so by instantiating it in main() in the main_path_regression.py. 
+
+First, add it in the include, e.g.
+``` from plugins.newplugin import NewPlugin ```
+
+<!-- TBD: create a registration as separate file -->
+Then, add the two liines by writing two lines under the comment "# REGISTER PLUGINS":
+    ```newplugin_plugin = NewPlugin()```
+    ```regression_app.load_plugins([newplugin_plugin]) ```
+    
+
+### Some tips and guidelines regarding data format:
+
+```python
+# Check if the DataFrame index is already in Unix timestamp format
+if self.path_obj.timestamps.dtype != 'int64':
+    self.timestamps = self.path_obj.get_timestamps().view('int64') // 10**6 
+else:
+    self.timestamps = self.path_obj.timestamps
+```
+
+### Explanation:
+
+1. **Check Data Type:**
+    - The code first checks if the `timestamps` attribute of `self.path_obj` is not of type `int64`.
+    - This is done using the condition `self.path_obj.timestamps.dtype != 'int64'`.
+
+2. **Convert to Unix Timestamp:**
+    - If the condition is true (i.e., the timestamps are not in `int64` format), it converts the timestamps to Unix timestamp format.
+    - This is achieved by calling `self.path_obj.get_timestamps().view('int64') // 10**6`.
+    - The `view('int64')` method changes the data type to `int64`, and the division by `10**9` converts the timestamps to seconds.
+
+3. **Assign Timestamps:**
+    - If the timestamps are already in `int64` format, it directly assigns `self.path_obj.timestamps` to `self.timestamps`.
+
+This code ensures that the timestamps are always in Unix timestamp format (in seconds) before proceeding with further operations.
+
+
+## **Top-level diagram** 
+```mermaid
+graph TD;
+  MainPathRegression --> PluginRegistry
+  MainPathRegression --> PathViewPlugin
+  MainPathRegression --> TimestampSlider
+  PluginRegistry --> sync_all_plugins
+  PluginRegistry --> display_all_plugins
+  PathViewPlugin --> load_data
+  PathViewPlugin --> sync_data_with_timestamp
+  PathViewPlugin --> display
+   ``` 

@@ -11,7 +11,7 @@ from plot_functions import update_plot, save_figure, calculate_virtual_path
 def create_main_window():
     """Create the main window's control UI components, but no window or layout."""
 
-        # Create a widget for the controls
+    # Create a widget for the controls
     controls_widget = QtWidgets.QWidget()
     controls_layout = QtWidgets.QVBoxLayout()
     controls_widget.setLayout(controls_layout)
@@ -113,7 +113,7 @@ def create_main_window():
     controls_layout.addWidget(save_button)
     
         # Return just the widgets (not the main window) for use in docks
-    ui_elements = {
+    ui_config_elements = {
         'line_width_spin': line_width_spin,
         'marker_size_spin': marker_size_spin,
         'colors_num_spin': colors_num_spin,
@@ -135,30 +135,45 @@ def create_main_window():
         'display_carpose_checkbox': display_carpose_checkbox
     }
     
-    return controls_widget, ui_elements, ui_display_elements
+    return controls_widget, ui_config_elements, ui_display_elements
     
 
-def connect_signals(run_button, load_button1, load_button2, update_plot_button, save_button, ui_elements,
-                    main_scope, ui_display_elements, display_trips1_checkbox_button, display_trips2_checkbox_button, display_carpose_checkbox_button):
+# def connect_signals(run_button, load_button1, load_button2, update_plot_button, save_button, ui_elements,
+#                     main_scope, ui_display_elements, display_trips1_checkbox_button, display_trips2_checkbox_button, display_carpose_checkbox_button):
+def connect_signals(ui_config_elements, ui_display_elements, main_scope):
     """Connect UI signals to their respective slots."""
-    run_button.clicked.connect(partial(handle_calculate_virtual_path, ui_elements, ui_display_elements, main_scope))
-    load_button1.clicked.connect(partial(handle_load_trip_path1, ui_elements, main_scope))
-    load_button2.clicked.connect(partial(handle_load_trip_path2, ui_elements, main_scope))
-    update_plot_button.clicked.connect(partial(update_plot, ui_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
-    save_button.clicked.connect(partial(save_figure, ui_elements))
 
-    display_trips1_checkbox_button.clicked.connect(partial(update_plot, ui_elements, ui_display_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
-    display_trips2_checkbox_button.clicked.connect(partial(update_plot, ui_elements, ui_display_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
-    display_carpose_checkbox_button.clicked.connect(partial(update_plot, ui_elements, ui_display_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
+    # Extract UI elements
+    run_button          =  ui_config_elements['run_button']
+    load_button1        =  ui_config_elements['load_button1']
+    load_button2        =  ui_config_elements['load_button2']
+    update_plot_button  =  ui_config_elements['update_plot_button']
+    save_button         =  ui_config_elements['save_button']
+    
+    disp_trip1_chkbx_button   = ui_display_elements['display_trips1_checkbox']
+    disp_trip2_chkbx_button  = ui_display_elements['display_trips2_checkbox']
+    disp_carpose_chkbx_button = ui_display_elements['display_carpose_checkbox']
+                    
+    
+    # connect signals
+    run_button.clicked.connect(partial(handle_calculate_virtual_path, ui_config_elements, ui_display_elements, main_scope))
+    load_button1.clicked.connect(partial(handle_load_trip_path1, ui_config_elements, main_scope))
+    load_button2.clicked.connect(partial(handle_load_trip_path2, ui_config_elements, main_scope))
+    update_plot_button.clicked.connect(partial(update_plot, ui_config_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
+    save_button.clicked.connect(partial(save_figure, ui_config_elements))
+
+    disp_trip1_chkbx_button.clicked.connect(partial(update_plot, ui_config_elements, ui_display_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
+    disp_trip2_chkbx_button.clicked.connect(partial(update_plot, ui_config_elements, ui_display_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
+    disp_carpose_chkbx_button.clicked.connect(partial(update_plot, ui_config_elements, ui_display_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
 
     
-def handle_load_trip_path1(ui_elements, main_scope):
-    prg_obj1 = load_trip_path(main_scope.get('prg_obj1'), ui_elements)
+def handle_load_trip_path1(ui_config_elements, main_scope):
+    prg_obj1 = load_trip_path(main_scope.get('prg_obj1'), ui_config_elements)
     main_scope['prg_obj1'] = prg_obj1
 
 
-def handle_load_trip_path2(ui_elements, main_scope):
-    prg_obj2 = load_trip_path(main_scope.get('prg_obj2'), ui_elements)
+def handle_load_trip_path2(ui_config_elements, main_scope):
+    prg_obj2 = load_trip_path(main_scope.get('prg_obj2'), ui_config_elements)
     main_scope['prg_obj2'] = prg_obj2
 
 

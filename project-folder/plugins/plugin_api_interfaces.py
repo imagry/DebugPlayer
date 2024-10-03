@@ -4,7 +4,7 @@ class UserPluginInterface:
         """This function should handle loading and parsing the user's data."""
         raise NotImplementedError("This method must be implemented by the user.")
 
-    def display(self, display_options: dict):
+    def set_display(self, display_options: dict):
         """This function should return a UI component to display the data in the main GUI."""
         raise NotImplementedError("This method must be implemented by the user.")
 
