@@ -205,7 +205,7 @@ def prepare_steering_data(trip_path, interpolation=False, cur_steer_file_name = 
         # remove duplicates
         df_str = df_str.drop_duplicates(subset='timestamp')
         
-        # Todo: fix this check and make sure it is really necessary to move into time indexing
+        # TODO: fix this check and make sure it is really necessary to move into time indexing
         # Set the timestamp as the index
         # df_str.set_index('timestamp', inplace=True)
 
@@ -235,7 +235,7 @@ def prepare_steering_data(trip_path, interpolation=False, cur_steer_file_name = 
         # remove duplicates
         df_cc = df_cc.drop_duplicates(subset='timestamp')
 
-        # Todo: fix this check and make sure it is really necessary to move into time indexing                
+        # TODO: fix this check and make sure it is really necessary to move into time indexing                
         # Set the timestamp as the index
         # df_cc.set_index('timestamp', inplace=True)
         
@@ -284,7 +284,7 @@ def merge_time_series(df1, df2, interpolation=False):
     if df2.index.name != 'timestamp' and 'timestamp' not in df2.columns:
         raise ValueError('Timestamp column not found in df2')
     
-    # Todo: fix this check and make sure it is really necessary
+    # TODO: fix this check and make sure it is really necessary
     # if df1['timestamp'].dtype != df2['timestamp'].dtype and df1['timestamp'].dtype != 'datetime64[ns]' and df2['timestamp'].dtype != 'datetime64[ns]':
     #     raise ValueError('Timestamp column data type mismatch')
     

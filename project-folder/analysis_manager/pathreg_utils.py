@@ -104,7 +104,7 @@ def prepare_plot_data(idx, timestamp_idx, x_vp, y_vp, color):
 #     pts_after_val = pts_after_spin.value()
 
 
-#     # Todo: Instantiate the new class PathRegressor
+#     # TODO: Instantiate the new class PathRegressor
 #     prg = PathRegressor(PathObj, df_car_pose, delta_t_sec_val, pts_before_val, pts_after_val,max_workers= MAX_WORKERS)
     
 #     v_p = prg.get_virtual_path()

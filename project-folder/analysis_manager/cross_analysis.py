@@ -61,7 +61,7 @@ def cross_analysis(df_list, ClassObjList, zero_time=False):
     setup_mouse_events(fig, slider, cp_time_seconds, ax_steering, ax_steering_rate, ax_speed)
 
     # Slider update function
-    # Todo:
+    # TODO:
     # change def update(val):
         # Update the plots based on the slider value
     # and definbe update_plots function

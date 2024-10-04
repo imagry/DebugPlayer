@@ -41,7 +41,7 @@ class PathViewPlugin(UserPluginInterface):
             self.update_plot()
 
 
-    # ToDo: allow returning data to plot such that plotting is handled from somewhere else, or allow inhertiing from a base class that handles plotting            
+    # TODO: allow returning data to plot such that plotting is handled from somewhere else, or allow inhertiing from a base class that handles plotting            
     def set_display(self, plot_widget, timestamp, plot_opts_dict=None):
         """Store plot widget and set path display handle."""
         self.plot_widget = plot_widget  # Store the plot widget reference

@@ -166,6 +166,9 @@ def connect_signals(ui_config_elements, ui_display_elements, main_scope):
     disp_trip2_chkbx_button.clicked.connect(partial(update_plot, ui_config_elements, ui_display_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
     disp_carpose_chkbx_button.clicked.connect(partial(update_plot, ui_config_elements, ui_display_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2')))
 
+def handle_calculate_virtual_path(ui_elements, ui_display_elements, main_scope):
+    result = calculate_virtual_path(ui_elements, ui_display_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2'))
+    main_scope['prg_obj1'], main_scope['prg_obj2'] = result
     
 def handle_load_trip_path1(ui_config_elements, main_scope):
     prg_obj1 = load_trip_path(main_scope.get('prg_obj1'), ui_config_elements)
@@ -177,7 +180,4 @@ def handle_load_trip_path2(ui_config_elements, main_scope):
     main_scope['prg_obj2'] = prg_obj2
 
 
-def handle_calculate_virtual_path(ui_elements, ui_display_elements, main_scope):
-    result = calculate_virtual_path(ui_elements, ui_display_elements, main_scope.get('prg_obj1'), main_scope.get('prg_obj2'))
-    main_scope['prg_obj1'], main_scope['prg_obj2'] = result
     

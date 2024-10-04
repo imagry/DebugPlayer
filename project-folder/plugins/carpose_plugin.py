@@ -34,7 +34,7 @@ class CarPosePlugin(UserPluginInterface):
         """Store plot widget and plot the full trajectory and current position."""
         self.plot_widget = plot_widget  # Store the plot widget reference
         
-        # Todo: add plot of pose not just position
+        # TODO: add plot of pose not just position
         if plot_opt_dict is not None:
             self.plot_opts_dict = plot_opt_dict
             # define a lmabda function for the plot as fucntion of x and y
