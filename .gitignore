@@ -160,6 +160,10 @@ ExampleData/
 # add personal_proecjt_setting  - contains personal settings for the project, e.g. launch.json or settings.json
 personal-folder/
 
+# Set not to ignore personal-folder/project_root from filtered directory of perosnal-folder
+!personal-folder/project_root/
+
+
 # PyCharm
 #  JetBrains specific template is maintained in a separate JetBrains.gitignore that can
 #  be found at https://github.com/github/gitignore/blob/main/Global/JetBrains.gitignore
