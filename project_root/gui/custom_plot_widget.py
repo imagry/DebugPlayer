@@ -6,6 +6,14 @@ class CustomPlotWidget(pg.PlotWidget):
         self.signal_names = signal_names  # This plot can subscribe to multiple signals
         self.data = {}
         
+        #         super().__init__()
+        # self.signal_names = signal_names  # This plot can subscribe to multiple signals
+        # self.layout = QVBoxLayout(self)
+        # self.plot_widget = pg.PlotWidget()  # Using pyqtgraph.PlotWidget
+        # self.layout.addWidget(self.plot_widget)
+        # self.plot_widget.showGrid(x=True, y=True)Z
+        # self.data = {}
+        
     def update_data(self, signal_name, data):
         """Update the plot with new data for a specific signal."""
         if signal_name in self.signal_names:

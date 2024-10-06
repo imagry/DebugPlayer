@@ -1,57 +1,83 @@
-from PySide6 import QtWidgets
-from pyqtgraph.dockarea import DockArea, Dock
+from PySide6.QtWidgets import QMainWindow, QDockWidget, QWidget, QVBoxLayout
+from PySide6.QtCore import Qt
 from gui.custom_plot_widget import CustomPlotWidget
 from gui.timestamp_slider import TimestampSlider
-from core.plot_manager import PlotManager  # Use PlotManager
-
+from core.plot_manager import PlotManager
+from gui.menu_bar import setup_menu_bar
 
 def create_main_window(car_pose_plugin):
-    win = QtWidgets.QMainWindow()  # Create the main window object
-    area = DockArea()  # Create a DockArea to hold docks/widgets
-    win.setCentralWidget(area)  # Set the dock area as the central widget
-    win.resize(1000, 600)  # Resize the main window
+    win = QMainWindow()  # Create the main window object
+    win.resize(1200, 800)  # Resize the main window
     win.setWindowTitle('Motion Planning Playback Debug Tool')  # Set the window title
-
+  
     # Initialize the PlotManager
     plot_manager = PlotManager()
-    
+
     # Register the car_pose plugin with the PlotManager
     plot_manager.register_plugin("car_pose", car_pose_plugin)
 
-    # Create the control dock
-    d1 = Dock("Controls", size=(300, 200))  # Create a dock for controls
-    area.addDock(d1, 'left')  # Add the dock to the dock area (on the left)
+    # Save the initial layout
+    def save_layout():
+        win.saved_layout = win.saveState()
 
-    # Create the plot dock for car pose
-    d2 = Dock("Car Pose Plot", size=(500, 400))  # Create a dock for the plot
-    area.addDock(d2, 'right')  # Add the dock to the dock area (on the right)
+    # Restore the saved layout
+    def restore_layout():
+        if hasattr(win, 'saved_layout'):
+            win.restoreState(win.saved_layout)
+                        
+   # Add a method to toggle the control panel
+    def toggle_control_panel():
+        if d1.isHidden():
+            d1.show()
+        else:
+            d1.hide()
+            
+    # Attach restore_layout and save_layout to window object
+    win.save_layout = save_layout
+    win.restore_layout = restore_layout
+    
+    # Attach toggle_control_panel to the window object so the menu can access it
+    win.toggle_control_panel = toggle_control_panel
+    
+    # Set up the menu bar
+    setup_menu_bar(win)  # Call the setup function from menu_bar.py   
 
-    # Create the plot dock for route
-    d3 = Dock("Route Plot", size=(500, 400))  # Create another dock for route plot
-    area.addDock(d3, 'bottom', d2)  # Add the dock to the bottom of d2
+   # Create the Control Panel as d1 (dockable widget)
+    d1 = QDockWidget("Control Panel", win)
+    control_panel_widget = QWidget()
+    control_panel_layout = QVBoxLayout(control_panel_widget)  # Add layout to control panel
+    # Add widgets to control panel layout as needed...
+    d1.setWidget(control_panel_widget)
+    d1.setFixedWidth(200)  # Make the control panel narrow
+    win.addDockWidget(Qt.LeftDockWidgetArea, d1)
 
-    # Create the TimestampSlider dock
-    d4 = Dock("Timestamp Slider", size=(500, 100))  # Create a dock for the slider
-    area.addDock(d4, 'bottom', d1)  # Add the dock to the bottom of the control dock
-
-    # Initialize CustomPlotWidget and register signals
+    # Create Car Pose Plot as d2
+    d2 = QDockWidget("Car Pose Plot", win)
     car_pose_plot = CustomPlotWidget(signal_names=["car_pose(t)", "route"])
+    d2.setWidget(car_pose_plot)
+    win.addDockWidget(Qt.RightDockWidgetArea, d2)
+
+    # Create Route Plot as d3
+    d3 = QDockWidget("Route Plot", win)
     route_plot = CustomPlotWidget(signal_names=["route"])
+    d3.setWidget(route_plot)
+    win.addDockWidget(Qt.RightDockWidgetArea, d3)
+
+    # Make sure d3 is below d2 (vertically stacked)
+    win.splitDockWidget(d2, d3, Qt.Vertical)
 
     # Register the plots with the PlotManager
     plot_manager.register_plot(car_pose_plot)  # Automatically fetch signal_names from the widget
     plot_manager.register_plot(route_plot)     # Automatically fetch signal_names from the widget
 
-    # Add the plots to their respective docks
-    d2.addWidget(car_pose_plot)
-    d3.addWidget(route_plot)
+    # Create TimestampSlider as d4
+    d4 = QDockWidget("Timestamp Slider", win)
+    slider = TimestampSlider(plot_manager, car_pose_plugin.timestamps)  # Initialize slider with timestamps
+    d4.setWidget(slider)
+    d4.setFixedHeight(100)  # Set a height for the slider dock
+    win.addDockWidget(Qt.BottomDockWidgetArea, d4)
 
-   # Now that we have loaded plugins, use the actual timestamps from the car_pose_plugin
-    timestamps = car_pose_plugin.timestamps # Get timestamps from the plugin in ms
-
-    # Initialize the TimestampSlider and connect it to the PlotManager
-    slider = TimestampSlider(plot_manager, timestamps)
-    d4.addWidget(slider)  # Add the slider to the dock
-
+    save_layout()  # Save the default layout state after initialization
+    
     return win, plot_manager  # Return the window and the PlotManager
 
