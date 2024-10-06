@@ -25,6 +25,10 @@ conda env export --no-builds | grep -v "prefix" > environment.yml
 ### Creating conda environment from YML requirments
 conda env create -f environment.yml
 
+### Running the package
+```bash
+./main --trip1 /home/thh3/data/trips/nissan/2024-10-01T13_46_59/
+```
 
 
 
