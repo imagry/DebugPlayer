@@ -27,6 +27,11 @@ def create_main_window(plot_manager):
         else:
             d1.hide()
             
+            
+    # Create the necessary plots and widgets, register them with PlotManager
+    car_pose_plot = CustomPlotWidget(signal_names=["car_pose(t)", "route", "path_in_world_coordinates(t)", "car_pose_at_path_timestamp(t)"])
+    route_plot = CustomPlotWidget(signal_names=["route"])
+                
     # Attach restore_layout and save_layout to window object
     win.save_layout = save_layout
     win.restore_layout = restore_layout
@@ -37,15 +42,6 @@ def create_main_window(plot_manager):
     # Set up the menu bar
     setup_menu_bar(win)  # Call the setup function from menu_bar.py   
 
-    # Create the necessary plots and widgets, register them with PlotManager
-    car_pose_plot = CustomPlotWidget(signal_names=["car_pose(t)", "route"])
-    route_plot = CustomPlotWidget(signal_names=["route"])
-    
- 
-
-    plot_manager.register_plot(car_pose_plot)
-    plot_manager.register_plot(route_plot)
-    
    # Create the Control Panel as d1 (dockable widget)
     d1 = QDockWidget("Control Panel", win)
     control_panel_widget = QWidget()
@@ -68,14 +64,23 @@ def create_main_window(plot_manager):
     
     # Make sure d3 is below d2 (vertically stacked)
     win.splitDockWidget(d2, d3, Qt.Vertical)
-
+       
     # Register the plots with the PlotManager
     plot_manager.register_plot(car_pose_plot)  # Automatically fetch signal_names from the widget
-    plot_manager.register_plot(route_plot)     # Automatically fetch signal_names from the widget
+    # plot_manager.register_plot(route_plot)     # Automatically fetch signal_names from the widget
+
+    # Fetch timestamps from the PlotManager
+    # Assuming "timestamps" is a signal provided by one of the plugins
+    if "timestamps" in plot_manager.signal_plugins:
+        # Get the "timestamps" signal from the CarPosePlugin
+        timestamps = plot_manager.plugins["CarPosePlugin"].signals["timestamps"]
+        plugin_name = plot_manager.signal_plugins["timestamps"][0]
+    else:
+        timestamps = []  # Fallback in case no plugin provides timestamps
 
     # Create TimestampSlider as d4
     d4 = QDockWidget("Timestamp Slider", win)
-    slider = TimestampSlider(plot_manager, car_pose_plugin.timestamps)  # Initialize slider with timestamps
+    slider = TimestampSlider(plot_manager, timestamps)  # Initialize slider with timestamps
     d4.setWidget(slider)
     d4.setFixedHeight(100)  # Set a height for the slider dock
     win.addDockWidget(Qt.BottomDockWidgetArea, d4)

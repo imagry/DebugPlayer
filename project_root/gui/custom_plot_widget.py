@@ -25,9 +25,15 @@ class CustomPlotWidget(pg.PlotWidget):
         # TODO: can we have this as an interface and implement it in the plugin, at least partially.
         self.clear()
         for signal_name, data in self.data.items():
-            if 'theta' in data and data['theta'] is not None:
+            if signal_name == 'car_pose(t)':
                 # Handle car pose with orientation (SE2)
-                self.plot([data['x']], [data['y']], symbol='o', pen=None)
-            else:
+                self.plot([data['x']], [data['y']], symbol='o', pen=None, symbolBrush='m')
+            elif signal_name == 'route':
                 # Handle regular 2D path (route)
-                self.plot(data['x'], data['y'], pen=pg.mkPen('r'))  # Red line for route
+                self.plot(data['x'], data['y'], pen=pg.mkPen('r')) #, symbol='o', symbolBrush='r')
+            elif signal_name == 'path_in_world_coordinates(t)':
+                # Handle regular 2D path (route)
+                self.plot(data[:,0],data[:,1], pen = pg.mkPen('g'), symbol='o', symbolBrush='g', symbolSize=5)
+            elif signal_name == 'car_pose_at_path_timestamp(t)':
+                # Handle car pose with orientation (SE2)
+                self.plot([data[0,2]], [data[1,2]], symbol='p', pen=None, symbolBrush='g', symbolSize=10)

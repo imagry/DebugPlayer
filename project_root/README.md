@@ -74,3 +74,41 @@ create_main_window - This where you register signals for plotting
 
 
 ## **Quick overview over main components**
+
+
+## How to construct a new plugin
+Great! Let's move forward with Option 2: Explicit class registry for your plugins.
+
+Here’s a step-by-step process to implement this across the system:
+
+1. Update Each Plugin File
+In each plugin file (like carpose_plugin.py), explicitly define the class to be used with a plugin_class variable.
+
+Example in carpose_plugin.py:
+```python
+class CarPosePlugin:
+    def __init__(self, file_path):
+        self.file_path = file_path
+        # Plugin initialization logic here...
+        pass
+
+# Explicitly define which class is the plugin
+plugin_class = CarPosePlugin
+```
+
+
+### Adding new signals to plot
+
+To add signals from PathViewPlugin to the plots, you need to ensure that the PlotManager correctly registers the plugin and its signals, and then updates the plots with the data from these signals. Here’s how you can achieve this:
+
+Ensure PathViewPlugin is correctly registered with PlotManager.
+Update the plots with data from the signals provided by PathViewPlugin.
+Step-by-Step Implementation:
+Register PathViewPlugin with PlotManager:
+
+Ensure that PathViewPlugin is instantiated and registered with PlotManager.
+This can be done in the main script where the PlotManager is initialized.
+Update the plots with data from the signals:
+
+Ensure that the PlotManager requests data from the plugin and updates the plots accordingly.
+

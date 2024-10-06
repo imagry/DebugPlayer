@@ -1,13 +1,7 @@
 # path_handler_loader_pandas.py
-import numpy as np
 import pandas as pd
 import os
-import sys
-import data_classes.PathTrajectory_pandas as  PathTrajectory_pandas
-
-# current_dir = os.path.dirname(os.path.abspath(__file__))
-# parent_dir = os.path.abspath(os.path.join(current_dir, '..'))
-# sys.path.insert(0, f"{parent_dir}/utils")
+from utils.data_loaders.data_converters import save_path_handler_data_as_pickle, load_path_handler_data_from_pickle
 
 
 def read_path_handler_data(filepath):
@@ -20,7 +14,18 @@ def read_path_handler_data(filepath):
     Returns:
     dict: A dictionary containing the extracted data.
     """
-   
+    
+    # Check if the data exists as a pickle file
+    pickle_path = filepath[:-4] + '.pkl'
+    if os.path.exists(pickle_path):
+        df_path_data, path_xy = load_path_handler_data_from_pickle(pickle_path)
+        print(f"Loaded path data from {pickle_path}")
+        return df_path_data, path_xy
+    
+    
+    
+    #### If we don't have a pickle file, read the CSV file
+    
     # Initialize containers for the extracted data
     data = {
         'data_timestamp_sec': [],
@@ -116,6 +121,9 @@ def read_path_handler_data(filepath):
     # define a nested list p such that p[i] is [N_i x 2] array of 2d points of the path  defined by (path_x_df container for the x and y values
     path_xy = {'path_x_data': path_x_df,
                'path_y_data': path_y_df}
-    
+        
+    # Save the data as a pickle file for future readings
+    save_path_handler_data_as_pickle(filepath, pickle_path) 
+    print(f"Loaded path data from {filepath} and saved to {pickle_path}") 
     
     return df_path_data, path_xy

@@ -1,10 +1,12 @@
 import numpy as np
 from data_classes.car_pose_class import CarPose
 from functools import partial
+from interfaces.PluginBase import PluginBase
 
-class CarPosePlugin:        
+class CarPosePlugin(PluginBase): 
+               
     def __init__(self, file_path):
-        self.file_path = file_path
+        super().__init__(file_path)
         self.car_pose = CarPose(file_path)
         self.car_poses = {"x": self.car_pose.route['cp_x'], "y": self.car_pose.route['cp_y'], "theta": self.car_pose.df_car_pose['cp_yaw_deg']}
         self.car_pose_at_timestamp = lambda t: self.handle_car_pose_at_timestamp(t)
@@ -16,8 +18,7 @@ class CarPosePlugin:
             "car_poses": self.car_poses
         }
         self.timestamps = self.car_pose.get_timestamps_milliseconds() # Example timestamps                
-        # TODO: Load real car pose data from a file
-    
+        # TODO: Load real car pose data from a file      
     def handle_car_pose_at_timestamp(self, timestamp):
         result = self.car_pose.get_car_pose_at_timestamp(timestamp)
         return {"x": result[0], "y": result[1], "theta": result[2]} 
@@ -41,7 +42,7 @@ class CarPosePlugin:
                 return signal_data
         # TODO: can we squash all last three into return signal_data?
 
-
-
+#Explicitly define which class is the plugin
+plugin_class = CarPosePlugin
 
 

@@ -41,20 +41,3 @@ def prepare_car_pose_data(trip, interpolation=False, car_pose_file_name = 'car_p
     # df.reset_index(inplace=True)
 
     return df_car_pose
-
-    
-    # def set_car_pose_data(self, df_car_pose):
-    #     ''' Set the car pose data.
-        
-    #         Parameters:
-    #         df_car_pose (pandas.DataFrame): The car pose data.
-    #     '''
-    #     self.df_car_pose = df_car_pose
-    #     # Check if the DataFrame index is already in Unix timestamp format
-    #     if df_car_pose.index.dtype != 'int64':
-    #         self.timestamps = df_car_pose.index.astype('int64') // 10**6
-    #     else:
-    #         self.timestamps = df_car_pose.index
-            
-    #     self.trejectory  = self.get_trajectory()
-    #     self.set_interpolation()

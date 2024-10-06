@@ -1,24 +1,34 @@
 from PySide6.QtWidgets import QApplication
 from gui.main_window import create_main_window
-from plugins.carpose_plugin import CarPosePlugin
 from core.data_loader import parse_arguments
+from core.plot_manager import PlotManager
+import os
 
 def main():
     # Initialize QApplication
     app = QApplication([])
+   
+    # Initialize the PlotManager
+    plot_manager = PlotManager()
+    
+    # Load plugins dynamically from the 'plugins/' directory
+    plugin_dir = os.path.join(os.path.dirname(__file__), 'plugins')
 
-    # Initialize and register plugins with the PlotManager
+    # Pass file path arguments as needed to the plugins
     trip_path = parse_arguments()
-    car_pose_plugin = CarPosePlugin(trip_path)
+    plugin_args = {"file_path": trip_path}
+    plot_manager.load_plugins_from_directory(plugin_dir, plugin_args=plugin_args)
     
-    # Create the main window, and pass the loaded plugins and timestamps to it
-    win, plot_manager = create_main_window(car_pose_plugin=car_pose_plugin)
+    # Create the main window
+    win, plot_manager = create_main_window(plot_manager=plot_manager)
     win.show()
-    
 
-    # Assuming we're loading data from a dummy path or a real trip
-    plot_manager.request_data(0)  # Start with an initial timestamp (e.g., 0)
-
+    # ** Request initial data for timestamp 0 **
+    # This ensures that the plots are initialized with data at the start
+    if "timestamps" in plot_manager.signal_plugins:
+        initial_timestamp = plot_manager.plugins[plot_manager.signal_plugins["timestamps"][0]].signals["timestamps"][0]
+        plot_manager.request_data(initial_timestamp)
+        
     # Start the event loop
     app.exec()
 
