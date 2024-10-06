@@ -71,3 +71,6 @@ create_main_window - This where you register signals for plotting
                 plot_manager.register_plot(car_pose_plot, ["car_pose(t)"])
                 plot_manager.register_plot(route_plot, ["route"])
         
+
+
+## **Quick overview over main components**

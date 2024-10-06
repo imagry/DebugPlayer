@@ -5,17 +5,12 @@ from gui.timestamp_slider import TimestampSlider
 from core.plot_manager import PlotManager
 from gui.menu_bar import setup_menu_bar
 
-def create_main_window(car_pose_plugin):
+def create_main_window(plot_manager):
     win = QMainWindow()  # Create the main window object
     win.resize(1200, 800)  # Resize the main window
     win.setWindowTitle('Motion Planning Playback Debug Tool')  # Set the window title
   
-    # Initialize the PlotManager
-    plot_manager = PlotManager()
-
-    # Register the car_pose plugin with the PlotManager
-    plot_manager.register_plugin("car_pose", car_pose_plugin)
-
+    
     # Save the initial layout
     def save_layout():
         win.saved_layout = win.saveState()
@@ -42,6 +37,15 @@ def create_main_window(car_pose_plugin):
     # Set up the menu bar
     setup_menu_bar(win)  # Call the setup function from menu_bar.py   
 
+    # Create the necessary plots and widgets, register them with PlotManager
+    car_pose_plot = CustomPlotWidget(signal_names=["car_pose(t)", "route"])
+    route_plot = CustomPlotWidget(signal_names=["route"])
+    
+ 
+
+    plot_manager.register_plot(car_pose_plot)
+    plot_manager.register_plot(route_plot)
+    
    # Create the Control Panel as d1 (dockable widget)
     d1 = QDockWidget("Control Panel", win)
     control_panel_widget = QWidget()
@@ -53,16 +57,15 @@ def create_main_window(car_pose_plugin):
 
     # Create Car Pose Plot as d2
     d2 = QDockWidget("Car Pose Plot", win)
-    car_pose_plot = CustomPlotWidget(signal_names=["car_pose(t)", "route"])
     d2.setWidget(car_pose_plot)
-    win.addDockWidget(Qt.RightDockWidgetArea, d2)
 
     # Create Route Plot as d3
     d3 = QDockWidget("Route Plot", win)
-    route_plot = CustomPlotWidget(signal_names=["route"])
     d3.setWidget(route_plot)
-    win.addDockWidget(Qt.RightDockWidgetArea, d3)
 
+    win.addDockWidget(Qt.RightDockWidgetArea, d2)
+    win.addDockWidget(Qt.RightDockWidgetArea, d3)
+    
     # Make sure d3 is below d2 (vertically stacked)
     win.splitDockWidget(d2, d3, Qt.Vertical)
 

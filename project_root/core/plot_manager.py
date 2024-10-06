@@ -1,3 +1,7 @@
+import os
+import sys
+from PySide6.QtCore import Slot
+
 class PlotManager:
     def __init__(self):
         self.plots = []  # List of all plots (subscribers)
@@ -5,7 +9,27 @@ class PlotManager:
         self.plugins = {}  # Plugin registry
         self.signal_plugins = {}  # To track which plugin provides which signal
 
+    def load_plugins_from_directory(self, directory_path):
+        """Dynamically discover and load plugins from the given directory."""
+        for filename in os.listdir(directory_path):
+            if filename.endswith(".py") and filename != "__init__.py":
+                module_name = filename[:-3]  # Strip off the '.py'
+                module_path = os.path.join(directory_path, filename)
+                self.load_plugin_from_file(module_name, module_path)
+    
+    def load_plugin_from_file(self, module_name, file_path):
+        """Load a plugin from a specified Python file."""
+        spec = importlib.util.spec_from_file_location(module_name, file_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
 
+        # Expect the plugin class to have a specific name, e.g., 'Plugin'
+        if hasattr(module, 'Plugin'):
+            plugin_instance = module.Plugin()
+            self.register_plugin(module_name, plugin_instance)
+        else:
+            print(f"No 'Plugin' class found in {module_name}")
+            
     def register_plugin(self, plugin_name, plugin_instance):
         """Register a plugin that provides data for signals."""
         self.plugins[plugin_name] = plugin_instance
