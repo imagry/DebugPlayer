@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from spatialmath import SE2
-from utils.se2_function import *
+from utils.spatial_poses.se2_function import *
 import webbrowser
 
 import sys
@@ -18,7 +18,7 @@ except pkg_resources.DistributionNotFound:
     subprocess.check_call([sys.executable, "-m", "pip", "install", package_name])
 
 from mpl_interactions import ioff, panhandler, zoom_factory
-from utils.utils_geo import trip_view_on_map
+from utils.localization_and_navigation.geographical_transforms import trip_view_on_map
 
 def path_merger_plot_cpp(X_1_world, X_2_world, X_now_world, p1_world, p2_world, p2_merged_world):
     #%% Plots
@@ -128,7 +128,7 @@ def draw_car_box(ax, x, y, yaw):
     - x, y: The position of the car.
     - yaw: The orientation of the car in radians.
     """
-    from config import W, L, wb, b_f, b_r, arm
+    from analysis_manager.config import W, L, wb, b_f, b_r, arm
     
     # Calculate the corners of the rectangular box
     # The car pose corresponds to the center of the front axle

@@ -1,8 +1,11 @@
 from datetime import datetime
 from PySide6.QtWidgets import QWidget, QSlider, QVBoxLayout, QLabel
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 
 class TimestampSlider(QWidget):
+    # Define the signal that emits the updated timestamp
+    timestamp_changed = Signal(object)
+    
     def __init__(self, plot_manager, timestamps, parent=None):
         super().__init__(parent)
         self.plot_manager = plot_manager
@@ -28,6 +31,7 @@ class TimestampSlider(QWidget):
         timestamp_ms = self.get_timestamp(value)  # Get actual timestamp from slider value
         self.label.setText(f"Timestamp: {self.time_ms_to_datetime(timestamp_ms)} ({timestamp_ms}[ms])")  # Update the label
         self.plot_manager.request_data(timestamp_ms)  # Request data for this timestamp
+        self.timestamp_changed.emit(timestamp_ms)
 
     def get_timestamp(self, slider_value):
         """Map the slider's integer value to the corresponding timestamp."""

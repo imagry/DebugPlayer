@@ -1,6 +1,6 @@
 # plotting.py
 
-from utils.plot_helpers import plot_ego_path, plot_se2_path
+from utils.plotting.plot_helpers import plot_ego_path, plot_se2_path
 import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 import numpy as np

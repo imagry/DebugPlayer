@@ -1,5 +1,5 @@
 # localization utils
-from utils.se2_function import *
+from utils.spatial_poses.se2_function  import *
 from scipy.interpolate import interp1d
 import numpy as np
 import matplotlib.pyplot as plt
