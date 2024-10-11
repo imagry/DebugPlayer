@@ -25,7 +25,7 @@ class PathViewPlugin(PluginBase):
         self.signals = {
             "path_in_world_coordinates(t)": self.get_path_world_at_timestamp,
             "car_pose_at_path_timestamp(t)": self.get_car_pose_at_timestamp,
-            "timestamps": self.path_trajectory.get_timestamps()
+            "timestamps": self.path_trajectory.get_timestamps_ms()
         }
 
     def get_path_in_world_coordinates_at_timestamp(self, timestamp):

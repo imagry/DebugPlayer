@@ -11,7 +11,7 @@ class PathTrajectoryBase(ABC):
         self.df_path_xy = path_xy
 
     @abstractmethod
-    def get_timestamps(self):
+    def get_timestamps_ms(self):
         pass
 
     @abstractmethod
@@ -61,8 +61,8 @@ class PathTrajectoryBase(ABC):
         R = np.array([[np.cos(vector[2]), -np.sin(vector[2])], [np.sin(vector[2]), np.cos(vector[2])]])
         t = np.array([vector[0], vector[1]])
         SE2_mat = np.eye(3)
-        SE2_mat[:2, :2] = R
-        SE2_mat[:2, 2] = t
+        SE2_mat[:2, :2] = R.squeeze()
+        SE2_mat[:2, 2] = t.squeeze()
         return SE2_mat
     
     def get_current_speed(self, timestamp):
@@ -86,3 +86,21 @@ class PathTrajectoryBase(ABC):
         speed = self.df_path.loc[row_ind, "current_speed_mps"]
 
         return speed
+    
+    def get_path_xy(self):
+        """
+        Gets the path in ego coordinates.
+
+        Returns:
+        DataFrame: The path in ego coordinates.
+        """
+        return self.df_path_xy
+    
+    def get_df_path(self):
+        """
+        Gets the path in ego coordinates.
+
+        Returns:
+        DataFrame: The path in ego coordinates.
+        """
+        return self.df_path

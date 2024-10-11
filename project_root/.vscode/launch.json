@@ -1,0 +1,12 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Test-test_pathtrajectory_reader",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/tests/test_pathtrajectory_reader.py",
+            "console": "integratedTerminal"
+        },
+    ]
+}

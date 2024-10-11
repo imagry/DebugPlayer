@@ -21,9 +21,7 @@ def read_path_handler_data(filepath):
         df_path_data, path_xy = load_path_handler_data_from_pickle(pickle_path)
         print(f"Loaded path data from {pickle_path}")
         return df_path_data, path_xy
-    
-    
-    
+      
     #### If we don't have a pickle file, read the CSV file
     
     # Initialize containers for the extracted data
@@ -123,7 +121,7 @@ def read_path_handler_data(filepath):
                'path_y_data': path_y_df}
         
     # Save the data as a pickle file for future readings
-    save_path_handler_data_as_pickle(filepath, pickle_path) 
+    save_path_handler_data_as_pickle(filepath, pickle_path, (df_path_data, path_xy)) 
     print(f"Loaded path data from {filepath} and saved to {pickle_path}") 
     
     return df_path_data, path_xy

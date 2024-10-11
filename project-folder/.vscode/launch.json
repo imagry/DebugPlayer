@@ -5,14 +5,21 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project-folder}/${file}",
+            "console": "integratedTerminal"
+        },
+        {
             "name": "Analysis Manaer Python Debugger: Send Arguments",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder:project-folder}/analysis_manager/main_analysis_manager.py",
             "console": "integratedTerminal",
-            "args": [ "--trip",
+            "args": [
+                "--trip",
                 "/home/thh3/data/trips/Nissan/debug_car_pose_jump/2024-09-20T13_43_59/"
-                
             ]
         },
         {

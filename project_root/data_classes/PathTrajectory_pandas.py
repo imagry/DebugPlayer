@@ -21,7 +21,7 @@ class PathTrajectoryPandas(PathTrajectoryBase):
         self.time_data_ms = timestamp_s.astype('int64') // 10**6
         
     
-    def get_timestamps(self):
+    def get_timestamps_ms(self):
         return self.time_data_ms
             
     def find_min_index(self, timestamps):
@@ -51,9 +51,14 @@ class PathTrajectoryPandas(PathTrajectoryBase):
         # Extract the corresponding path from the path_xy
         path_x = self.df_path_xy['path_x_data'].iloc[row_ind]
         path_y = self.df_path_xy['path_y_data'].iloc[row_ind]
-        path_x = pd.to_numeric(path_x.dropna())
-        path_y = pd.to_numeric(path_y.dropna())
-        path_xy = np.column_stack((path_x, path_y))        
+                               
+        x = pd.to_numeric(path_x.dropna())
+        y = pd.to_numeric(path_y.dropna())
+        
+        x = x[np.logical_not(np.isnan(x))]
+        y = y[np.logical_not(np.isnan(y))]
+        
+        path_xy = np.column_stack((x, y))        
 
         return path_xy, car_pose_path
 
@@ -63,3 +68,14 @@ class PathTrajectoryPandas(PathTrajectoryBase):
 
     
     
+
+        # Filter out None values
+        x_filtered = [x for x in path_x_series if x is not None]
+        y_filtered = [y for y in path_y_series if y is not None]    
+        
+        x = np.array(x_filtered, dtype=float)
+        y = np.array(y_filtered, dtype=float)                
+        
+        x = x[np.logical_not(np.isnan(x))]
+        y = y[np.logical_not(np.isnan(y))]
+        path_xy = np.column_stack((x.T, y.T))

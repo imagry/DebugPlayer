@@ -19,7 +19,7 @@ def read_path_handler_data(filepath):
    
     # Read the entire CSV file as a Polars DataFrame
     # df = pl.read_csv(filepath, infer_schema_length=1, null_values=[""])
-    df = pl.read_csv(filepath, infer_schema_length=1, null_values=[""], truncate_ragged_lines=True)
+    df = pl.read_csv(filepath, null_values=[""], truncate_ragged_lines=True)
 
     # Strip leading and trailing spaces from column names
     df.columns = [col.strip() for col in df.columns]
@@ -41,9 +41,9 @@ def read_path_handler_data(filepath):
     # Select the fixed columns and convert to polars DataFrame
     df_fixed = df.select(fixed_columns)
     
-    # Check the dtype of 'data_timestamp_sec' and cast if necessary
-    if df_fixed['data_timestamp_sec'].dtype != pl.Float64:
-        df_fixed = df_fixed.with_columns([pl.col('data_timestamp_sec').cast(pl.Float64)])
+    # # Check if 'data_timestamp_sec' exists and its dtype, then cast if necessary
+    # if 'data_timestamp_sec' in df_fixed.columns and df_fixed['data_timestamp_sec'].dtype != pl.Float64:
+    #     df_fixed = df_fixed.with_columns([pl.col('data_timestamp_sec').cast(pl.Float64)])
     
     # Extract path_x and path_y data and convert to polars DataFrames
     df_path_x = df.select(path_x_columns)
@@ -85,5 +85,5 @@ if __name__ == "__main__":
 
 
         path = 'ExampleData/path_trajectory.csv'
-        df = read_path_data(path)
+        df = read_path_handler_data(path)
         # print(df)
