@@ -3,8 +3,8 @@ from PySide6.QtWidgets import QListWidget, QPushButton, QMessageBox, QCheckBox
 from PySide6.QtCore import Qt
 from gui.custom_plot_widget import CustomPlotWidget
 from gui.timestamp_slider import TimestampSlider
-from core.plot_manager import PlotManager
 from gui.menu_bar import setup_menu_bar
+from core.plot_manager import PlotManager
 
 
 def create_main_window(plot_manager):
@@ -43,19 +43,20 @@ def create_main_window(plot_manager):
     signal_selector_widget = QWidget()
     signal_selector_layout = QVBoxLayout(signal_selector_widget)
     
-    # Combo box for selecting signals
-    signal_selector = QComboBox()
-    signal_selector.addItems(list(plot_manager.signal_plugins.keys()))  # Populate with available signals
-    signal_selector_layout.addWidget(signal_selector)
+    # # Combo box for selecting signals
+    # signal_selector = QComboBox()
+    # signal_selector.addItems(list(plot_manager.signal_plugins.keys()))  # Populate with available signals
+    # signal_selector_layout.addWidget(signal_selector)
        
-    # Add the signal selector widget to the dock
-    signal_selector_dock.setWidget(signal_selector_widget)
-    signal_selector_dock.setFixedWidth(200)
-    win.addDockWidget(Qt.LeftDockWidgetArea, signal_selector_dock)
+    # # Add the signal selector widget to the dock
+    # signal_selector_dock.setWidget(signal_selector_widget)
+    # signal_selector_dock.setFixedWidth(200)
+    # win.addDockWidget(Qt.LeftDockWidgetArea, signal_selector_dock)
 
     # Create and wrap the plots in QDockWidgets
-    car_pose_plot = CustomPlotWidget(signal_names=[])
-    car_signals_plot = CustomPlotWidget(signal_names=[])
+    spatial_signal_names=["car_pose(t)", "route", "path_in_world_coordinates(t)"]
+    car_pose_plot = CustomPlotWidget(signal_names=spatial_signal_names, default_visible_signals = spatial_signal_names)
+    car_signals_plot = CustomPlotWidget(signal_names=spatial_signal_names)
     
     car_pose_dock = QDockWidget("Car Pose Plot", win)
     car_pose_dock.setObjectName("CarPosePlotDock")  # Set object name
@@ -69,28 +70,29 @@ def create_main_window(plot_manager):
         
     plot_manager.register_plot(car_pose_plot)
     plot_manager.register_plot(car_signals_plot)
+     
     
-    # Combo box for selecting plots
-    plot_selector = QComboBox()
-    plot_selector.addItem("Car Pose Plot")
-    plot_selector.addItem("Car Signals Plot")
-    signal_selector_layout.addWidget(plot_selector)
+    # # Combo box for selecting plots
+    # plot_selector = QComboBox()
+    # plot_selector.addItem("Car Pose Plot")
+    # plot_selector.addItem("Car Signals Plot")
+    # signal_selector_layout.addWidget(plot_selector)
     # win.addDockWidget(Qt.LeftDockWidgetArea, plot_selector)
 
     # TODO: Have this a generic option to add a new plot from the menu
 
-    def get_selected_plot():
-        """Get the selected plot based on user choice from plot_selector."""
-        selected_plot = plot_selector.currentText()
-        if selected_plot == "Car Pose Plot":
-            return car_pose_plot
-        elif selected_plot == "Car Signals Plot":
-            return car_signals_plot
-        return None
+    # def get_selected_plot():
+    #     """Get the selected plot based on user choice from plot_selector."""
+    #     selected_plot = plot_selector.currentText()
+    #     if selected_plot == "Car Pose Plot":
+    #         return car_pose_plot
+    #     elif selected_plot == "Car Signals Plot":
+    #         return car_signals_plot
+    #     return None
         
-    def get_selected_signal():
-        """Get the selected signal based on user choice from signal_selector."""
-        return signal_selector.currentText()
+    # def get_selected_signal():
+    #     """Get the selected signal based on user choice from signal_selector."""
+    #     return signal_selector.currentText()
     
     def update_timestamp(new_timestamp):
         nonlocal current_timestamp
@@ -105,76 +107,76 @@ def create_main_window(plot_manager):
         signal_selector_layout.addWidget(checkbox)
         
     # Define the add_signal method (if needed separately for buttons)
-    def add_signal():
-        nonlocal current_timestamp  # Reference the current timestamp variable
-        selected_signal = get_selected_signal()
-        target_plot = get_selected_plot()  # Get the selected plot
-        if not target_plot:
-            return
+    # def add_signal():
+    #     nonlocal current_timestamp  # Reference the current timestamp variable
+    #     selected_signal = get_selected_signal()
+    #     target_plot = get_selected_plot()  # Get the selected plot
+    #     if not target_plot:
+    #         return
 
-        available_signals = [s for s in plot_manager.signal_plugins.keys() if s not in target_plot.signal_names]
-        if not available_signals:
-            QMessageBox.information(win, "No Signals", "No available signals to add.")
-            return
+    #     available_signals = [s for s in plot_manager.signal_plugins.keys() if s not in target_plot.signal_names]
+    #     if not available_signals:
+    #         QMessageBox.information(win, "No Signals", "No available signals to add.")
+    #         return
         
-        # Prevent adding the same signal multiple times
-        if selected_signal in target_plot.signal_names:
-            QMessageBox.information(win, "Signal Already Added", f"{selected_signal} is already assigned to the plot.")
-            return  # Do nothing if the signal is already assigned
+    #     # Prevent adding the same signal multiple times
+    #     if selected_signal in target_plot.signal_names:
+    #         QMessageBox.information(win, "Signal Already Added", f"{selected_signal} is already assigned to the plot.")
+    #         return  # Do nothing if the signal is already assigned
         
-        # Assign the signal to the selected plot               
-        target_plot.signal_names.append(selected_signal)
-        plot_manager.assign_signal_to_plot(target_plot, selected_signal)
+    #     # Assign the signal to the selected plot               
+    #     target_plot.signal_names.append(selected_signal)
+    #     plot_manager.assign_signal_to_plot(target_plot, selected_signal)
         
-        # Use the current timestamp instead of resetting to 0       
-        plot_manager.request_data(current_timestamp)
-        target_plot.add_signal_to_legend(selected_signal)
+    #     # Use the current timestamp instead of resetting to 0       
+    #     plot_manager.request_data(current_timestamp)
+    #     target_plot.add_signal_to_legend(selected_signal)
         
-        # TODO: Have signals selection be as a drop down menu in the plot itself where each plot can only have 
-        # signals that are available fot the plot type, e.g. spatial, tempporal, etc.
+    #     # TODO: Have signals selection be as a drop down menu in the plot itself where each plot can only have 
+    #     # signals that are available fot the plot type, e.g. spatial, tempporal, etc.
 
-        # Add a checkbox for signal visibility control
-        add_signal_checkbox(target_plot, selected_signal)
+    #     # Add a checkbox for signal visibility control
+    #     add_signal_checkbox(target_plot, selected_signal)
         
             
     # Define the remove_signal method
-    def remove_signal():
-        target_plot = get_selected_plot()  # Get the selected plot
-        if not target_plot or not target_plot.signal_names:
-            QMessageBox.information(win, "No Signals", "No signals to remove.")
-            return
+    # def remove_signal():
+    #     target_plot = get_selected_plot()  # Get the selected plot
+    #     if not target_plot or not target_plot.signal_names:
+    #         QMessageBox.information(win, "No Signals", "No signals to remove.")
+    #         return
 
-        signal_to_remove = get_selected_signal()
-        target_plot.signal_names.remove(signal_to_remove)
-        plot_manager.remove_signal_from_plot(target_plot, signal_to_remove)
-        target_plot.plot_data()
+    #     signal_to_remove = get_selected_signal()
+    #     target_plot.signal_names.remove(signal_to_remove)
+    #     plot_manager.remove_signal_from_plot(target_plot, signal_to_remove)
+    #     target_plot.plot_data()
 
-        if signal_to_remove in target_plot.legend_items:
-            legend_checkbox = target_plot.legend_items.pop(signal_to_remove)
-            target_plot.legend.removeItem(legend_checkbox)
+    #     if signal_to_remove in target_plot.legend_items:
+    #         legend_checkbox = target_plot.legend_items.pop(signal_to_remove)
+    #         target_plot.legend.removeItem(legend_checkbox)
    
     # Attach these methods to the window so that menu_bar.py can access them
-    win.add_signal = add_signal
-    win.remove_signal = remove_signal
+    # win.add_signal = add_signal
+    # win.remove_signal = remove_signal
        
     # Set up the menu bar
     setup_menu_bar(win)  # Call the setup function from menu_bar.py   
 
     # Create Car Pose Plot as d2
-    d2 = QDockWidget("Car Pose Plot", win)
-    d2.setObjectName("CarPosePlotDock2")  # Set object name for second dock
-    d2.setWidget(car_pose_plot)
+    # d2 = QDockWidget("Car Pose Plot", win)
+    # d2.setObjectName("CarPosePlotDock2")  # Set object name for second dock
+    # d2.setWidget(car_pose_plot)
 
     # Create Route Plot as d3
-    d3 = QDockWidget("Route Plot", win)
-    d3.setObjectName("RoutePlotDock")  # Set object name    
-    d3.setWidget(car_signals_plot)
+    # d3 = QDockWidget("Route Plot", win)
+    # d3.setObjectName("RoutePlotDock")  # Set object name    
+    # d3.setWidget(car_signals_plot)
 
-    win.addDockWidget(Qt.RightDockWidgetArea, d2)
-    win.addDockWidget(Qt.RightDockWidgetArea, d3)
+    # win.addDockWidget(Qt.RightDockWidgetArea, d2)
+    # win.addDockWidget(Qt.RightDockWidgetArea, d3)
     
-    # Make sure d3 is below d2 (vertically stacked)
-    win.splitDockWidget(d2, d3, Qt.Vertical)
+    # # Make sure d3 is below d2 (vertically stacked)
+    # win.splitDockWidget(d2, d3, Qt.Vertical)
        
     # Fetch timestamps from the PlotManager
     # Assuming "timestamps" is a signal provided by one of the plugins

@@ -29,12 +29,12 @@ def setup_menu_bar(win):
 
    # Add the actions for adding/removing signals
     add_signal_action = QAction("Add Signal", win)
-    add_signal_action.triggered.connect(win.add_signal)  # Connect to add_signal method in main window
-    view_menu.addAction(add_signal_action)
+    # add_signal_action.triggered.connect(win.add_signal)  # Connect to add_signal method in main window
+    # view_menu.addAction(add_signal_action)
     
     remove_signal_action = QAction("Remove Signal", win)
-    remove_signal_action.triggered.connect(win.remove_signal)  # Connect to remove_signal method in main window
-    view_menu.addAction(remove_signal_action)
+    # remove_signal_action.triggered.connect(win.remove_signal)  # Connect to remove_signal method in main window
+    # view_menu.addAction(remove_signal_action)
     
     
     # Restore default layout
