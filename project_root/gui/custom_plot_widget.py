@@ -53,7 +53,8 @@ class CustomPlotWidget(pg.PlotWidget):
                         elif signal_name == 'car_pose_at_path_timestamp(t)':
                             # Handle car pose at path timestamp as a single marker
                             # print(f"Plotting car_pose_at_path_timestamp(t) with data: {data}")  # Debug output
-                            curve.setData([data[0]], [data[1]], pen=None, symbol='p', symbolBrush='g', symbolSize=10)
+                            # curve.setData([data[0]], [data[1]], pen=None, symbol='p', symbolBrush='g', symbolSize=10)
+                            pass
                     except Exception as e:
                         print(f"Error plotting {signal_name}: {e}")
             else:
