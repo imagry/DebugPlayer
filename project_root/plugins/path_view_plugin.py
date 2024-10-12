@@ -4,7 +4,7 @@ from data_classes.PathTrajectory_polars import PathTrajectoryPolars
 from interfaces.PluginBase import PluginBase
 
 class PathViewPlugin(PluginBase):
-    def __init__(self, file_path, path_type = 'path_trajectory.csv', path_loader_type='pandas'):
+    def __init__(self, file_path, path_type = 'path_trajectory.csv', path_loader_type='polars'):
         super().__init__(file_path)
         """
         Initialize the PathViewPlugin with the appropriate PathTrajectory object.

@@ -52,7 +52,7 @@ class PathTrajectoryPolars(PathTrajectoryBase):
         w_car_pose_image_x = row["w_car_pose_image_x"]
         w_car_pose_image_y = row["w_car_pose_image_y"]
         w_car_pose_image_yaw_rad = row["w_car_pose_image_yaw_rad"]
-        SE2_vector = np.array([w_car_pose_image_x, w_car_pose_image_y, w_car_pose_image_yaw_rad])
+        SE2_vector = np.array([w_car_pose_image_x, w_car_pose_image_y, w_car_pose_image_yaw_rad]).astype(float)
         car_pose_path = self.get_se2_from_vector(SE2_vector)
         
         # Extract the corresponding path from df_path_xy
