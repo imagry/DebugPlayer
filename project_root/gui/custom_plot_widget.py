@@ -2,6 +2,15 @@ import pyqtgraph as pg
 from PySide6.QtWidgets import QCheckBox, QHBoxLayout, QWidget, QMenu  # Import QCheckBox from PySide6
 from PySide6.QtCore import Qt, QObject, QEvent
 from PySide6.QtGui import QAction 
+from PySide6.QtWidgets import QGraphicsPolygonItem, QGraphicsItem
+
+from PySide6.QtGui import QPolygonF, QBrush, QColor
+from PySide6.QtCore import QPointF
+import numpy as np
+from gui.vehicle_object import VehicleObject
+from gui.vehicle_config import VehicleConfigBase
+from gui.vehicle_config import niro_ev2
+import math
 
 class CustomPlotWidget(pg.PlotWidget):
     def __init__(self, signal_names, default_visible_signals=[]):
@@ -11,7 +20,10 @@ class CustomPlotWidget(pg.PlotWidget):
         self.plot_curves = {}  # Track plot curves (signal name -> PlotCurveItem)
         self.visibility_control = {signal: False for signal in signal_names}  # Visibility state for each signal
         self.legend = self.addLegend(offset=(10, 10))  # Add a legend to the plot with default position
-
+        self.rect_items = {}  # Track custom polygon items for car_pose(t)
+        self.vehicle = VehicleObject(config=niro_ev2)
+                
+                
         # Initialize default visible signals
         for signal in default_visible_signals:
             if signal in signal_names:
@@ -29,8 +41,65 @@ class CustomPlotWidget(pg.PlotWidget):
             else:
                 print(f"Warning: Received empty or None data for signal {signal_name}")
 
+    def prep_rect_obj(self, data):
+        x = data['x']
+        y = data['y']
+        heading = math.radians(data['theta'])  # Convert heading to radians
+
+        # TODO: Replace with actual vehicle dimensions from the vehicle config file
+        # and use the vehicle object to calculate the vertices of the rectangle
+        # based on the vehicle's position and orientation and the refrence point, e.g., 
+        # center of front axle vehicle dimensions. Also, if heading info is available 
+        # use it to draw the wheels as well and rotate them in the appropriate direction.
+        # Rectangle dimensions
+        
+        length = 4.0  # Length of the rectangle (4 meters)
+        width = 2.0   # Width of the rectangle (2 meters)
+
+        # Calculate the vertices of the rectangle
+        # Rectangle corners relative to center at (0, 0)
+        half_length = length / 2
+        half_width = width / 2
+
+        corners = np.array([
+            [-half_length, -half_width],  # Bottom-left
+            [-half_length, half_width],   # Top-left
+            [half_length, half_width],    # Top-right
+            [half_length, -half_width],   # Bottom-right
+            [-half_length, -half_width]   # Close the rectangle (back to bottom-left)
+        ])
+
+        # Rotation matrix to rotate the rectangle by 'heading'
+        rotation_matrix = np.array([
+            [np.cos(heading), -np.sin(heading)],
+            [np.sin(heading), np.cos(heading)]
+        ])
+
+        # Rotate and translate the corners to the car's position
+        rotated_corners = (rotation_matrix @ corners.T).T
+        translated_corners = rotated_corners + np.array([x, y])
+
+        # Extract the x and y coordinates of the corners
+        # xs, ys = translated_corners[:, 0], translated_corners[:, 1]
+
+        # return xs, ys
+        # Create QPolygonF for the rectangle
+        polygon = QPolygonF([QPointF(pt[0], pt[1]) for pt in translated_corners])
+
+        # Create QGraphicsPolygonItem to represent the rectangle
+        rect_item = QGraphicsPolygonItem(polygon)
+        rect_item.setBrush(QBrush(QColor(255, 0, 0, 100)))  # Set red color with transparency
+        rect_item.setPen(pg.mkPen('m', width=2))  # Set pen for rectangle border
+
+        return rect_item
+                            
     def plot_data(self):
         """Plot data for all subscribed signals based on visibility control."""
+              # Clear existing QGraphicsPolygonItem objects
+        for item in self.rect_items.values():
+            self.getViewBox().removeItem(item)
+        self.rect_items.clear()
+        
         for signal_name, curve in self.plot_curves.items():
             if self.visibility_control.get(signal_name, False):
                 data = self.data.get(signal_name)
@@ -40,6 +109,16 @@ class CustomPlotWidget(pg.PlotWidget):
                             # Handle car pose with orientation (SE2) as a single marker
                             # print(f"Plotting car_pose(t) with data: {data}")  # Debug output
                             curve.setData([data['x']], [data['y']], pen=None, symbol='o', symbolBrush='m', symbolSize=10)
+                            
+                            # Plot the rectangle
+                            # xs, ys = self.prep_rect_obj(data)
+                            # curve.setData(xs, ys, pen=pg.mkPen('m', width=2))
+                            rect_item = self.prep_rect_obj(data)
+                            
+                            # Add the rectangle to the plot
+                            self.getViewBox().addItem(rect_item)
+                            self.rect_items[signal_name] = rect_item
+                            
                         elif signal_name == 'route':
                             # Handle regular 2D path (route) as a line
                             # print(f"Plotting route with data: {data}")  # Debug output
