@@ -2,11 +2,26 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Test-test_pathtrajectory_reader",
+            "name": "Test: Vehicle Object",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/tests/gui_tests/test_vehicle_object.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}",  // Set the base path here
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
+            }
+        },
+        {
+            "name": "Test: pathtrajectory reader",
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder:project_root}/tests/test_pathtrajectory_reader.py",
-            "console": "integratedTerminal"
-        },
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}",  // Set the base path here
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
+            }
+        }
     ]
 }

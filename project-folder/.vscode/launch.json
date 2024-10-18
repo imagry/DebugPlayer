@@ -9,7 +9,11 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder:project-folder}/${file}",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project-folder}",  // Set the base path here
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project-folder}"  // Add the project root to PYTHONPATH
+            }
         },
         {
             "name": "Analysis Manaer Python Debugger: Send Arguments",
@@ -20,7 +24,11 @@
             "args": [
                 "--trip",
                 "/home/thh3/data/trips/Nissan/debug_car_pose_jump/2024-09-20T13_43_59/"
-            ]
+            ],
+            "cwd": "${workspaceFolder:project-folder}",  // Set the base path here
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project-folder}"  // Add the project root to PYTHONPATH
+            }
         },
         {
             "name": "Playback Python Debugger: Send with Arguments",
@@ -31,7 +39,11 @@
             "args": [
                 "--trip_dir",
                 "/home/thamam/data/trips/Logs_2024-09-11T13_42_44/2024-09-11T15_36_18"
-            ]
+            ],
+            "cwd": "${workspaceFolder:project-folder}",  // Set the base path here
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project-folder}"  // Add the project root to PYTHONPATH
+            }
         }
     ]
 }

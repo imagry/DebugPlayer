@@ -1,6 +1,3 @@
-
-
-
 class VehicleConfigBase():
     def __init__(self, vehicle_name = None,
                  vehicle_type = None,
