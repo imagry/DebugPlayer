@@ -1,27 +1,50 @@
 {
     "version": "0.2.0",
     "configurations": [
+        // {
+        //     "name": "Test: Vehicle Object",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "program": "${workspaceFolder:project_root}/tests/gui_tests/test_vehicle_object.py",
+        //     "console": "integratedTerminal",
+        //     "cwd": "${workspaceFolder:project_root}",  // Set the base path here
+        //     "env": {
+        //         "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
+        //     }
+        // },
+        // {
+        //     "name": "Test: pathtrajectory reader",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "program": "${workspaceFolder:project_root}/tests/test_pathtrajectory_reader.py",
+        //     "console": "integratedTerminal",
+        //     "cwd": "${workspaceFolder:project_root}",  // Set the base path here
+        //     "env": {
+        //         "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
+        //     }
+        // },
         {
-            "name": "Test: Vehicle Object",
+            "name": "Python Debugger: Choose Test File",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder:project_root}/tests/gui_tests/test_vehicle_object.py",
+            "program": "${input:chooseTestFile}",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder:project_root}",  // Set the base path here
             "env": {
                 "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
             }
-        },
+        }
+    ],
+    "inputs": [
         {
-            "name": "Test: pathtrajectory reader",
-            "type": "debugpy",
-            "request": "launch",
-            "program": "${workspaceFolder:project_root}/tests/test_pathtrajectory_reader.py",
-            "console": "integratedTerminal",
-            "cwd": "${workspaceFolder:project_root}",  // Set the base path here
-            "env": {
-                "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
-            }
+            "id": "chooseTestFile",
+            "type": "pickString",
+            "description": "Choose a test file to run",
+            "options": [
+                "${workspaceFolder:project_root}/tests/gui_tests/test_vehicle_object.py",
+                "${workspaceFolder:project_root}/tests/test_pathtrajectory_reader.py",
+                "${workspaceFolder:project_root}/tests/test_vehicle_multi_files_reader.py",
+            ]
         }
     ]
 }

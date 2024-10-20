@@ -52,8 +52,3 @@ def read_vehicle_state_logs(filepath, log_files_names = None):
     
     return df_cruise_control, df_driving_mode, df_speed, df_steering
     
-            
-            
-
-if __name__ == "__main__":
-    
