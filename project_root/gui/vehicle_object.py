@@ -1,11 +1,20 @@
 from PySide6.QtWidgets import QGraphicsPolygonItem, QGraphicsRectItem
-from PySide6.QtGui import QPolygonF, QPen, QBrush, QPainterPath, QTransform
+from PySide6.QtGui import QPolygonF, QPen, QBrush, QPainterPath, QTransform, QColor, QPixmap
 from PySide6.QtCore import Qt, QPointF, QRectF
 import math
 import pyqtgraph as pg
 
 
 
+# Create a semi-transparent colors (red with 50% opacity)
+translucent_red = QColor(255, 0, 0, 128)  # RGB with Alpha = 128 for 50% opacity
+translucent_green = QColor(0, 255, 0, 128)  # RGB with Alpha = 128 for 50% opacity
+translucent_gray = QColor(128, 128, 128, 128)  # RGB with Alpha = 128 for 50% opacity
+translucent_black = QColor(0, 0, 0, 128)  # RGB with Alpha = 128 for 50% opacity
+translucent_dark_grey = QColor(64, 64, 64, 128)  # RGB with Alpha = 128 for 50% opacity
+translucent_white = QColor(255, 255, 255, 255)  # RGB with Alpha = 128 for 50% opacity
+translucent_yellow = QColor(255, 255, 0, 100)  # RGB with Alpha = 128 for 50% opacity
+# translucent_black = translucent_dark_grey = translucent_white 
 class VehicleGraphicsItem(pg.GraphicsObject):
     def __init__(self, vehicle_config):
         super().__init__()
@@ -45,8 +54,8 @@ class VehicleGraphicsItem(pg.GraphicsObject):
         painter.setTransform(transform)
 
         # Set brush and pen
-        painter.setBrush(QBrush(Qt.lightGray))
-        painter.setPen(QPen(Qt.black))
+        painter.setBrush(QBrush(translucent_gray))
+        painter.setPen(QPen(translucent_black, 0.1))
 
         # Draw the vehicle shape
         painter.drawPath(self.vehicle_path)
@@ -59,7 +68,6 @@ class VehicleGraphicsItem(pg.GraphicsObject):
         length = self.vehicle_config.vehicle_length_meters
         width = self.vehicle_config.vehicle_width_meters
         return QRectF(0, -width / 2, length, width)
-
 
 class VehicleObject(QGraphicsPolygonItem):
     """
@@ -109,7 +117,7 @@ class VehicleObject(QGraphicsPolygonItem):
         self.wheelbase = config.vehicle_wheels_base  # in meters
         self.front_axle_offset = config.vehicle_fron_axle_offset  # in meters
         self.rear_axle_offset = self.length - self.wheelbase - self.front_axle_offset
-
+        self.setZValue(1)
         # Initialize vehicle state
         self.x = 0  # Position of the rear end
         self.y = 0
@@ -117,11 +125,26 @@ class VehicleObject(QGraphicsPolygonItem):
         self.wheel_angle = 0  # Steering angle of front wheels
         self.speed = 0
         self.acceleration = 0
-
+        car_brush = QBrush(translucent_yellow)        
+        car_brush.setStyle(Qt.SolidPattern)
+        self.setBrush(car_brush)
+        car_pen = QPen(Qt.white)
+        car_pen.setWidthF(0.1)        
+        self.setPen(car_pen)
+        # graphics setting
+        self.wheels_color = translucent_white
+        self.bounding_box_color = translucent_green
+        self.vehicle_body_color = translucent_yellow
+        self.wheels_brush_color = QColor(0, 0, 255, 200)
+        self.wheels_pen_color = QColor(255, 255, 255, 200)
+        self.wheels_pen_width = 0.025
+        
         # Create visual elements
         self._create_vehicle_body()
         self._create_bounding_box()
         self._create_wheels()
+        
+
 
     def _create_vehicle_body(self):
         """Create the shape of the vehicle based on its length and width."""
@@ -132,19 +155,22 @@ class VehicleObject(QGraphicsPolygonItem):
             QPointF(self.length, -self.width / 2),    # Front-left corner
         ])
         self.setPolygon(vehicle_shape)
-        self.setBrush(QBrush(Qt.lightGray))
+        self.setBrush(QBrush(self.vehicle_body_color))
 
     def _create_bounding_box(self):
         """Create a bounding box for the vehicle."""
         self.bounding_box = QGraphicsRectItem(0, -self.width / 2, self.length, self.width)
-        pen_green = QPen(Qt.green, 1.0)
-        self.bounding_box.setPen(pen_green)
+        pen_green = QPen(self.bounding_box_color, 1.0)
+        translucent_pen = QPen(QColor(0, 255, 0, 128))  # Red color with 100/255 opacity
+        translucent_pen.setWidth(0.5)
+        self.bounding_box.setPen(translucent_pen)
         self.bounding_box.setBrush(Qt.NoBrush)
         self.bounding_box.setParentItem(self)  # Make bounding box a child of the vehicle
-
+        # self.bounding_box.setZValue(-1)  # Set Z-value to be behind the vehicle
+        
     def _create_wheels(self):
         """Create the front and rear wheels."""
-        wheel_width = self.width * 0.025  # Adjust width as needed
+        wheel_width = self.width * 0.25  # Adjust width as needed
         wheel_length = self.length * 0.3  # Adjust length as needed
 
         # Define the rectangular shape for the wheels along x-axis
@@ -154,22 +180,31 @@ class VehicleObject(QGraphicsPolygonItem):
             QPointF(wheel_length / 2, wheel_width / 2),
             QPointF(-wheel_length / 2, wheel_width / 2)
         ])
-
+       
+        wheels_pen = QPen(self.wheels_pen_color)  # RGB with Alpha = 255 for 100% opacity
+        wheels_pen.setWidthF(self.wheels_pen_width)  # Set the width of the pen
+        wheels_bush = QBrush(self.wheels_brush_color)  # RGB with Alpha = 255 for 100% opacity
+        
         # Create wheels as child items of the vehicle
         self.front_left_wheel = QGraphicsPolygonItem(wheel_shape, self)
-        self.front_left_wheel.setBrush(QBrush(Qt.darkGray))
+        self.front_left_wheel.setBrush(wheels_bush)
+        self.front_left_wheel.setPen(wheels_pen) 
         self.front_left_wheel.setTransformOriginPoint(0, 0)
-
+        
+        
         self.front_right_wheel = QGraphicsPolygonItem(wheel_shape, self)
-        self.front_right_wheel.setBrush(QBrush(Qt.darkGray))
+        self.front_right_wheel.setBrush(wheels_bush)
+        self.front_right_wheel.setPen(wheels_pen)
         self.front_right_wheel.setTransformOriginPoint(0, 0)
 
         self.rear_left_wheel = QGraphicsPolygonItem(wheel_shape, self)
-        self.rear_left_wheel.setBrush(QBrush(Qt.darkGray))
+        self.rear_left_wheel.setBrush(wheels_bush)
+        self.rear_left_wheel.setPen(wheels_pen)
         self.rear_left_wheel.setTransformOriginPoint(0, 0)
 
         self.rear_right_wheel = QGraphicsPolygonItem(wheel_shape, self)
-        self.rear_right_wheel.setBrush(QBrush(Qt.darkGray))
+        self.rear_right_wheel.setBrush(wheels_bush)
+        self.rear_right_wheel.setPen(wheels_pen)
         self.rear_right_wheel.setTransformOriginPoint(0, 0)
 
     def update_state(self, x, y, theta, wheel_angle, speed, acceleration):

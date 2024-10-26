@@ -7,6 +7,7 @@ from PySide6.QtGui import QAction
 
 # Define global list for spatial signals
 spatial_signal_names = ["car_pose(t)", "route", "path_in_world_coordinates(t)"]
+temporal_signal_names = ["speed","steering","driving_mode","traget_speed","target_steering"]
 
 def create_main_window(plot_manager):
     win = QMainWindow()
@@ -44,7 +45,7 @@ def create_main_window(plot_manager):
 
 def setup_plot_docks(win, plot_manager):
     car_pose_plot = CustomPlotWidget(signal_names=spatial_signal_names, default_visible_signals=spatial_signal_names)
-    car_signals_plot = CustomPlotWidget(signal_names=[])
+    car_signals_plot = CustomPlotWidget(signal_names= temporal_signal_names, default_visible_signals = temporal_signal_names)
 
     car_pose_dock = QDockWidget("Car Pose Plot", win)
     car_pose_dock.setObjectName("CarPosePlotDock")
