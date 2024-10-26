@@ -9,16 +9,21 @@ class CarPosePlugin(PluginBase):
         super().__init__(file_path)
         self.car_pose = CarPose(file_path)
         self.car_poses = {"x": self.car_pose.route['cp_x'], "y": self.car_pose.route['cp_y'], "theta": self.car_pose.df_car_pose['cp_yaw_deg']}
-        self.car_pose_at_timestamp = lambda t: self.handle_car_pose_at_timestamp(t)
-        route = self.car_pose.get_route() 
-        self.signals = {
-            "car_pose(t)": self.car_pose_at_timestamp,
-            "route": {"x": route[:, 0], "y": route[:, 1]},
-            "timestamps": self.car_pose.get_timestamps_milliseconds(),
-            "car_poses": self.car_poses
-        }
         self.timestamps = self.car_pose.get_timestamps_milliseconds() # Example timestamps                
-        # TODO: Load real car pose data from a file      
+        # self.car_pose_at_timestamp = lambda t: self.handle_car_pose_at_timestamp(t)
+        # route = self.car_pose.get_route() 
+        self.signals = {
+            "car_pose(t)": self.handle_car_pose_at_timestamp,
+            "route": self.route_handler,
+            "timestamps":lambda: self.timestamps,
+            "car_poses": lambda: self.car_poses
+        }
+        # TODO: Load real car pose data from a file   
+        
+    def route_handler(self):
+        route_ = self.car_pose.get_route()
+        return {"x": route_[:, 0], "y": route_[:, 1]}
+    
     def handle_car_pose_at_timestamp(self, timestamp):
         result = self.car_pose.get_car_pose_at_timestamp(timestamp)
         return {"x": result[0], "y": result[1], "theta": result[2]} 
@@ -34,13 +39,11 @@ class CarPosePlugin(PluginBase):
             # For the route signal, return the entire path            
             if signal_name == "car_pose(t)":
                 return signal_data(timestamp)
-            elif signal_name == "route":
-                return signal_data
-            elif signal_name == "timestamps":
-                return signal_data
-            elif signal_name == "car_poses":
-                return signal_data
-        # TODO: can we squash all last three into return signal_data?
+            else:
+                # Directly call the lambda to retrieve data
+                return signal_data()
+        else:
+            print(f"Error: Signal '{signal_name}' not found in CarPosePlugin.")
 
 #Explicitly define which class is the plugin
 plugin_class = CarPosePlugin

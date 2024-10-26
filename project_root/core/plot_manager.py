@@ -9,7 +9,7 @@ class PlotManager:
         self.signals = {}  # Dictionary to manage signal subscriptions
         self.plugins = {}  # Plugin registry
         self.signal_plugins = {}  # To track which plugin provides which signal
-
+        self.signal_types = {}  # To track the type of data for each signal
 
     def register_plugin(self, plugin_name, plugin_instance):
         """
@@ -18,37 +18,31 @@ class PlotManager:
         Args:
             plugin_name (str): The name of the plugin to register.
             plugin_instance (object): The instance of the plugin to register. 
-                          This instance should have a 'signals' attribute 
-                          which is a dictionary of signal names.
-
-        Raises:
-            None
+                        This instance should have a 'signals' attribute 
+                        which is a dictionary of signal names.
 
         Side Effects:
             Updates the 'plugins' dictionary with the new plugin.
             Updates the 'signal_plugins' dictionary to track which plugin provides which signals.
         """
         self.plugins[plugin_name] = plugin_instance
-                
-        for signal in plugin_instance.signals.keys():
-        # Track which plugin provides which signals
-        # Iteration Over Signals: The loop starts by iterating over each key
-        # in the plugin_instance.signals dictionary. Each key represents a signal.
+
+        for signal_name, signal_func in plugin_instance.signals.items():
+            # Validate the signal function is callable
+            if not callable(signal_func):
+                print(f"Error: Signal '{signal_name}' in plugin '{plugin_name}' does not have a valid method.")
+                continue
+
+            # Track which plugin provides which signals
+            if signal_name not in self.signal_plugins:
+                self.signal_plugins[signal_name] = []
             
+            # Append the plugin name to the list for this signal
+            self.signal_plugins[signal_name].append(plugin_name)
         
-            if signal not in self.signal_plugins:
-            # Check for Signal in signal_plugins: For each signal, the code 
-            # checks if the signal is already a key in the self.signal_plugins 
-            # dictionary. If the signal is not present, it initializes an empty list for that signal.
-                self.signal_plugins[signal] = []
-                
-            # Append Plugin Name: The code then appends the plugin_name to the 
-            # list associated with the current signal in the self.signal_plugins 
-            # dictionary. This effectively registers the plugin name under the
-            # corresponding signal.
-            self.signal_plugins[signal].append(plugin_name)
-            
-            
+        print(f"Registered signals for plugin '{plugin_name}': {list(plugin_instance.signals.keys())}")
+        
+    
     def load_plugins_from_directory(self, directory_path, plugin_args=None):
         """
         Dynamically discover and load plugins from the given directory.

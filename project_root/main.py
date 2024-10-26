@@ -26,7 +26,7 @@ def main():
     # ** Request initial data for timestamp 0 **
     # This ensures that the plots are initialized with data at the start
     if "timestamps" in plot_manager.signal_plugins:
-        initial_timestamp = plot_manager.plugins[plot_manager.signal_plugins["timestamps"][0]].signals["timestamps"][0]
+        initial_timestamp = plot_manager.plugins["CarPosePlugin"].signals["timestamps"]()[0] # Fetch timestamps from the CarPosePlugin - use () to call the lambda       
         plot_manager.request_data(initial_timestamp)
         
     # Start the event loop

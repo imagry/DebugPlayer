@@ -25,7 +25,7 @@ class PathViewPlugin(PluginBase):
         self.signals = {
             "path_in_world_coordinates(t)": self.get_path_world_at_timestamp,
             "car_pose_at_path_timestamp(t)": self.get_car_pose_at_timestamp,
-            "timestamps": self.path_trajectory.get_timestamps_ms()
+            "timestamps": lambda:self.path_trajectory.get_timestamps_ms()
         }
 
     def get_path_in_world_coordinates_at_timestamp(self, timestamp):
@@ -65,26 +65,15 @@ class PathViewPlugin(PluginBase):
         return signal_name in self.signals
 
     def get_data_for_timestamp(self, signal_name, timestamp):
-        """
-        Fetch data for a specific signal and timestamp.
-
-        Parameters:
-        signal_name (str): The name of the signal.
-        timestamp (float): The timestamp to fetch data for.
-
-        Returns:
-        dict: The data for the requested signal and timestamp.
-        """
+        """Fetch data for a specific signal and timestamp."""
         if signal_name in self.signals:
             signal_data = self.signals[signal_name]
-            if signal_name == "path_in_world_coordinates(t)":
+            if signal_name == "path_in_world_coordinates(t)" or signal_name == "car_pose_at_path_timestamp(t)":
                 return signal_data(timestamp)
-            elif signal_name == "timestamps":
-                return signal_data
-            elif signal_name == "car_pose_at_path_timestamp(t)":
-                return signal_data(timestamp)
+            else:
+                # Directly call the lambda to retrieve data
+                return signal_data()
         else:
             raise ValueError(f"Signal '{signal_name}' not found.")
-        
 #Explicitly define which class is the plugin
 plugin_class = PathViewPlugin        

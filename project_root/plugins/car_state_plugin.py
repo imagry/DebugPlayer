@@ -9,8 +9,8 @@ class CarStatePlugin(PluginBase):
         super().__init__(file_path)
         self.CarStateInfo = CarStateInfo(file_path)        
         self.signals = {
-            "steering": partial(self.CarStateInfo.get_current_steering_angle),
-            "speed": partial(self.CarStateInfo.get_speed_at_timestamp),
+            "current_steering": partial(self.CarStateInfo.get_current_steering_angle),
+            "current_speed": partial(self.CarStateInfo.get_speed_at_timestamp),
             "driving_mode": partial(self.CarStateInfo.get_driving_mode_at_timestamp),
             "target_speed": partial(self.CarStateInfo.get_target_speed_at_timestamp),
             "target_steering_angle": partial(self.CarStateInfo.get_target_steering_angle_at_timestamp)

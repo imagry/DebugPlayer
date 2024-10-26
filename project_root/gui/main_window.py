@@ -86,7 +86,7 @@ def setup_menu_bar(win, plot_manager, plots, current_timestamp):
 
 def setup_timestamp_slider(win, plot_manager, current_timestamp):
     if "timestamps" in plot_manager.signal_plugins:
-        timestamps = plot_manager.plugins["CarPosePlugin"].signals["timestamps"]
+        timestamps = plot_manager.plugins["CarPosePlugin"].signals["timestamps"]()  # Fetch timestamps from the CarPosePlugin - use () to call the lambda
     else:
         timestamps = []  # Fallback in case no plugin provides timestamps
 

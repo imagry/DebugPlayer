@@ -33,6 +33,21 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
             }
+        },
+        {
+            "name": "PLAYBACK",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/main.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--trip1",
+                "/home/thh3/data/trips/2024-10-17T13_08_07/"
+            ],
+            "cwd": "${workspaceFolder:project_root}",  // Set the base path here
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
+            }
         }
     ],
     "inputs": [

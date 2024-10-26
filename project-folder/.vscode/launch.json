@@ -37,7 +37,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "args": [
-                "--trip_dir",
+                "--trip1",
                 "/home/thamam/data/trips/Logs_2024-09-11T13_42_44/2024-09-11T15_36_18"
             ],
             "cwd": "${workspaceFolder:project-folder}",  // Set the base path here
