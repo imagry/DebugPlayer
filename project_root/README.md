@@ -112,3 +112,37 @@ Update the plots with data from the signals:
 
 Ensure that the PlotManager requests data from the plugin and updates the plots accordingly.
 
+#Troubleshoot - issue with QCharts
+Exception has occurred: ImportError
+libQt6Charts.so.6: cannot open shared object file: No such file or directory
+  File "/home/thh3/dev/DebugPlayer/project_root/gui/custom_plot_widget.py", line 8, in <module>
+    from PySide6.QtCharts import QChart, QChartView, QLineSeries
+  File "/home/thh3/dev/DebugPlayer/project_root/gui/main_window.py", line 3, in <module>
+    from gui.custom_plot_widget import SpatialPlotWidget
+  File "/home/thh3/dev/DebugPlayer/project_root/main.py", line 2, in <module>
+    from gui.main_window import create_main_window
+ImportError: libQt6Charts.so.6: cannot open shared object file: No such file or directory
+
+ChatGPT said:
+ChatGPT
+The error ImportError: libQt6Charts.so.6: cannot open shared object file: No such file or directory indicates that the required QtCharts library for PySide6 is missing or not properly installed on your system.
+
+How to Fix This:
+To resolve this issue, you'll need to ensure that PySide6 and its QtCharts module are correctly installed. Here’s how you can do this:
+
+1. Install or Reinstall PySide6:
+If PySide6 is not installed or if the installation is missing components, you can install or reinstall it using pip:
+
+bash
+Copy code
+pip install PySide6
+This command installs the PySide6 library, which should include QtCharts.
+
+2. Check System Libraries:
+On Linux, missing libQt6Charts.so.6 might mean that the necessary Qt libraries are not properly linked or installed.
+
+You may need to install the QtCharts development package. For example, if you use a package manager like apt:
+
+bash
+Copy code
+sudo apt-get install libqt6charts6 libqt6charts6-dev

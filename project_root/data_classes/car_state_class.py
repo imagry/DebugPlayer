@@ -109,7 +109,7 @@ class CarStateInfo:
         '''
         if self.df_cruise_control is not None:
             closest_idx = (self.df_cruise_control['timestamp'] - timestamp).abs().arg_min()
-            return self.df_cruise_control.loc[closest_idx, 'steer_command']
+            return self.df_cruise_control['steer_command'][closest_idx]
             return self.df_cruise_control.select('target_speed')[closest_idx]
 
         else:

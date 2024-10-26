@@ -13,13 +13,12 @@ class CarPosePlugin(PluginBase):
         # self.car_pose_at_timestamp = lambda t: self.handle_car_pose_at_timestamp(t)
         # route = self.car_pose.get_route() 
         self.signals = {
-            "car_pose(t)": self.handle_car_pose_at_timestamp,
-            "route": self.route_handler,
-            "timestamps":lambda: self.timestamps,
-            "car_poses": lambda: self.car_poses
+            "car_pose(t)": {"func": self.handle_car_pose_at_timestamp, "type": "spatial"},
+            "route": {"func": self.route_handler, "type": "spatial"},
+            "timestamps": {"func": lambda: self.timestamps, "type": "temporal"},
+            "car_poses": {"func": lambda: self.car_poses, "type": "spatial"}
         }
-        # TODO: Load real car pose data from a file   
-        
+                
     def route_handler(self):
         route_ = self.car_pose.get_route()
         return {"x": route_[:, 0], "y": route_[:, 1]}
@@ -35,15 +34,21 @@ class CarPosePlugin(PluginBase):
     def get_data_for_timestamp(self, signal_name, timestamp):
         """Fetch data for a specific signal and timestamp."""
         if signal_name in self.signals:
-            signal_data = self.signals[signal_name]
-            # For the route signal, return the entire path            
-            if signal_name == "car_pose(t)":
-                return signal_data(timestamp)
+            signal_info = self.signals[signal_name]
+            signal_func = signal_info.get("func")
+        
+            if callable(signal_func):
+                # Call the function with the timestamp if the signal is temporal
+                if signal_name == "car_pose(t)":
+                    return signal_func(timestamp)
+                else:
+                    # For signals like "timestamps", directly call without arguments
+                    return signal_func()
             else:
-                # Directly call the lambda to retrieve data
-                return signal_data()
+                print(f"Error: Signal function for '{signal_name}' is not callable.")
         else:
             print(f"Error: Signal '{signal_name}' not found in CarPosePlugin.")
+        return None
 
 #Explicitly define which class is the plugin
 plugin_class = CarPosePlugin

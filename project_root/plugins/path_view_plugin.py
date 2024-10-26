@@ -23,10 +23,11 @@ class PathViewPlugin(PluginBase):
             raise ValueError("Invalid path_type. Must be 'pandas' or 'polars'.")
 
         self.signals = {
-            "path_in_world_coordinates(t)": self.get_path_world_at_timestamp,
-            "car_pose_at_path_timestamp(t)": self.get_car_pose_at_timestamp,
-            "timestamps": lambda:self.path_trajectory.get_timestamps_ms()
+            "path_in_world_coordinates(t)": {"func": self.get_path_world_at_timestamp, "type": "spatial"},
+            "car_pose_at_path_timestamp(t)": {"func": self.get_car_pose_at_timestamp, "type": "spatial"},
+            "timestamps": {"func": lambda: self.path_trajectory.get_timestamps_ms(), "type": "temporal"}
         }
+        
 
     def get_path_in_world_coordinates_at_timestamp(self, timestamp):
         """
@@ -67,12 +68,18 @@ class PathViewPlugin(PluginBase):
     def get_data_for_timestamp(self, signal_name, timestamp):
         """Fetch data for a specific signal and timestamp."""
         if signal_name in self.signals:
-            signal_data = self.signals[signal_name]
-            if signal_name == "path_in_world_coordinates(t)" or signal_name == "car_pose_at_path_timestamp(t)":
-                return signal_data(timestamp)
+            signal_info = self.signals[signal_name]
+            signal_func = signal_info.get("func")
+            
+            if callable(signal_func):       
+                # Call the function with the timestamp if required        
+                if signal_name in ["path_in_world_coordinates(t)", "car_pose_at_path_timestamp(t)"]:
+                    return signal_func(timestamp)
+                else:
+                    # Directly call the lambda to retrieve data
+                    return signal_func()
             else:
-                # Directly call the lambda to retrieve data
-                return signal_data()
+                raise ValueError(f"Signal function for '{signal_name}' is not callable.")
         else:
             raise ValueError(f"Signal '{signal_name}' not found.")
 #Explicitly define which class is the plugin

@@ -2,6 +2,7 @@ import os
 import sys
 from PySide6.QtCore import Slot
 import importlib.util
+from gui.custom_plot_widget import TemporalPlotWidget, SpatialPlotWidget
 
 class PlotManager:
     def __init__(self):
@@ -14,34 +15,34 @@ class PlotManager:
     def register_plugin(self, plugin_name, plugin_instance):
         """
         Register a plugin that provides data for signals.
-
+        
         Args:
             plugin_name (str): The name of the plugin to register.
-            plugin_instance (object): The instance of the plugin to register. 
-                        This instance should have a 'signals' attribute 
-                        which is a dictionary of signal names.
-
-        Side Effects:
-            Updates the 'plugins' dictionary with the new plugin.
-            Updates the 'signal_plugins' dictionary to track which plugin provides which signals.
+            plugin_instance (object): The instance of the plugin to register.
         """
         self.plugins[plugin_name] = plugin_instance
 
-        for signal_name, signal_func in plugin_instance.signals.items():
-            # Validate the signal function is callable
+        for signal_name, signal_info in plugin_instance.signals.items():
+            signal_func = signal_info.get("func")
+            signal_type = signal_info.get("type", "temporal")  # Default to "temporal" if type is missing.
+
             if not callable(signal_func):
                 print(f"Error: Signal '{signal_name}' in plugin '{plugin_name}' does not have a valid method.")
                 continue
 
-            # Track which plugin provides which signals
-            if signal_name not in self.signal_plugins:
-                self.signal_plugins[signal_name] = []
-            
-            # Append the plugin name to the list for this signal
-            self.signal_plugins[signal_name].append(plugin_name)
-        
+            if signal_type not in ["temporal", "spatial"]:
+                print(f"Warning: Signal '{signal_name}' in plugin '{plugin_name}' has an unknown type '{signal_type}'. Defaulting to 'temporal'.")
+                signal_type = "temporal"
+
+            # Store the signal, its function, and type in self.signal_plugins.
+            self.signal_plugins[signal_name] = {
+                "plugin": plugin_name,
+                "func": signal_func,
+                "type": signal_type
+            }
+
         print(f"Registered signals for plugin '{plugin_name}': {list(plugin_instance.signals.keys())}")
-        
+
     
     def load_plugins_from_directory(self, directory_path, plugin_args=None):
         """
@@ -102,7 +103,7 @@ class PlotManager:
             print(f"No 'Plugin' class found in {module_name}")
            
                     
-    def register_plot(self, plot_widget):
+    def register_plot(self, signal_name):
         """
         Register a plot widget and auto-fetch the signals it subscribes to.
 
@@ -114,12 +115,29 @@ class PlotManager:
             plot_widget (PlotWidget): The plot widget to be registered. It should have an attribute
                           `signal_names` which is a list of signal names the widget subscribes to.
         """
-        self.plots.append(plot_widget)
-        for signal in plot_widget.signal_names:
-            if signal not in self.signals:
-                self.signals[signal] = []
-            self.signals[signal].append(plot_widget)  # Subscribe the plot to this signal
+        signal_info = self.signal_plugins.get(signal_name)
+        if not signal_info:
+            print(f"Error: Signal '{signal_name}' not found.")
+            return
 
+        signal_type = signal_info["type"]
+        plugin_name = signal_info["plugin"]
+    
+        # Create the appropriate plot widget based on signal type
+        if signal_type == "temporal":
+            plot_widget = TemporalPlotWidget()
+            self.temporal_plot_widget = plot_widget
+        elif signal_type == "spatial":
+            plot_widget = SpatialPlotWidget()
+            self.spatial_plot_widget = plot_widget
+        else:
+            print(f"Warning: Signal type '{signal_type}' is unknown. Using a default TemporalPlotWidget.")
+            plot_widget = TemporalPlotWidget()
+
+        # Register the signal with the appropriate widget
+        plot_widget.register_signal(signal_name)
+        self.plots[signal_name] = plot_widget
+    
 
     def update_signal(self, signal_name, data):
         """Broadcast the updated data to all subscribed plots."""
@@ -144,14 +162,21 @@ class PlotManager:
         print(f"Requesting data for timestamp {timestamp}")
         for signal, plot_list in self.signals.items():
             # Fetch data for each signal from all plugins that provide it
-            for plugin_name in self.signal_plugins.get(signal, []):
-                plugin = self.plugins[plugin_name]
-                if plugin.has_signal(signal):
-                    # Fetch data for this signal at the given timestamp
-                    data = plugin.get_data_for_timestamp(signal, timestamp)
-                    self.update_signal(signal, data)    
-            
+            signal_info = self.signal_plugins.get(signal)
+            if not signal_info:
+                        print(f"Warning: No plugin found for signal '{signal}'")
+                        continue
                     
+            plugin_name = signal_info["plugin"]
+            plugin = self.plugins.get(plugin_name)
+            if plugin and plugin.has_signal(signal):
+                # Fetch data for this signal at the given timestamp
+                data = plugin.get_data_for_timestamp(signal, timestamp)
+                self.update_signal(signal, data)
+            else:
+                print(f"Error: Plugin '{plugin_name}' for signal '{signal}' not found.")   
+                
+                        
     def assign_signal_to_plot(self, plot_widget, signal_name):
         """
         Assign a specific signal to a plot.
