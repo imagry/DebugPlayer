@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QMainWindow, QDockWidget, QWidget, QVBoxLayout, QComboBox, QCheckBox, QHBoxLayout, QMenu, QMenuBar, QMessageBox, QSizePolicy
 from PySide6.QtCore import Qt, Signal
-from gui.custom_plot_widget import SpatialPlotWidget
+from gui.custom_plot_widget import SpatialPlotWidget, TemporalPlotWidget
 from gui.timestamp_slider import TimestampSlider
 from core.plot_manager import PlotManager
 from PySide6.QtGui import QAction
@@ -43,9 +43,10 @@ def create_main_window(plot_manager):
     return win, plot_manager
 
 
-def setup_plot_docks(win, plot_manager):
+def setup_plot_docks(win, plot_manager):    
     car_pose_plot = SpatialPlotWidget(signal_names=spatial_signal_names, default_visible_signals=spatial_signal_names)
-    car_signals_plot = SpatialPlotWidget(signal_names= temporal_signal_names, default_visible_signals = temporal_signal_names)
+    car_signals_plot = TemporalPlotWidget(signal_names=temporal_signal_names, default_visible_signals=temporal_signal_names)
+
 
     car_pose_dock = QDockWidget("Car Pose Plot", win)
     car_pose_dock.setObjectName("CarPosePlotDock")
@@ -59,8 +60,13 @@ def setup_plot_docks(win, plot_manager):
     car_signals_dock.setFeatures(QDockWidget.DockWidgetMovable | QDockWidget.DockWidgetClosable)
     win.addDockWidget(Qt.RightDockWidgetArea, car_signals_dock)
 
-    plot_manager.register_plot(car_pose_plot)
-    plot_manager.register_plot(car_signals_plot)
+    # Register the spatial and temporal signals with the plot manager    
+    for signal_name in spatial_signal_names:
+        plot_manager.register_plot(signal_name)
+
+    for signal_name in temporal_signal_names:
+        plot_manager.register_plot(signal_name)
+    
 
     return {'plots': [car_pose_plot, car_signals_plot], 'docks': [car_pose_dock, car_signals_dock]}
 

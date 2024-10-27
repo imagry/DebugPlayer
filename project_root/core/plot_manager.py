@@ -105,15 +105,10 @@ class PlotManager:
                     
     def register_plot(self, signal_name):
         """
-        Register a plot widget and auto-fetch the signals it subscribes to.
-
-        This method adds the given plot widget to the list of plots managed by this instance.
-        It also subscribes the plot widget to the signals it listens to by updating the signals
-        dictionary.
-
+        Register a plot widget for a given signal based on its type.
+        
         Args:
-            plot_widget (PlotWidget): The plot widget to be registered. It should have an attribute
-                          `signal_names` which is a list of signal names the widget subscribes to.
+            signal_name (str): The name of the signal to plot.
         """
         signal_info = self.signal_plugins.get(signal_name)
         if not signal_info:
@@ -122,31 +117,23 @@ class PlotManager:
 
         signal_type = signal_info["type"]
         plugin_name = signal_info["plugin"]
-    
+
         # Create the appropriate plot widget based on signal type
         if signal_type == "temporal":
             plot_widget = TemporalPlotWidget()
-            self.temporal_plot_widget = plot_widget
         elif signal_type == "spatial":
-            plot_widget = SpatialPlotWidget()
-            self.spatial_plot_widget = plot_widget
+            plot_widget = SpatialPlotWidget(signal_names=[signal_name])
         else:
-            print(f"Warning: Signal type '{signal_type}' is unknown. Using a default TemporalPlotWidget.")
+            print(f"Warning: Signal type '{signal_type}' is unknown. Using TemporalPlotWidget by default.")
             plot_widget = TemporalPlotWidget()
 
-        # Register the signal with the appropriate widget
+        # Register the signal with the appropriate widget and ensure it's added to self.signals
+        self.assign_signal_to_plot(plot_widget, signal_name)
+        self.plots.append(plot_widget)
         plot_widget.register_signal(signal_name)
-        self.plots[signal_name] = plot_widget
-    
+        print(f"Registered '{signal_name}' (type: '{signal_type}') from plugin '{plugin_name}' to plot.")
 
-    def update_signal(self, signal_name, data):
-        """Broadcast the updated data to all subscribed plots."""
-        # print(f"Broadcasting data for signal {signal_name}: x={data['x']}, y={data['y']}")
-        if signal_name in self.signals:
-            for plot in self.signals[signal_name]:
-                plot.update_data(signal_name, data)
-            
-                            
+    
     def request_data(self, timestamp):
         """
         Request new data for all signals at the given timestamp.
@@ -160,21 +147,21 @@ class PlotManager:
             timestamp (int): The timestamp for which to request data.
         """
         print(f"Requesting data for timestamp {timestamp}")
-        for signal, plot_list in self.signals.items():
+        for signal_name, plot_list in self.signals.items():
             # Fetch data for each signal from all plugins that provide it
-            signal_info = self.signal_plugins.get(signal)
+            signal_info = self.signal_plugins.get(signal_name)
             if not signal_info:
-                        print(f"Warning: No plugin found for signal '{signal}'")
+                        print(f"Warning: No plugin found for signal '{signal_name}'")
                         continue
                     
             plugin_name = signal_info["plugin"]
             plugin = self.plugins.get(plugin_name)
-            if plugin and plugin.has_signal(signal):
+            if plugin and plugin.has_signal(signal_name):
                 # Fetch data for this signal at the given timestamp
-                data = plugin.get_data_for_timestamp(signal, timestamp)
-                self.update_signal(signal, data)
+                data = plugin.get_data_for_timestamp(signal_name, timestamp)
+                self.update_signal(signal_name, data, timestamp)
             else:
-                print(f"Error: Plugin '{plugin_name}' for signal '{signal}' not found.")   
+                print(f"Error: Plugin '{plugin_name}' for signal '{signal_name}' not found.")   
                 
                         
     def assign_signal_to_plot(self, plot_widget, signal_name):
@@ -184,14 +171,24 @@ class PlotManager:
         Parameters:
         plot_widget (object): The plot widget to which the signal will be assigned.
         signal_name (str): The name of the signal to be assigned.
-
-        Returns:
-        None
         """
         if signal_name not in self.signals:
             self.signals[signal_name] = []
-        self.signals[signal_name].append(plot_widget)         
-        
+        if plot_widget not in self.signals[signal_name]:
+            self.signals[signal_name].append(plot_widget)
+        print(f"Assigned '{signal_name}' to plot {plot_widget}.")
+    
+    
+    def update_signal(self, signal_name, data, current_timestamp):
+        """Broadcast the updated data to all subscribed plots."""
+        if signal_name in self.signals:
+            print(f"Updating data for signal '{signal_name}': {data}")
+            for plot in self.signals[signal_name]:
+                plot.update_data(signal_name, data, current_timestamp)
+        else:
+            print(f"Error: Signal '{signal_name}' not found in registered signals.")
+    
+    
 
     def remove_signal_from_plot(self, plot_widget, signal_name):
         """Remove a specific signal from a plot."""
