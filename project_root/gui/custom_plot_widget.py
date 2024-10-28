@@ -13,25 +13,25 @@ from PySide6.QtGui import QPainter
 import pandas as pd
 import polars as pl
 
-class SpatialPlotWidget(QWidget):
-    def __init__(self, signal_names, default_visible_signals=[], parent=None):
-        super().__init__(parent)  # Use CustomViewBox for mouse interactions
+class SpatialPlotWidget(pg.PlotWidget):
+    def __init__(self, signal_names, default_visible_signals=[]):
+        super().__init__(viewBox=CustomViewBox(self))  # Use CustomViewBox for mouse interactions
         
         # Create a plot widget and set it up for spatial data
-        self.plot_widget = pg.PlotWidget(viewBox=CustomViewBox(self))  # Use CustomViewBox for mouse interactions
+        # self.plot_widget = pg.PlotWidget(viewBox=CustomViewBox(self))  # Use CustomViewBox for mouse interactions
         self.signal_names = signal_names  # This plot can subscribe to multiple signals
         self.data = {}  # Dictionary to store data for multiple signals
         self.plot_curves = {}  # Track plot curves (signal name -> PlotCurveItem)
         self.visibility_control = {signal: False for signal in signal_names}  # Visibility state for each signal
-        self.legend = self.plot_widget.addLegend(offset=(10, 10))  # Add a legend to the plot with default position
+        self.legend = self.addLegend(offset=(10, 10))  # Add a legend to the plot with default position
         self.rect_items = {}  # Track custom polygon items for car_pose(t)
         self.vehicle = VehicleObject(config=niro_ev2)
 
 
-        # Layout for the plot widget
-        layout = QVBoxLayout()
-        layout.addWidget(self.plot_widget)
-        self.setLayout(layout)
+        # # Layout for the plot widget
+        # layout = QVBoxLayout()
+        # layout.addWidget(self.plot_widget)
+        # self.setLayout(layout)
                                 
         # Initialize default visible signals
         for signal in default_visible_signals:
@@ -49,7 +49,7 @@ class SpatialPlotWidget(QWidget):
             return  # Signal already exists
         
         curve = pg.PlotDataItem()  # Create a plot data item for the signal
-        self.plot_widget.addItem(curve)  # Add the curve to the plot
+        self.addItem(curve)  # Add the curve to the plot
         self.plot_curves[signal_name] = curve
         self.legend.addItem(curve, signal_name)  # Add the curve to the legend
         print(f"Added signal {signal_name} to plot and legend")  # Debug output
@@ -83,7 +83,7 @@ class SpatialPlotWidget(QWidget):
                                 self.vehicle.set_pose_at_front_axle(data['x'], data['y'], math.radians(data['theta']))
                             else:
                                 rect_item = self.vehicle
-                                self.plot_widget.getViewBox().addItem(rect_item)
+                                self.getViewBox().addItem(rect_item)
                                 self.rect_items[signal_name] = rect_item
                         elif signal_name == 'route':
                             curve.setData(data['x'], data['y'], pen=pg.mkPen('r'))
@@ -120,7 +120,7 @@ class SpatialPlotWidget(QWidget):
         menu.addMenu(signals_menu)
         menu.exec(global_pos)
 
-class CustomPlotWidget(pg.PlotWidget):
+class CustomPlotWidget_deprecated(pg.PlotWidget):
     def __init__(self, signal_names, default_visible_signals=[]):
         super().__init__(viewBox=CustomViewBox(self))  # Use CustomViewBox for mouse interactions
         self.signal_names = signal_names  # This plot can subscribe to multiple signals

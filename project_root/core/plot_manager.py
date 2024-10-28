@@ -165,24 +165,19 @@ class PlotManager:
                 
                         
     def assign_signal_to_plot(self, plot_widget, signal_name):
-        """
-        Assign a specific signal to a plot.
-
-        Parameters:
-        plot_widget (object): The plot widget to which the signal will be assigned.
-        signal_name (str): The name of the signal to be assigned.
-        """
+        """Assign a specific signal to an existing plot widget."""
         if signal_name not in self.signals:
             self.signals[signal_name] = []
         if plot_widget not in self.signals[signal_name]:
             self.signals[signal_name].append(plot_widget)
         print(f"Assigned '{signal_name}' to plot {plot_widget}.")
+
     
     
     def update_signal(self, signal_name, data, current_timestamp):
         """Broadcast the updated data to all subscribed plots."""
         if signal_name in self.signals:
-            print(f"Updating data for signal '{signal_name}': {data}")
+            # print(f"Updating data for signal '{signal_name}': {data}")
             for plot in self.signals[signal_name]:
                 plot.update_data(signal_name, data, current_timestamp)
         else:

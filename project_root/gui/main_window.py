@@ -8,7 +8,7 @@ from PySide6.QtGui import QAction
 # Define global list for spatial signals
 spatial_signal_names = ["car_pose(t)", "route", "path_in_world_coordinates(t)"]
 temporal_signal_names = ["current_speed","current_steering","driving_mode","target_speed","target_steering_angle"]
-
+temporal_signal_names = []
 def create_main_window(plot_manager):
     win = QMainWindow()
     win.resize(1200, 800)
@@ -60,12 +60,12 @@ def setup_plot_docks(win, plot_manager):
     car_signals_dock.setFeatures(QDockWidget.DockWidgetMovable | QDockWidget.DockWidgetClosable)
     win.addDockWidget(Qt.RightDockWidgetArea, car_signals_dock)
 
-    # Register the spatial and temporal signals with the plot manager    
+    # Register the widgets with the plot manager, but without recreating them for each signal
     for signal_name in spatial_signal_names:
-        plot_manager.register_plot(signal_name)
-
+        plot_manager.assign_signal_to_plot(car_pose_plot, signal_name)
+        
     for signal_name in temporal_signal_names:
-        plot_manager.register_plot(signal_name)
+        plot_manager.assign_signal_to_plot(car_signals_plot, signal_name)
     
 
     return {'plots': [car_pose_plot, car_signals_plot], 'docks': [car_pose_dock, car_signals_dock]}
