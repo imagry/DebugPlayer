@@ -290,23 +290,16 @@ class TemporalPlotWidget(QWidget):
                 # Store the scalar value in the data store
                 value = float(data)  # Ensure value is a float
         
-            
-            self.data_store[signal_name]['timestamps'].append(current_timestamp)
-            self.data_store[signal_name]['values'].append(value)
+            np.asarray(data)
 
-            # Update the plot with accumulated data
-            timestamps = self.data_store[signal_name]['timestamps']
-            values = self.data_store[signal_name]['values']
-            try:
-                for t, v in zip(timestamps, values):
-                    series.append(float(t), v)
-            except Exception as e:
-                print(f"Error updating series for {signal_name}: {e}")
 
+            # Update the series with the new data                       
             self.chart_view.chart().update()
-            print(f"Updated plot for '{signal_name}' with {len(values)} points.")
+            
         else:
             print(f"Error: Series for '{signal_name}' not found.")
+            
+            
             
         #     if isinstance(data, pd.DataFrame):
         #         timestamps = data['timestamps'].values if 'timestamps' in data else []

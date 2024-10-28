@@ -29,8 +29,16 @@ class CarStateInfo:
             
         if df_steering is not None:
             self.df_steering = df_steering                    
-
-    def get_speed_at_timestamp(self, timestamp):
+    
+    def get_all_current_speed_data(self):
+        ''' Get all the speed data.
+        
+            Returns:
+            pandas.DataFrame: The speed data.
+        '''
+        return self.df_speed
+    
+    def get_current_speed_at_timestamp(self, timestamp):
         ''' Get the speed at the given timestamp.
         
             Args:
@@ -46,7 +54,14 @@ class CarStateInfo:
             print("Error: speed data not availalbe")
             return None
         
-    
+    def get_all_current_steering_angle_data(self):
+        ''' Get all the steering data.
+        
+            Returns:
+            pandas.DataFrame: The steering data.
+        '''
+        return self.df_steering
+        
     def get_current_steering_angle(self, timestamp):
         ''' Get the current steering angle at the given timestamp.
         
@@ -62,6 +77,14 @@ class CarStateInfo:
         else:
             print("Error: steering data not availalbe")
             return None
+    
+    def get_all_driving_mode_data(self):
+        ''' Get all the driving mode data.
+        
+            Returns:
+            pandas.DataFrame: The driving mode data.
+        '''
+        return self.df_driving_mode
     
     def get_driving_mode_at_timestamp(self, timestamp):
         ''' Get the driving mode at the given timestamp.
@@ -79,6 +102,21 @@ class CarStateInfo:
             print("Error: driving mode data not availalbe")
             return None
         
+    def get_all_cruise_control_data(self):
+        ''' Get all the cruise control data.
+        
+            Returns:
+            pandas.DataFrame: The cruise control data.
+        '''
+        return self.df_cruise_control
+    
+    def get_all_target_speed_data(self):
+        ''' Get all the target speed data.
+        
+            Returns:
+            pandas.DataFrame: The target speed data.
+        '''
+        return self.df_cruise_control.select('target_speed')
     
     def get_target_speed_at_timestamp(self, timestamp):
         ''' Get the target speed at the given timestamp.
@@ -97,6 +135,13 @@ class CarStateInfo:
             print("Error: cruise control data not availalbe")
             return None
         
+    def get_all_target_steering_angle_data(self):
+        ''' Get all the target steering angle data.
+        
+            Returns:
+            pandas.DataFrame: The target steering angle data.
+        '''
+        return self.df_cruise_control.select('steer_command')
     
     def get_target_steering_angle_at_timestamp (self, timestamp):
         ''' Get the target steering angle at the given timestamp.

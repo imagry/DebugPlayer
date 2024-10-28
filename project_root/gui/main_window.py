@@ -7,8 +7,21 @@ from PySide6.QtGui import QAction
 
 # Define global list for spatial signals
 spatial_signal_names = ["car_pose(t)", "route", "path_in_world_coordinates(t)"]
-temporal_signal_names = ["current_speed","current_steering","driving_mode","target_speed","target_steering_angle"]
-temporal_signal_names = []
+# temporal_signal_names = ["current_speed","current_steering","driving_mode","target_speed","target_steering_angle"]
+temporal_signal_names = [
+    "current_steering",
+    "all_steering_data",
+    "current_speed",
+    "all_current_speed_data",
+    "driving_mode",
+    "all_driving_mode_data",
+    "target_speed",
+    "all_target_speed_data",
+    "target_steering_angle",
+    "all_target_steering_angle_data"
+]
+
+
 def create_main_window(plot_manager):
     win = QMainWindow()
     win.resize(1200, 800)
