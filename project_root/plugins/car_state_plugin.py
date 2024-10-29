@@ -9,16 +9,16 @@ class CarStatePlugin(PluginBase):
         super().__init__(file_path)
         self.CarStateInfo = CarStateInfo(file_path)        
         self.signals = {
-            "current_steering": {"func": partial(self.CarStateInfo.get_current_steering_angle), "type": "temporal"},
-            "current_speed": {"func": partial(self.CarStateInfo.get_current_speed_at_timestamp), "type": "temporal"},
-            "driving_mode": {"func": partial(self.CarStateInfo.get_driving_mode_at_timestamp), "type": "temporal"},
-            "target_speed": {"func": partial(self.CarStateInfo.get_target_speed_at_timestamp), "type": "temporal"},
-            "target_steering_angle": {"func": partial(self.CarStateInfo.get_target_steering_angle_at_timestamp), "type": "temporal"},
-            "all_steering_data": {"func": self.handler_get_all_current_steering_angle_data, "type": "temporal"},
-            "all_current_speed_data": {"func": self.handler_get_all_current_speed_data, "type": "temporal"},
-            "all_driving_mode_data": {"func": self.handler_get_all_driving_mode_data, "type": "temporal"},
-            "all_target_speed_data": {"func": self.handler_get_all_target_speed_data, "type": "temporal"},
-            "all_target_steering_angle_data": {"func": self.handler_get_all_target_steering_angle_data, "type": "temporal"},            
+            "current_steering": {"func": partial(self.CarStateInfo.get_current_steering_angle), "type": "temporal", "mode": "dynamic"},
+            "current_speed": {"func": partial(self.CarStateInfo.get_current_speed_at_timestamp), "type": "temporal","mode": "dynamic"},
+            "driving_mode": {"func": partial(self.CarStateInfo.get_driving_mode_at_timestamp), "type": "temporal","mode": "dynamic"},
+            "target_speed": {"func": partial(self.CarStateInfo.get_target_speed_at_timestamp), "type": "temporal","mode": "dynamic"},
+            "target_steering_angle": {"func": partial(self.CarStateInfo.get_target_steering_angle_at_timestamp), "type": "temporal","mode": "dynamic"},
+            "all_steering_data": {"func": self.handler_get_all_current_steering_angle_data, "type": "temporal", "mode": "static"},
+            "all_current_speed_data": {"func": self.handler_get_all_current_speed_data, "type": "temporal", "mode": "static"},
+            "all_driving_mode_data": {"func": self.handler_get_all_driving_mode_data, "type": "temporal", "mode": "static"},
+            "all_target_speed_data": {"func": self.handler_get_all_target_speed_data, "type": "temporal", "mode": "static"},
+            "all_target_steering_angle_data": {"func": self.handler_get_all_target_steering_angle_data, "type": "temporal", "mode": "static"},            
         }
 
 

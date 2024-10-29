@@ -247,23 +247,34 @@ class TemporalPlotWidget(QWidget):
             signal_name: {'timestamps': [], 'values': []} 
             for signal_name in self.signal_names
         }
-               
-        # Create a chart and set it up for time-series data
-        self.chart = QChart()
-        self.chart_view = QChartView(self.chart)
-        self.chart_view.setRenderHint(QPainter.Antialiasing)
+        
+                # Setup pyqtgraph plot
+        self.plot_widget = pg.PlotWidget()
+        self.curves = {signal_name: self.plot_widget.plot(pen=pg.mkPen(color)) 
+                       for signal_name, color in zip(self.signal_names, ["r", "g", "b", "y", "c"])}
 
-        # Layout for the chart
+        # Layout
         layout = QVBoxLayout()
-        layout.addWidget(self.chart_view)
+        layout.addWidget(self.plot_widget)
         self.setLayout(layout)
         
-        # Store series for signals
-        self.series_dict = {}  # Stores QLineSeries for each signal
+               
+        # # Create a chart and set it up for time-series data
+        # self.chart = QChart()
+        # self.chart_view = QChartView(self.chart)
+        # self.chart_view.setRenderHint(QPainter.Antialiasing)
 
-        # Initialize visible signals
-        for signal_name in self.default_visible_signals:
-            self.register_signal(signal_name)
+        # # Layout for the chart
+        # layout = QVBoxLayout()
+        # layout.addWidget(self.chart_view)
+        # self.setLayout(layout)
+        
+        # # Store series for signals
+        # self.series_dict = {}  # Stores QLineSeries for each signal
+
+        # # Initialize visible signals
+        # for signal_name in self.default_visible_signals:
+        #     self.register_signal(signal_name)
             
             
     def register_signal(self, signal_name):
@@ -278,7 +289,19 @@ class TemporalPlotWidget(QWidget):
                 self.data_store[signal_name] = {'timestamps': [], 'values': []}
 
     def update_data(self, signal_name, data, current_timestamp):
-        if signal_name in self.series_dict:
+        if signal_name in self.curve:
+            
+            if current_timestamp:
+                # store data
+                self.data_store[signal_name]['timestamps'].append(current_timestamp)
+                self.data_store[signal_name]['values'].append(value)
+
+            # update plot
+            if current_timestamp:
+                timestamps = self.data_store[signal_name]['timestamps']
+            else: 
+                timestamps = self.timestamps
+            
             series = self.series_dict[signal_name]
             series.clear()
     
@@ -300,25 +323,6 @@ class TemporalPlotWidget(QWidget):
             print(f"Error: Series for '{signal_name}' not found.")
             
             
-            
-        #     if isinstance(data, pd.DataFrame):
-        #         timestamps = data['timestamps'].values if 'timestamps' in data else []
-        #         values = data['values'].values if 'values' in data else []
-        #     elif isinstance(data, pl.DataFrame):
-        #         timestamps = data["timestamps"].to_list() if "timestamps" in data.columns else []
-        #         values = data["values"].to_list() if "values" in data.columns else []
-        #     else:
-        #         timestamps = data.get('timestamps', [])
-        #         values = data.get('values', [])
-
-        #     for t, v in zip(timestamps, values):
-        #         series.append(t, v)
-
-        #     self.chart_view.chart().update()
-        #     print(f"Updated plot for '{signal_name}' with {len(values)} points.")
-        # else:
-        #     print(f"Error: Series for '{signal_name}' not found.")
-
 
 class CustomViewBox(pg.ViewBox):
     def __init__(self, parent_plot, *args, **kwargs):
