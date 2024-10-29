@@ -1,11 +1,10 @@
 # data_converters.py
-
 import pickle
 import utils.data_loaders.misc_data_loader_pandas as misc_data_loader
-import utils.data_loaders.path_handler_loader_pandas as path_handler_loader_pandas
 
 ### carpose data
 def save_car_pose_as_pickle(file_path, output_path, car_pose_data = None):
+    
     """
     Reads car pose data using misc_data_loader.load_trip_car_pose_data and saves it as a pickle file.
 
@@ -36,13 +35,15 @@ def load_car_pose_from_pickle(pickle_path):
 	return car_pose_data
 
 ### Path data
-def save_path_handler_data_as_pickle(file_path, output_path, path_handler_data = None):
+def save_path_handler_data_as_pickle(file_path, output_path, path_handler_data = None):    
     """
     Reads data using path_handler_loader_pandas.load_path_handler_data and saves it as a pickle file.
 
     :param file_path: Path to the input file to read data from.
     :param output_path: Path to the output pickle file to save the data.
     """
+    import utils.data_loaders.path_handler_loader_pandas as path_handler_loader_pandas
+
     # Read the data
     if path_handler_data is None:
         path_handler_data = path_handler_loader_pandas.read_path_handler_data(file_path)
