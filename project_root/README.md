@@ -64,8 +64,8 @@ Important windows -
 create_main_window - This where you register signals for plotting
         Note that there are two similar appearences: 
                 # Initialize CustomPlotWidget and register signals
-                car_pose_plot = CustomPlotWidget(signal_names=["car_pose(t)", "route"])
-                route_plot = CustomPlotWidget(signal_names=["route"])
+                car_pose_plot = CustomPlotWidget(signals=["car_pose(t)", "route"])
+                route_plot = CustomPlotWidget(signals=["route"])
 
                 # Register the plots with the PlotManager
                 plot_manager.register_plot(car_pose_plot, ["car_pose(t)"])

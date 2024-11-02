@@ -13,12 +13,12 @@ class PluginBase(ABC):
         self.signals = {}
 
     @abstractmethod
-    def has_signal(self, signal_name):
+    def has_signal(self, signal):
         """
         Check if this plugin provides the requested signal.
 
         Parameters:
-        signal_name (str): The name of the signal.
+        signal (str): The name of the signal.
 
         Returns:
         bool: True if the signal is provided, False otherwise.
@@ -26,12 +26,12 @@ class PluginBase(ABC):
         pass
 
     @abstractmethod
-    def get_data_for_timestamp(self, signal_name, timestamp):
+    def get_data_for_timestamp(self, signal, timestamp):
         """
         Fetch data for a specific signal and timestamp.
 
         Parameters:
-        signal_name (str): The name of the signal.
+        signal (str): The name of the signal.
         timestamp (float): The timestamp to fetch data for.
 
         Returns:

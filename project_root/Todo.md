@@ -39,6 +39,7 @@
 
 ## Miscelennous list. 
 ### 1. Add Consule that will allow some limited custom manipulations
+### 2. connect tehe wheels angle from the current steering to the angle of the wheels in the vehicle object icon
 
 
 

@@ -3,12 +3,13 @@ from PySide6.QtCore import Qt, Signal
 from gui.custom_plot_widget import SpatialPlotWidget, TemporalPlotWidget
 from gui.timestamp_slider import TimestampSlider
 from core.plot_manager import PlotManager
+from core.config import spatial_signals, temporal_signals  # Import signal lists from config
 from PySide6.QtGui import QAction
 
 # Define global list for spatial signals
-spatial_signal_names = ["car_pose(t)", "route", "path_in_world_coordinates(t)"]
+spatial_signals = ["car_pose(t)", "route", "path_in_world_coordinates(t)"]
 # temporal_signal_names = ["current_speed","current_steering","driving_mode","target_speed","target_steering_angle"]
-temporal_signal_names = [
+temporal_signals = [
     "current_steering",
     "current_speed",
     "driving_mode",
@@ -57,9 +58,12 @@ def create_main_window(plot_manager: PlotManager) -> tuple[QMainWindow, PlotMana
 
 
 def setup_plot_docks(win: QMainWindow, plot_manager: PlotManager) -> dict[str, list]:
-    car_pose_plot = SpatialPlotWidget(signal_names=spatial_signal_names, default_visible_signals=spatial_signal_names)
-    car_signals_plot = TemporalPlotWidget(signal_names=temporal_signal_names, default_visible_signals=temporal_signal_names)
-
+   
+    # Directly reference the centralized widgets in PlotManager
+    car_pose_plot = plot_manager.spatial_plot_widget
+    car_signals_plot = plot_manager.temporal_plot_widget
+    
+    # Set up dock widgets
     car_pose_dock = QDockWidget("Car Pose Plot", win)
     car_pose_dock.setObjectName("CarPosePlotDock")
     car_pose_dock.setWidget(car_pose_plot)
@@ -73,11 +77,15 @@ def setup_plot_docks(win: QMainWindow, plot_manager: PlotManager) -> dict[str, l
     win.addDockWidget(Qt.RightDockWidgetArea, car_signals_dock)
 
     # Register the widgets with the plot manager, but without recreating them for each signal
-    for signal_name in spatial_signal_names:
-        plot_manager.assign_signal_to_plot(car_pose_plot, signal_name)
+    for signal in spatial_signals:
+        plot_manager.register_plot(signal)
+        # plot_manager.assign_signal_to_plot(car_pose_plot, signal)
+
         
-    for signal_name in temporal_signal_names:
-        plot_manager.assign_signal_to_plot(car_signals_plot, signal_name)
+    for signal in temporal_signals:
+        plot_manager.register_plot(signal)
+        # plot_manager.assign_signal_to_plot(car_signals_plot, signal)
+
     
     return {'plots': [car_pose_plot, car_signals_plot], 'docks': [car_pose_dock, car_signals_dock]}
 
@@ -93,11 +101,11 @@ def setup_menu_bar(win, plot_manager, plots, current_timestamp):
     view_menu.addMenu(load_signal_menu)
 
     # Add checkboxes for each available signal
-    for signal_name in plot_manager.signal_plugins.keys():
-        signal_action = QAction(signal_name, win)
+    for signal in plot_manager.signal_plugins.keys():
+        signal_action = QAction(signal, win)
         signal_action.setCheckable(True)
-        signal_action.setChecked(any(signal_name in plot.signal_names for plot in plots))
-        signal_action.triggered.connect(lambda checked, s=signal_name: toggle_signal_visibility(plot_manager, plots, s, checked, current_timestamp))
+        signal_action.setChecked(any(signal in plot.signals for plot in plots))
+        signal_action.triggered.connect(lambda checked, s=signal: toggle_signal_visibility(plot_manager, plots, s, checked, current_timestamp))
         load_signal_menu.addAction(signal_action)
 
 
@@ -135,15 +143,15 @@ def setup_timestamp_slider(win, plot_manager, current_timestamp):
     slider_dock.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
 
 
-def toggle_signal_visibility(plot_manager, plots, signal_name, visible, current_timestamp):
+def toggle_signal_visibility(plot_manager, plots, signal, visible, current_timestamp):
     for plot in plots:
         if visible:
-            if signal_name not in plot.signal_names:
-                plot.signal_names.append(signal_name)
-                plot_manager.assign_signal_to_plot(plot, signal_name)
+            if signal not in plot.signals:
+                plot.signals.append(signal)
+                plot_manager.assign_signal_to_plot(plot, signal)
                 plot_manager.request_data(current_timestamp)
         else:
-            if signal_name in plot.signal_names:
-                plot.signal_names.remove(signal_name)
-                plot_manager.remove_signal_from_plot(plot, signal_name)
+            if signal in plot.signals:
+                plot.signals.remove(signal)
+                plot_manager.remove_signal_from_plot(plot, signal)
                 plot.plot_data()

@@ -12,408 +12,120 @@ from gui.vehicle_config import niro_ev2
 from PySide6.QtGui import QPainter, QPen
 import pandas as pd
 import polars as pl
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
 
-# class BasePlotWidget(pg.PlotWidget):
-#     def __init__(self, signal_names, default_visible_signals=[], parent = None):
-#         super().__init__(parent)
-#         self.signal_names = signal_names
-#         self.default_visible_signals = default_visible_signals
-#         self.data_store = {signal_name: {'timestamps':[], 'values':[] }for signal_name in self.signal_names} 
-#         self.visibility_control = {signal: False for signal in signal_names}
-#         self.plot_widget = pg.PlotWidget()
-#         self.curves = {signal_name: self.plot_widget.plot(pen = pg.mkPen(color))
-#                        for signal_name , color in zip(self.signal_names, ["r", "g", "b", "y", "c"])}
-#         self.legend = self.plot_widget.addLegend(offset = (10,10))
-#         layout = QVBoxLayout()
-#         layout.addWidget(self.plot_widget)
-#         self.setLayout(layout)
+class SpatialPlotWidget(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
         
+        # Set up plot widget for displaying spatial data
+        self.plot_widget = pg.PlotWidget()
+        layout = QVBoxLayout()
+        layout.addWidget(self.plot_widget)
+        self.setLayout(layout)
         
-#         for signal in default_visible_signals:
-#             if signal in signal_names:
-#                 self.visibility_control[signal] = True
-#                 self.register_signal(signal)
-#             else:
-#                 print(f"Error: Signal '{signal}' not found in signal_names.")
-                
-#     def register_signal(self, signal_name):
-#         if signal_name in self.curves:
-#             return
-#         curve = pg.PlotDataItem()
-#         set.plot_widget.addItem(curve)
-#         self.curves[signal_name] = curve
-#         self.legned.addItem(curve, signal_name)
-#         print(f"Added signal {signal_name} to plot and legend")
-        
-#     def update_data(self, signal_name, data, current_timestamp):
-#         if signal_name in self.signal_names:
-#             if data is not None:
-#                 self.data_store[signal_name]['timestamps'].append(current_timestamp)
-#                 self.data_store[signal_name]['values'].append(data)
-#                 self.plot_data()
-#             else:
-#                 print(f"Warning: Received empty or None data for signal {signal_name}")
-#         else:   
-#             print(f"Error: Signal '{signal_name}' not found in signal_names.")
-            
-            
-            
-#     def plot_data(self):
-#         for signal_name, curve in self.curves.items():
-#             data = self.data_store.get(signal_name)
-#             if data and len(data['timestamps']) > 0:
-#                 timestamps = np.array(data['timestamps']).flatten()
-#                 values = np.array(data['values']).flatten()
-#                 curve.setData(timestamps, values)
-#             else:
-#                 curve.clear()
-                
-#     def toggle_signal_visibility(self, signal_name, visible):
-#         if signal_name in self.curves:
-#             self.curves[signal_name].setVisible(visible)
-#             print(f"Toggled visibility for {signal_name} to {visible}")
-#         else:
-#             print(f"Error: Signal '{signal_name}' not found in curves.")
-            
-#     def show_custom_context_menu(self, global_pos):
-#         menu = QMenu(self)
-#         signals_menu = QMenu("Signals", menu)
-        
-#         for signal_name in self.signal_names:
-#             action = QAction(signal_name, signals_menu)
-#             action.setCheckable(True)
-#             action.setChecked(self.visibility_control.get(signal_name, False))
-#             action.triggered.connect(lambda checked, s=signal_name: self.toggle_signal_visibility(s, checked))
-#             signals_menu.addAction(action)
-            
-#         menu.addMenu(signals_menu)
-#         menu.exec(global_pos)
+        # Dictionaries to store data and plot elements for each signal
+        self.data_store = {}
+        self.plot_elements = {}
+        self.signals = []  # Track registered signals
 
-# class SpatialPlotWidget(BasePlotWidget):
-#     def __init__(self, signal_names, default_visible_signals=[], parent=None):
-#         super().__init__(signal_names, default_visible_signals, parent)
-#         self.rect_items = {}
-#         self.vehicle = VehicleObject(config=niro_ev2)
-
-#     def plot_data(self):
-#         for signal_name, curve in self.curves.items():
-#             if self.visibility_control.get(signal_name, False):
-#                 data = self.data_store.get(signal_name)
-#                 if data is not None:
-#                     try:
-#                         if signal_name == 'car_pose(t)':
-#                             if signal_name in self.rect_items:
-#                                 rect_item = self.rect_items[signal_name]
-#                                 self.vehicle.set_pose_at_front_axle(data['x'], data['y'], math.radians(data['theta']))
-#                             else:
-#                                 rect_item = self.vehicle
-#                                 self.plot_widget.getViewBox().addItem(rect_item)
-#                                 self.rect_items[signal_name] = rect_item
-#                         elif signal_name == 'route':
-#                             curve.setData(data['x'], data['y'], pen=pg.mkPen('r'))
-#                         elif signal_name == 'path_in_world_coordinates(t)':
-#                             data = np.array(data)
-#                             curve.setData(data[:, 0], data[:, 1], pen=None, symbol='o', symbolBrush='g', symbolSize=5)
-#                         elif signal_name == 'car_pose_at_path_timestamp(t)':
-#                             x, y = data['x'], data['y']
-#                             curve.setData([x], [y], pen=None, symbol='p', symbolBrush='b', symbolSize=10)
-#                     except Exception as e:
-#                         print(f"Error plotting {signal_name}: {e}")
-#             else:
-#                 curve.clear()        
-                
-#     def highlight_area(self, x1, y1, x2, y2):
-#         """Highlight a rectangular area on the plot."""
-#         rect = pg.QtGui.QGraphicsRectItem(pg.QtCore.QRectF(x1, y1, x2 - x1, y2 - y1))
-#         rect.setPen(pg.mkPen('y', width=2))
-#         self.plot_widget.addItem(rect)
-#         print(f"Highlighted area from ({x1}, {y1}) to ({x2}, {y2})")
-
-#     def clear_highlights(self):
-#         """Clear all highlighted areas on the plot."""
-#         for item in self.plot_widget.items():
-#             if isinstance(item, pg.QtGui.QGraphicsRectItem):
-#                 self.plot_widget.removeItem(item)
-#         print("Cleared all highlighted areas")
-# class TemporalPlotWidget(BasePlotWidget):
-#     def __init__(self, signal_names=None, default_visible_signals=None, parent=None):
-#         self.series_dict = {}
-#         self.static_signals = {}
-#         super().__init__(signal_names, default_visible_signals, parent)
-   
-   
-#     def register_signal(self, signal_name):
-#         if signal_name not in self.series_dict:
-#             curve = pg.PlotDataItem(pen=pg.mkPen(color='blue', width=2, style=Qt.SolidLine))  # Customize pen
-#             self.plot_widget.addItem(curve)
-#             self.series_dict[signal_name] = curve
-#             if signal_name not in self.data_store:
-#                 self.data_store[signal_name] = {'timestamps': [], 'values': []}
-
-
-#     def load_static_data(self, signal_name, data):
-#         if signal_name in self.series_dict:
-#             self.static_signals[signal_name] = data
-#         else:
-#             print(f"Error: Series for '{signal_name}' not found.")
-                    
-                    
-#     def plot_data(self):
-#         for signal_name, curve in self.series_dict.items():
-#             data = self.data_store.get(signal_name)
-#             if data and len(data['timestamps']) > 0:
-#                 timestamps = np.array(data['timestamps']).flatten()
-#                 values = np.array(data['values']).flatten()
-#                 curve.setData(timestamps, values)
-#             else:
-#                 curve.clear()   
-                
-                
-#     def calculate_moving_average(self, signal_name, window_size):
-#         """Calculate and plot the moving average of a signal."""
-#         if signal_name in self.data_store:
-#             data = self.data_store[signal_name]['values']
-#             if len(data) >= window_size:
-#                 moving_avg = np.convolve(data, np.ones(window_size)/window_size, mode='valid')
-#                 timestamps = self.data_store[signal_name]['timestamps'][window_size-1:]
-#                 self.plot_widget.plot(timestamps, moving_avg, pen=pg.mkPen('b', width=2))
-#                 print(f"Plotted moving average for {signal_name} with window size {window_size}")
-#             else:
-#                 print(f"Not enough data to calculate moving average for {signal_name}")
-#         else:
-#             print(f"Error: Signal '{signal_name}' not found in data_store")
-
-#     def export_data_to_csv(self, signal_name, file_path):
-#         """Export the data of a signal to a CSV file."""
-#         if signal_name in self.data_store:
-#             data = self.data_store[signal_name]
-#             timestamps = data['timestamps']
-#             values = data['values']
-#             with open(file_path, 'w') as file:
-#                 file.write("Timestamp,Value\n")
-#                 for t, v in zip(timestamps, values):
-#                     file.write(f"{t},{v}\n")
-#             print(f"Exported data for {signal_name} to {file_path}")
-#         else:
-#             print(f"Error: Signal '{signal_name}' not found in data_store")                           
-class SpatialPlotWidget(pg.PlotWidget):
-    def __init__(self, signal_names, default_visible_signals=[]):
-        super().__init__(viewBox=CustomViewBox(self))  # Use CustomViewBox for mouse interactions
-        
-        # Create a plot widget and set it up for spatial data
-        # self.plot_widget = pg.PlotWidget(viewBox=CustomViewBox(self))  # Use CustomViewBox for mouse interactions
-        self.signal_names = signal_names  # This plot can subscribe to multiple signals
-        self.data = {}  # Dictionary to store data for multiple signals
-        self.plot_curves = {}  # Track plot curves (signal name -> PlotCurveItem)
-        self.visibility_control = {signal: False for signal in signal_names}  # Visibility state for each signal
-        self.legend = self.addLegend(offset=(10, 10))  # Add a legend to the plot with default position
-        self.rect_items = {}  # Track custom polygon items for car_pose(t)
+        # Initialize vehicle representation
         self.vehicle = VehicleObject(config=niro_ev2)
+        self.plot_widget.addItem(self.vehicle)  # Add vehicle to plot                                      
 
 
-        # # Layout for the plot widget
-        # layout = QVBoxLayout()
-        # layout.addWidget(self.plot_widget)
-        # self.setLayout(layout)
-                                
-        # Initialize default visible signals
-        for signal in default_visible_signals:
-            if signal in signal_names:
-                self.visibility_control[signal] = True
-                self.register_signal(signal)
-            else:
-                print(f"Error: Signal '{signal}' not found in signal_names.")
-
-   
-    def register_signal(self, signal_name):
-        """Register a new signal to be displayed on the spatial plot."""
+    def register_signal(self, signal):               
+        """
+        Register spatial signals, initializing plot elements.
+        """
         
-        if signal_name in self.plot_curves:
-            return  # Signal already exists
         
-        curve = pg.PlotDataItem()  # Create a plot data item for the signal
-        self.addItem(curve)  # Add the curve to the plot
-        self.plot_curves[signal_name] = curve
-        self.legend.addItem(curve, signal_name)  # Add the curve to the legend
-        print(f"Added signal {signal_name} to plot and legend")  # Debug output
+                # Append signal to self.signals if not already present
+        
+        # Append signal to self.signals if not already present
+        if signal not in self.signals: 
+            self.signals.append(signal)
+            
+        # Initialize an empty dictionary for this signal's data
+        self.data_store[signal] = {"x": [], "y": [], "theta": None}  # Adjust as needed
+        
+        # Create plot elements based on signal type
+        if signal == "route":
+            self.plot_elements[signal] = self.plot_widget.plot(pen=pg.mkPen('r', width=2))
+        elif signal == "car_pose(t)":
+            self.plot_elements[signal] = pg.ScatterPlotItem()
+            self.plot_widget.addItem(self.plot_elements[signal])
+        elif signal == "path_in_world_coordinates(t)":
+            self.plot_elements[signal] = pg.PlotDataItem(pen=None, symbol='o', symbolBrush='g', symbolSize=5)
+            self.plot_widget.addItem(self.plot_elements[signal])
+            
+        print(f"Registered spatial signal: {signal}")
 
         
-    def update_data(self, signal_name, data, current_timestamp):
-        """Update the plot with new data for a specific signal."""
-        if signal_name in self.signal_names:
-            # if data is not None and len(data) > 0:
-            if data is not None:
-                self.data[signal_name] = data
-                if signal_name not in self.plot_curves:
-                    self.register_signal(signal_name)  # Ensure the signal is added to the plot
-                self.plot_data()  # Re-plot with updated data for all signals
-            else:
-                print(f"Warning: Received empty or None data for signal {signal_name}")
-        else:
-            print(f"Error: Signal '{signal_name}' not found in signal_names.")
+    def update_data(self, signal, data):
+        """Update data for spatial signals."""
+        if signal not in self.data_store:
+            print(f"Error(update_data): Signal '{signal}' not registered.")
+            return
+        
+        # Update data store
+        # Handle data as either dictionary or ndarray
+        if isinstance(data, dict):
+            self.data_store[signal]["x"] = data.get("x", [])
+            self.data_store[signal]["y"] = data.get("y", [])
+            self.data_store[signal]["theta"] = data.get("theta")  # Only for 'car_pose(t)', if applicable
+        elif isinstance(data, np.ndarray):
+             # Assuming ndarray format: [[x1, y1], [x2, y2], ...]
+            if data.shape[1] >= 2:  # Check to ensure we have at least two columns
+                self.data_store[signal]["x"] = data[:, 0]
+                self.data_store[signal]["y"] = data[:, 1]
+                # Optional: Set theta if provided as a third column in ndarray
+                if data.shape[1] > 2:
+                    self.data_store[signal]["theta"] = data[:, 2]
 
+        # Update plot elements
+        if signal in self.plot_elements:
+            if signal == "route" or signal == "path_in_world_coordinates(t)":
+                self.plot_elements[signal].setData(self.data_store[signal]["x"], self.data_store[signal]["y"])
+            elif signal == "car_pose(t)":
+                # Update the vehicle position and orientation
+                self.vehicle.set_pose_at_front_axle(
+                    self.data_store[signal]["x"], 
+                    self.data_store[signal]["y"], 
+                    math.radians(self.data_store[signal]["theta"])
+                )
+            
+        self.plot_widget.repaint()
+        
         
     def plot_data(self):
-        """Plot data for all subscribed signals based on visibility control."""
-        for signal_name, curve in self.plot_curves.items():
-            if self.visibility_control.get(signal_name, False):
-                data = self.data.get(signal_name)
-                if data is not None:
-                    try:
-                        if signal_name == 'car_pose(t)':
-                            if signal_name in self.rect_items:
-                                rect_item = self.rect_items[signal_name]
-                                self.vehicle.set_pose_at_front_axle(data['x'], data['y'], math.radians(data['theta']))
-                            else:
-                                rect_item = self.vehicle
-                                self.getViewBox().addItem(rect_item)
-                                self.rect_items[signal_name] = rect_item
-                        elif signal_name == 'route':
-                            curve.setData(data['x'], data['y'], pen=pg.mkPen('r'))
-                        elif signal_name == 'path_in_world_coordinates(t)':
-                            data = np.array(data)  # Ensure it's a numpy array
-                            curve.setData(data[:, 0], data[:, 1], pen=None, symbol='o', symbolBrush='g', symbolSize=5)
-                        elif signal_name == 'car_pose_at_path_timestamp(t)':
-                            x, y = data['x'], data['y']
-                            curve.setData([x], [y], pen=None, symbol='p', symbolBrush='b', symbolSize=10)
-                    except Exception as e:
-                        print(f"Error plotting {signal_name}: {e}")
-            else:
-                curve.clear()  # Clear the data if the signal is not visible
+        """Plot data for all registered signals based on current data."""
+        for signal in self.plot_elements.keys():
+            if signal in self.data_store:
+                self.update_data(signal, self.data_store[signal])
+  
+    
+    def toggle_signal_visibility(self, signal, visible):
+        """
+        Allows toggling visibility for each signal.        
+        """
+        if signal in self.plot_elements:
+            self.plot_elements[signal].setVisible(visible)
+            print(f"Toggled visibility for {signal} to {visible}")
 
-
-    def toggle_signal_visibility(self, signal_name, visible):
-        """Toggle the visibility of the signal."""
-        self.visibility_control[signal_name] = visible
-        print(f"Toggled visibility for {signal_name} to {visible}")  # Debug output
-        self.plot_data()  # Re-plot to update visibility
 
     def show_custom_context_menu(self, global_pos):
         """Show a custom context menu with signal visibility options."""
         menu = QMenu(self)
         signals_menu = QMenu("Signals", menu)
 
-        for signal_name in self.signal_names:
-            action = QAction(signal_name, signals_menu)
+        for signal in self.data_store.keys():
+            action = QAction(signal, self)
             action.setCheckable(True)
-            action.setChecked(self.visibility_control.get(signal_name, False))
-            action.triggered.connect(lambda checked, s=signal_name: self.toggle_signal_visibility(s, checked))
-            signals_menu.addAction(action)
-
-        menu.addMenu(signals_menu)
-        menu.exec(global_pos)
-
-class CustomPlotWidget_deprecated(pg.PlotWidget):
-    def __init__(self, signal_names, default_visible_signals=[]):
-        super().__init__(viewBox=CustomViewBox(self))  # Use CustomViewBox for mouse interactions
-        self.signal_names = signal_names  # This plot can subscribe to multiple signals
-        self.data = {}  # Dictionary to store data for multiple signals
-        self.plot_curves = {}  # Track plot curves (signal name -> PlotCurveItem)
-        self.visibility_control = {signal: False for signal in signal_names}  # Visibility state for each signal
-        self.legend = self.addLegend(offset=(10, 10))  # Add a legend to the plot with default position
-        self.rect_items = {}  # Track custom polygon items for car_pose(t)
-        self.vehicle = VehicleObject(config=niro_ev2)
-                                
-        # Initialize default visible signals
-        for signal in default_visible_signals:
-            if signal in signal_names:
-                self.visibility_control[signal] = True
-                self.add_signal(signal)
-        
-        print(f"Initializing TemporalPlotWidget with signals: {self.signal_names}")
-        print(f"Data store initialized: {self.data_store}")
-
-    def update_data(self, signal_name, data, current_timestamp):
-        """Update the plot with new data for a specific signal."""
-        if signal_name in self.signal_names:
-            # if data is not None and len(data) > 0:
-            if data is not None:
-                self.data[signal_name] = data
-                if signal_name not in self.plot_curves:
-                    self.add_signal(signal_name)  # Ensure the signal is added to the plot
-                self.plot_data()  # Re-plot with updated data for all signals
-            else:
-                print(f"Warning: Received empty or None data for signal {signal_name}")
-
-    def register_signal(self, signal_name):
-        """Register a new signal to be displayed on the temporal plot."""
-        series = QLineSeries(name=signal_name)
-        self.chart.addSeries(series)
-        self.series_dict[signal_name] = series
-        
-    def plot_data(self):
-        """Plot data for all subscribed signals based on visibility control."""
-        # Clear existing QGraphicsPolygonItem objects
-        # for item in self.rect_items.values():
-        #     self.getViewBox().removeItem(item)
-        # self.rect_items.clear()
-        
-        for signal_name, curve in self.plot_curves.items():
-            if self.visibility_control.get(signal_name, False):
-                data = self.data.get(signal_name)
-                if data is not None: # and len(data) > 0:
-                    try:
-                        if signal_name == 'car_pose(t)':
-                            # Update existing rectangle instead of clearing and re-adding
-                            if signal_name in self.rect_items:
-                                rect_item = self.rect_items[signal_name]
-                                # Update the vehicle's pose
-                                self.vehicle.set_pose_at_front_axle(data['x'], data['y'], math.radians(data['theta']))
-                            else:
-                                rect_item = self.vehicle
-                                self.getViewBox().addItem(rect_item)
-                                self.rect_items[signal_name] = rect_item   
-                                # add the rect_item to the legend
-                                # self.legend.addItem(rect_item, signal_name)
-                                
-                        elif signal_name == 'route':
-                            # Handle regular 2D path (route) as a line
-                            # print(f"Plotting route with data: {data}")  # Debug output
-                            curve.setData(data['x'], data['y'], pen=pg.mkPen('r'))
-                        elif signal_name == 'path_in_world_coordinates(t)':
-                            # Handle path in world coordinates as scatter plot
-                            # print(f"Plotting path_in_world_coordinates(t) with data: {data}")  # Debug output
-                            if isinstance(data, (list, tuple)) and len(data) > 1 and isinstance(data[0], (list, tuple)):
-                                data = pg.np.array(data)  # Ensure data is numpy array if needed
-                            curve.setData(data[:, 0], data[:, 1], pen=None, symbol='o', symbolBrush='g', symbolSize=5)
-                        elif signal_name == 'car_pose_at_path_timestamp(t)':
-                            # Handle car pose at path timestamp as a single marker
-                            # print(f"Plotting car_pose_at_path_timestamp(t) with data: {data}")  # Debug output
-                            # curve.setData([data[0]], [data[1]], pen=None, symbol='p', symbolBrush='g', symbolSize=10)
-                            pass
-                    except Exception as e:
-                        print(f"Error plotting {signal_name}: {e}")
-            else:
-                curve.clear()  # Clear the data if the signal is not visible
-
-    def add_signal(self, signal_name):
-        """Add a signal to the plot and the legend."""
-        if signal_name in self.plot_curves:
-            return  # Signal already exists
-
-        curve = pg.PlotDataItem()  # Create a plot data item for the signal
-        self.addItem(curve)  # Add the curve to the plot
-        self.plot_curves[signal_name] = curve
-        self.legend.addItem(curve, signal_name)  # Add the curve to the legend
-        print(f"Added signal {signal_name} to plot and legend")  # Debug output
-
-    def toggle_signal_visibility(self, signal_name, visible):
-        """Toggle the visibility of the signal."""
-        self.visibility_control[signal_name] = visible
-        print(f"Toggled visibility for {signal_name} to {visible}")  # Debug output
-        self.plot_data()  # Re-plot to update visibility
-
-    def show_custom_context_menu(self, global_pos):
-        """Show a custom context menu with signal visibility options."""
-        menu = QMenu(self)
-        signals_menu = QMenu("Signals", menu)
-
-        for signal_name in self.signal_names:
-            action = QAction(signal_name, signals_menu)
-            action.setCheckable(True)
-            action.setChecked(self.visibility_control.get(signal_name, False))
-            action.triggered.connect(lambda checked, s=signal_name: self.toggle_signal_visibility(s, checked))
+            action.setChecked(self.plot_elements[signal].isVisible())
+            action.triggered.connect(lambda checked, s=signal: self.toggle_signal_visibility(s, checked))
             signals_menu.addAction(action)
 
         menu.addMenu(signals_menu)
@@ -421,78 +133,163 @@ class CustomPlotWidget_deprecated(pg.PlotWidget):
 
 
 class TemporalPlotWidget(QWidget):
-    def __init__(self, signal_names=None, default_visible_signals=None, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.signal_names = signal_names or []
-        self.default_visible_signals = default_visible_signals or []      
-
-        # Store the time series data for each signal
+        
+        # Initialize Matplotlib figure and canvas
+        self.figure , (self.ax1, self.ax2, self.ax3) = plt.subplots(3,1,figsize = (8,6))
+        self.canvas = FigureCanvas(self.figure)
+        
+        # Layout setup for embedding the Matplotlib canvas
+        layout = QVBoxLayout() # Vertical layout
+        layout.addWidget(self.canvas) # Add the Matplotlib canvas to the layout
+        self.setLayout(layout) # Set the layout for the widget
+        
+        # Dictionary to store data for each subplot        
+        # self.data_store = {
+        #         "ax1": {"timestamps": [], "values": {}},
+        #         "ax2": {"timestamps": [], "values": {}},
+        #         "ax3": {"timestamps": [], "values": {}},
+        
+        # }   
         self.data_store = {
-            signal_name: {'timestamps': [], 'values': []} 
-            for signal_name in self.signal_names
+            "ax1": {},
+            "ax2": {},
+            "ax3": {},
+        }
+        # Initialize list to store registered signal names
+        self.signals = []
+        
+        # current timestamp indicator
+        self.timestamp_line = {
+            "ax1": None,
+            "ax2": None,
+            "ax3": None,
         }
         
-        # Setup pyqtgraph plot
-        self.plot_widget = pg.PlotWidget()
-        self.legend = self.plot_widget.addLegend(offset = (10,10))
-        self.curves = {signal_name: self.plot_widget.plot(pen=pg.mkPen(color)) 
-                       for signal_name, color in zip(self.signal_names, ["r", "g", "b", "y", "c"])}
-
-        # Layout
-        layout = QVBoxLayout()
-        layout.addWidget(self.plot_widget)
-        self.setLayout(layout)
-                                
+        # Legend visibility control
+        self.legend_lines = {}
+                                                            
             
-    def register_signal(self, signal_name):
-        """Register a new signal to be displayed on the temporal plot."""
-        if signal_name not in self.series_dict:
-            series = QLineSeries(name=signal_name)
-            self.chart.addSeries(series)
-            self.series_dict[signal_name] = series
-            self.legend.addItem(series, signal_name)  # Add the curve to the legend
+    def register_signal(self, signal, ax_name="ax1"):
+        """
+        Register a signal to be displayed on a specific subplot (ax1, ax2, or ax3).
+        """
+        
+        if ax_name in self.data_store: # Check if the subplot exists
 
-            # Ensure that the signal has an entry in the data store
-            if signal_name not in self.data_store:
-                self.data_store[signal_name] = {'timestamps': [], 'values': []}
+            # Initialize timestamps and values for this signal in the specified axis
+            self.data_store[ax_name][signal] = {
+                "timestamps": [],
+                "values": []
+            }
+                                            
+            # add signal to signals if not already present
+            if signal not in self.signals:
+                self.signals.append(signal)
+                                    
+            # Plot the signal on the specified axis and store the line for toggling visibility
+            line, = getattr(self, ax_name).plot([], [], label=signal)
+            self.legend_lines[signal] = line
+            
+            # update legened for subplot
+            getattr(self, ax_name).legend(loc="upper right", fancybox=True, shadow=True) # Add the legend to the subplot
+            self.canvas.draw() # Redraw the canvas
 
-    def load_static_data(self, signal_name, data):                
-        if signal_name in self.curves:
-            self.static_signals[signal_name] = data            
+            # Debug message
+            print(f"Added signal '{signal}' to data_store in subplot '{ax_name}'") # Debug output
         else:
-            print(f"Error: Series for '{signal_name}' not found.")
+            print(f"\033[95mError(register_signal): Subplot '{ax_name}' not found in data_store.\033[0m")
+        
+                      
+    def update_data(self, signal, data, current_timestamp):
+        """
+        Update data for a specific signal and timestamp:
+        # Iterate over all subplots: ax1, ax2, ax3 and their data. For 
+        # each subplot, we have a dictionary with timestamps and values. 
+        # Then we iterate over the dictionary items to get the subplot 
+        # name and data so we can append the current timestamp and data for the signal.
+        """
+                   
+        # Ensure data is in a compatible format
+        data_value = data.to_numpy().item() if hasattr(data, 'to_numpy') else data
+
+                
+        for ax_name, ax_data in self.data_store.items(): # Iterate over all subplots
+             # Initialize 'timestamps' and 'values' if not present
+            if "timestamps" not in ax_data:
+                ax_data["timestamps"] = []
+            if "values" not in ax_data:
+                ax_data["values"] = {}
             
-    def update_data(self, signal_name, data, current_timestamp):
-        """Update the plot with new data for a specific signal."""
-        if signal_name in self.signal_names:
-            if data is not None:
-                self.data_store[signal_name]['timestamps'].append(current_timestamp)
-                self.data_store[signal_name]['values'].append(data)
-                self.plot_data()  # Re-plot with updated data for all signals
+            
+            if signal in ax_data:# Check if the signal is registered for this subplot
+                if data_value is not None: 
+                    # Append the current timestamp and data value to this signal's list
+                    ax_data[signal]["timestamps"].append(current_timestamp)
+                    ax_data[signal]["values"].append(data_value)                                
+                    
+                    # Update the line data for the signal
+                    line = self.legend_lines[signal]
+                    line.set_xdata(ax_data[signal]["timestamps"])
+                    line.set_ydata(ax_data[signal]["values"])
+                    
+                    # Set reasonable axis limits to avoid singular matrix issues
+                    # self.ensure_axis_limits(ax_name)
+                    
+                    # Update or create the timestamp line
+                    # if self.timestamp_line[ax_name] is None:
+                    #     self.timestamp_line[ax_name] = getattr(self, ax_name).axvline(current_timestamp, color="red", linestyle="--")
+                    # else:
+                    #     self.timestamp_line[ax_name].set_xdata([current_timestamp, current_timestamp])
+                        
+                    # Update the figure
+                    self.canvas.draw()
+
+                else:
+                    print(f"\033[93mWarning: Received empty or None data for signal {signal}\033[0m")            
+
+    def ensure_axis_limits(self, ax_name):
+        """
+        Adjust the y-axis limits for a given subplot based on the values of the signals
+        plotted on that axis, with safeguards against singular matrix errors.
+        """
+        if ax_name not in self.data_store or "values" not in self.data_store[ax_name]:
+            print(f"Error: Axis '{ax_name}' not found or 'values' key missing in data_store.")
+            return
+
+        all_values = []
+        for signal, signal_data in self.data_store[ax_name]["values"].items():
+            if signal_data:  # Only include non-empty data
+                all_values.extend(signal_data)
+
+        if all_values:
+            min_val, max_val = min(all_values), max(all_values)
+            
+            # Apply buffer to avoid singular matrix
+            if max_val - min_val < 1e-3:
+                buffer = 0.1 if min_val == 0 else 0.05 * abs(min_val)
+                min_val -= buffer
+                max_val += buffer
             else:
-                print(f"Warning: Received empty or None data for signal {signal_name}")
-        else:
-            print(f"Error: Signal '{signal_name}' not found in signal_names.")
+                buffer = 0.05 * (max_val - min_val)
+                min_val -= buffer
+                max_val += buffer
 
-    def plot_data(self):
-        """Plot data for all subscribed signals based on visibility control."""
-        for signal_name, curve in self.curves.items():
-            data = self.data_store.get(signal_name)
-            if data and len(data['timestamps']) > 0:
-                timestamps = np.array(data['timestamps']).flatten()
-                values = np.array(data['values']).flatten()
-                curve.setData(timestamps, values)
-            else:
-                curve.clear()  # Clear the data if the signal is not visible
+            getattr(self, ax_name).set_ylim(min_val, max_val)
+            self.canvas.draw()
+        else:
+            print(f"Warning: No data available for setting axis limits on '{ax_name}'.")
+
+
+    def toggle_signal_visibility(self, signal, visible):
+        """
+        Toggle the visibility of a signal.
+        """
+        if signal in self.legend_lines:
+            self.legend_lines[signal].set_visible(visible)
+            self.canvas.draw()
             
-    def toggle_signal_visibility(self, signal_name, visible):
-        """Toggle the visibility of the signal."""
-        if signal_name in self.curves:
-            self.curves[signal_name].setVisible(visible)
-            print(f"Toggled visibility for {signal_name} to {visible}")  # Debug output
-        else:
-            print(f"Error: Signal '{signal_name}' not found in curves.")            
-
 class CustomViewBox(pg.ViewBox):
     def __init__(self, parent_plot, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -516,3 +313,79 @@ class CustomViewBox(pg.ViewBox):
         self.parent_plot.show_custom_context_menu(event.screenPos())
         
     
+    
+# class BasePlotWidget(pg.PlotWidget):
+#     def __init__(self, signals, default_visible_signals=[], parent = None):
+#         super().__init__(parent)
+#         self.signals = signals
+#         self.default_visible_signals = default_visible_signals
+#         self.data_store = {signal: {'timestamps':[], 'values':[] }for signal in self.signals} 
+#         self.visibility_control = {signal: False for signal in signals}
+#         self.plot_widget = pg.PlotWidget()
+#         self.curves = {signal: self.plot_widget.plot(pen = pg.mkPen(color))
+#                        for signal , color in zip(self.signals, ["r", "g", "b", "y", "c"])}
+#         self.legend = self.plot_widget.addLegend(offset = (10,10))
+#         layout = QVBoxLayout()
+#         layout.addWidget(self.plot_widget)
+#         self.setLayout(layout)
+        
+        
+#         for signal in default_visible_signals:
+#             if signal in signals:
+#                 self.visibility_control[signal] = True
+#                 self.register_signal(signal)
+#             else:
+#                 print(f"Error: Signal '{signal}' not found in signals.")
+                
+#     def register_signal(self, signal):
+#         if signal in self.curves:
+#             return
+#         curve = pg.PlotDataItem()
+#         set.plot_widget.addItem(curve)
+#         self.curves[signal] = curve
+#         self.legned.addItem(curve, signal)
+#         print(f"Added signal {signal} to plot and legend")
+        
+#     def update_data(self, signal, data, current_timestamp):
+#         if signal in self.signals:
+#             if data is not None:
+#                 self.data_store[signal]['timestamps'].append(current_timestamp)
+#                 self.data_store[signal]['values'].append(data)
+#                 self.plot_data()
+#             else:
+#                 print(f"Warning: Received empty or None data for signal {signal}")
+#         else:   
+#             print(f"Error: Signal '{signal}' not found in signals.")
+            
+            
+            
+#     def plot_data(self):
+#         for signal, curve in self.curves.items():
+#             data = self.data_store.get(signal)
+#             if data and len(data['timestamps']) > 0:
+#                 timestamps = np.array(data['timestamps']).flatten()
+#                 values = np.array(data['values']).flatten()
+#                 curve.setData(timestamps, values)
+#             else:
+#                 curve.clear()
+                
+#     def toggle_signal_visibility(self, signal, visible):
+#         if signal in self.curves:
+#             self.curves[signal].setVisible(visible)
+#             print(f"Toggled visibility for {signal} to {visible}")
+#         else:
+#             print(f"Error: Signal '{signal}' not found in curves.")
+            
+#     def show_custom_context_menu(self, global_pos):
+#         menu = QMenu(self)
+#         signals_menu = QMenu("Signals", menu)
+        
+#         for signal in self.signals:
+#             action = QAction(signal, signals_menu)
+#             action.setCheckable(True)
+#             action.setChecked(self.visibility_control.get(signal, False))
+#             action.triggered.connect(lambda checked, s=signal: self.toggle_signal_visibility(s, checked))
+#             signals_menu.addAction(action)
+            
+#         menu.addMenu(signals_menu)
+#         menu.exec(global_pos)

@@ -40,26 +40,26 @@ class CarStatePlugin(PluginBase):
 
 
 
-    def has_signal(self, signal_name):
+    def has_signal(self, signal):
         """Check if this plugin provides the requested signal."""
-        return signal_name in self.signals
+        return signal in self.signals
     
-    def get_data_for_timestamp(self, signal_name, timestamp):
+    def get_data_for_timestamp(self, signal, timestamp):
         """Fetch data for a specific signal and timestamp."""
-        if signal_name in self.signals:
-            signal_info = self.signals[signal_name]
+        if signal in self.signals:
+            signal_info = self.signals[signal]
             signal_func = signal_info.get("func")
 
             if callable(signal_func):
                 # Call the partial function with the timestamp (converted to seconds)
                 timestamp_in_sec = timestamp / 1000
                 result = signal_func(timestamp_in_sec)
-                print(f"Fetched data for '{signal_name}' at {timestamp_in_sec}s: {result}")
+                print(f"Fetched data for '{signal}' at {timestamp_in_sec}s: {result}")
                 return result
             else:
-                print(f"Error: Signal function for '{signal_name}' is not callable.")
+                print(f"Error: Signal function for '{signal}' is not callable.")
         else:
-            print(f"Error: Signal '{signal_name}' not found in CarStatePlugin.")
+            print(f"Error: Signal '{signal}' not found in CarStatePlugin.")
         return None
      
 

@@ -31,7 +31,7 @@
 |    2. Extracts signals and registers each   |
 |       with register_signal()                |
 |                                             |
-| - register_signal(signal_name, signal_info) |
+| - register_signal(signal, signal_info) |
 |    1. Stores signal type (temporal/spatial) |
 |    2. Adds signal to 'signal_plugins' dict  |
 |                                             |
@@ -74,7 +74,7 @@
 |           Temporal Plot Widget              |
 |---------------------------------------------|
 | Attributes:                                 |
-| - signal_names (list): Tracks active signals|
+| - signals (list): Tracks active signals|
 | - data_store (dict): Stores timestamped data|
 | - curves (dict): Stores plot lines for each |
 |   signal                                     |
@@ -98,7 +98,7 @@
 |           Spatial Plot Widget               |
 |---------------------------------------------|
 | Attributes:                                 |
-| - signal_names (list): Tracks spatial       |
+| - signals (list): Tracks spatial       |
 |   signals                                   |
 | - data_store (dict): Stores position data   |
 | - curves (dict): Stores plot lines for each |

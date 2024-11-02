@@ -27,27 +27,27 @@ class CarPosePlugin(PluginBase):
         result = self.car_pose.get_car_pose_at_timestamp(timestamp)
         return {"x": result[0], "y": result[1], "theta": result[2]} 
     
-    def has_signal(self, signal_name):
+    def has_signal(self, signal):
         """Check if this plugin provides the requested signal."""
-        return signal_name in self.signals
+        return signal in self.signals
     
-    def get_data_for_timestamp(self, signal_name, timestamp):
+    def get_data_for_timestamp(self, signal, timestamp):
         """Fetch data for a specific signal and timestamp."""
-        if signal_name in self.signals:
-            signal_info = self.signals[signal_name]
+        if signal in self.signals:
+            signal_info = self.signals[signal]
             signal_func = signal_info.get("func")
         
             if callable(signal_func):
                 # Call the function with the timestamp if the signal is temporal
-                if signal_name == "car_pose(t)":
+                if signal == "car_pose(t)":
                     return signal_func(timestamp)
                 else:
                     # For signals like "timestamps", directly call without arguments
                     return signal_func()
             else:
-                print(f"Error: Signal function for '{signal_name}' is not callable.")
+                print(f"Error: Signal function for '{signal}' is not callable.")
         else:
-            print(f"Error: Signal '{signal_name}' not found in CarPosePlugin.")
+            print(f"Error: Signal '{signal}' not found in CarPosePlugin.")
         return None
 
 #Explicitly define which class is the plugin
