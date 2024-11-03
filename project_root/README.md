@@ -30,6 +30,15 @@ conda env create -f environment.yml
 ./main --trip1 /home/thh3/data/trips/nissan/2024-10-01T13_46_59/
 ```
 
+### FAQ
+### Issue with 'wayland'-
+``` bash
+qt.qpa.plugin: Could not find the Qt platform plugin "wayland" in ""
+export QT_QPA_PLATFORM=xcb
+```
+
+
+
 
 
 ## **Some collected notes that needs to be organized**
@@ -143,6 +152,7 @@ On Linux, missing libQt6Charts.so.6 might mean that the necessary Qt libraries a
 
 You may need to install the QtCharts development package. For example, if you use a package manager like apt:
 
-bash
+```bash
 Copy code
 sudo apt-get install libqt6charts6 libqt6charts6-dev
+```

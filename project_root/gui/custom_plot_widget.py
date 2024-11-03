@@ -14,8 +14,136 @@ import pandas as pd
 import polars as pl
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+from PySide6.QtCore import Qt, QObject, QEvent, QPointF
 
 
+class TemporalPlotWidget_pg(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        # Create three PlotWidgets
+        self.plot1 = pg.PlotWidget()
+        self.plot2 = pg.PlotWidget()
+        self.plot3 = pg.PlotWidget()
+
+        # Add the plots to the layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.plot1)
+        layout.addWidget(self.plot2)
+        layout.addWidget(self.plot3)
+        self.setLayout(layout)
+
+        # Initialize data store for each plot
+        self.data_store = {
+            "plot1": {},
+            "plot2": {},
+            "plot3": {},
+        }
+
+        # List to store registered signals
+        self.signals = []
+
+        # Dictionary to store plot lines
+        self.plot_lines = {}
+
+        # Current timestamp indicator
+        self.timestamp_line = {
+            "plot1": None,
+            "plot2": None,
+            "plot3": None,
+        }
+
+        # Add legends to plots
+        self.legend_items = {
+            "plot1": self.plot1.addLegend(),
+            "plot2": self.plot2.addLegend(),
+            "plot3": self.plot3.addLegend(),
+        }
+        
+        # Initialize a color cycle
+        self.color_cycle = self.get_color_cycle()
+
+    def get_color_cycle(self):
+        """Returns a generator that cycles through a list of colors."""
+        colors = [
+            'r', 'g', 'b', 'c', 'm', 'y', 'k',  # Basic colors
+            '#e6194b', '#3cb44b', '#ffe119', '#4363d8',  # More colors
+            '#f58231', '#911eb4', '#46f0f0', '#f032e6',
+            '#bcf60c', '#fabebe', '#008080', '#e6beff',
+            '#9a6324', '#fffac8', '#800000', '#aaffc3',
+            '#808000', '#ffd8b1', '#000075', '#808080'
+        ]
+        while True:
+            for color in colors:
+                yield color
+                
+    def register_signal(self, signal, plot_name="plot1", color = None):
+        """
+        Register a signal to be displayed on a specific plot (plot1, plot2, or plot3).
+        """
+        if plot_name in self.data_store:
+            # Initialize data storage for the signal in the specified plot
+            self.data_store[plot_name][signal] = {
+                "timestamps": [],
+                "values": []
+            }
+
+            # Add signal to signals list if not already present
+            if signal not in self.signals:
+                self.signals.append(signal)
+                
+            # Assign a color if not specified
+            if color is None:
+                color = next(self.color_cycle)                
+
+            # Create a pen with the specified color
+            pen = pg.mkPen(color=color, width=2)
+            
+            # Plot the signal on the specified plot and store the line for future updates
+            line = getattr(self, plot_name).plot([], [], name=signal, pen=pen)            
+            self.plot_lines[signal] = line  # Correct: line is already a PlotDataItem
+
+            # Debug message
+            print(f"Added signal '{signal}' to data_store in plot '{plot_name}'")
+        else:
+            print(f"Error(register_signal): Plot '{plot_name}' not found in data_store.")
+
+    def update_data(self, signal, data, current_timestamp):
+        """
+        Update data for a specific signal and timestamp.
+        """
+        # Ensure data is in a compatible format
+        data_value = data.to_numpy().item() if hasattr(data, 'to_numpy') else data
+
+        for plot_name, plot_data in self.data_store.items():
+            if signal in plot_data:
+                if data_value is not None:
+                    # Append the current timestamp and data value to this signal's list
+                    plot_data[signal]["timestamps"].append(current_timestamp)
+                    plot_data[signal]["values"].append(data_value)
+
+                    # Update the line data for the signal
+                    line = self.plot_lines[signal]
+                    line.setData(plot_data[signal]["timestamps"], plot_data[signal]["values"])
+
+                    # Update or create the timestamp line
+                    if self.timestamp_line[plot_name] is None:
+                        self.timestamp_line[plot_name] = pg.InfiniteLine(pos=current_timestamp, angle=90, pen=pg.mkPen('r', style=Qt.DashLine))
+                        getattr(self, plot_name).addItem(self.timestamp_line[plot_name])
+                    else:
+                        self.timestamp_line[plot_name].setValue(current_timestamp)
+
+                    # Auto-update zoom if desired
+                    self.auto_update_zoom()
+                else:
+                    print(f"Warning: Received empty or None data for signal {signal}")
+
+    def auto_update_zoom(self):
+        """Auto-update zoom to fit the data."""
+        for plot in [self.plot1, self.plot2, self.plot3]:
+            plot.enableAutoRange()
+            
 class SpatialPlotWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -132,7 +260,7 @@ class SpatialPlotWidget(QWidget):
         menu.exec(global_pos)
 
 
-class TemporalPlotWidget(QWidget):
+class TemporalPlotWidget_plt(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         
@@ -245,10 +373,19 @@ class TemporalPlotWidget(QWidget):
                         
                     # Update the figure
                     self.canvas.draw()
+                    self.auto_update_zoom()  # Auto-update zoom
+
 
                 else:
                     print(f"\033[93mWarning: Received empty or None data for signal {signal}\033[0m")            
 
+    def auto_update_zoom(self):
+        """Auto-update zoom to fit the data."""
+        for ax in [self.ax1, self.ax2, self.ax3]:
+            ax.relim()
+            ax.autoscale_view()
+        self.canvas.draw()
+        
     def ensure_axis_limits(self, ax_name):
         """
         Adjust the y-axis limits for a given subplot based on the values of the signals
@@ -313,79 +450,85 @@ class CustomViewBox(pg.ViewBox):
         self.parent_plot.show_custom_context_menu(event.screenPos())
         
     
-    
-# class BasePlotWidget(pg.PlotWidget):
-#     def __init__(self, signals, default_visible_signals=[], parent = None):
-#         super().__init__(parent)
-#         self.signals = signals
-#         self.default_visible_signals = default_visible_signals
-#         self.data_store = {signal: {'timestamps':[], 'values':[] }for signal in self.signals} 
-#         self.visibility_control = {signal: False for signal in signals}
-#         self.plot_widget = pg.PlotWidget()
-#         self.curves = {signal: self.plot_widget.plot(pen = pg.mkPen(color))
-#                        for signal , color in zip(self.signals, ["r", "g", "b", "y", "c"])}
-#         self.legend = self.plot_widget.addLegend(offset = (10,10))
-#         layout = QVBoxLayout()
-#         layout.addWidget(self.plot_widget)
-#         self.setLayout(layout)
+class MplCanvas(FigureCanvas):
+
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super(MplCanvas, self).__init__(fig)
+            
+class BasePlotWidget(pg.PlotWidget):
+    def __init__(self, signals, default_visible_signals=[], parent = None):
+        super().__init__(parent)
+        self.signals = signals
+        self.default_visible_signals = default_visible_signals
+        self.data_store = {signal: {'timestamps':[], 'values':[] }for signal in self.signals} 
+        self.visibility_control = {signal: False for signal in signals}
+        self.plot_widget = pg.PlotWidget()
+        self.curves = {signal: self.plot_widget.plot(pen = pg.mkPen(color))
+                       for signal , color in zip(self.signals, ["r", "g", "b", "y", "c"])}
+        self.legend = self.plot_widget.addLegend(offset = (10,10))
+        layout = QVBoxLayout()
+        layout.addWidget(self.plot_widget)
+        self.setLayout(layout)
         
         
-#         for signal in default_visible_signals:
-#             if signal in signals:
-#                 self.visibility_control[signal] = True
-#                 self.register_signal(signal)
-#             else:
-#                 print(f"Error: Signal '{signal}' not found in signals.")
+        for signal in default_visible_signals:
+            if signal in signals:
+                self.visibility_control[signal] = True
+                self.register_signal(signal)
+            else:
+                print(f"Error: Signal '{signal}' not found in signals.")
                 
-#     def register_signal(self, signal):
-#         if signal in self.curves:
-#             return
-#         curve = pg.PlotDataItem()
-#         set.plot_widget.addItem(curve)
-#         self.curves[signal] = curve
-#         self.legned.addItem(curve, signal)
-#         print(f"Added signal {signal} to plot and legend")
+    def register_signal(self, signal):
+        if signal in self.curves:
+            return
+        curve = pg.PlotDataItem()
+        set.plot_widget.addItem(curve)
+        self.curves[signal] = curve
+        self.legned.addItem(curve, signal)
+        print(f"Added signal {signal} to plot and legend")
         
-#     def update_data(self, signal, data, current_timestamp):
-#         if signal in self.signals:
-#             if data is not None:
-#                 self.data_store[signal]['timestamps'].append(current_timestamp)
-#                 self.data_store[signal]['values'].append(data)
-#                 self.plot_data()
-#             else:
-#                 print(f"Warning: Received empty or None data for signal {signal}")
-#         else:   
-#             print(f"Error: Signal '{signal}' not found in signals.")
+    def update_data(self, signal, data, current_timestamp):
+        if signal in self.signals:
+            if data is not None:
+                self.data_store[signal]['timestamps'].append(current_timestamp)
+                self.data_store[signal]['values'].append(data)
+                self.plot_data()
+            else:
+                print(f"Warning: Received empty or None data for signal {signal}")
+        else:   
+            print(f"Error: Signal '{signal}' not found in signals.")
             
             
             
-#     def plot_data(self):
-#         for signal, curve in self.curves.items():
-#             data = self.data_store.get(signal)
-#             if data and len(data['timestamps']) > 0:
-#                 timestamps = np.array(data['timestamps']).flatten()
-#                 values = np.array(data['values']).flatten()
-#                 curve.setData(timestamps, values)
-#             else:
-#                 curve.clear()
+    def plot_data(self):
+        for signal, curve in self.curves.items():
+            data = self.data_store.get(signal)
+            if data and len(data['timestamps']) > 0:
+                timestamps = np.array(data['timestamps']).flatten()
+                values = np.array(data['values']).flatten()
+                curve.setData(timestamps, values)
+            else:
+                curve.clear()
                 
-#     def toggle_signal_visibility(self, signal, visible):
-#         if signal in self.curves:
-#             self.curves[signal].setVisible(visible)
-#             print(f"Toggled visibility for {signal} to {visible}")
-#         else:
-#             print(f"Error: Signal '{signal}' not found in curves.")
+    def toggle_signal_visibility(self, signal, visible):
+        if signal in self.curves:
+            self.curves[signal].setVisible(visible)
+            print(f"Toggled visibility for {signal} to {visible}")
+        else:
+            print(f"Error: Signal '{signal}' not found in curves.")
             
-#     def show_custom_context_menu(self, global_pos):
-#         menu = QMenu(self)
-#         signals_menu = QMenu("Signals", menu)
+    def show_custom_context_menu(self, global_pos):
+        menu = QMenu(self)
+        signals_menu = QMenu("Signals", menu)
         
-#         for signal in self.signals:
-#             action = QAction(signal, signals_menu)
-#             action.setCheckable(True)
-#             action.setChecked(self.visibility_control.get(signal, False))
-#             action.triggered.connect(lambda checked, s=signal: self.toggle_signal_visibility(s, checked))
-#             signals_menu.addAction(action)
+        for signal in self.signals:
+            action = QAction(signal, signals_menu)
+            action.setCheckable(True)
+            action.setChecked(self.visibility_control.get(signal, False))
+            action.triggered.connect(lambda checked, s=signal: self.toggle_signal_visibility(s, checked))
+            signals_menu.addAction(action)
             
-#         menu.addMenu(signals_menu)
-#         menu.exec(global_pos)
+        menu.addMenu(signals_menu)
+        menu.exec(global_pos)

@@ -14,11 +14,11 @@ temporal_signals = [
 
 # Updated mapping: signals assigned to one or more axes
 temporal_signal_axes = {
-    "current_steering": ["ax1", "ax3"],
-    "target_steering_angle": ["ax1", "ax3"],
-    "current_speed": ["ax2","ax3"],
-    "target_speed": ["ax2", "ax3"],
-    "driving_mode": ["ax3", "ax3"]   
+    "current_steering": ["plot1", "plot3"],
+    "target_steering_angle": ["plot1", "plot3"],
+    "current_speed": ["plot2","plot3"],
+    "target_speed": ["plot2", "plot3"],
+    "driving_mode": ["plot3"]   
     # Add additional mappings as needed
 }
 

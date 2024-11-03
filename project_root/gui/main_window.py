@@ -1,6 +1,6 @@
 from PySide6.QtWidgets import QMainWindow, QDockWidget, QWidget, QVBoxLayout, QComboBox, QCheckBox, QHBoxLayout, QMenu, QMenuBar, QMessageBox, QSizePolicy
 from PySide6.QtCore import Qt, Signal
-from gui.custom_plot_widget import SpatialPlotWidget, TemporalPlotWidget
+from gui.custom_plot_widget import SpatialPlotWidget, TemporalPlotWidget_plt, TemporalPlotWidget_pg
 from gui.timestamp_slider import TimestampSlider
 from core.plot_manager import PlotManager
 from core.config import spatial_signals, temporal_signals  # Import signal lists from config

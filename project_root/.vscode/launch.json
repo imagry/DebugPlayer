@@ -1,6 +1,7 @@
 {
     "version": "0.2.0",
     "configurations": [
+
         // {
         //     "name": "Test: Vehicle Object",
         //     "type": "debugpy",
@@ -48,7 +49,31 @@
             "env": {
                 "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
             }
-        }
+        },
+        {
+            "name": "Test: Plot Widget",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/tests/test_plot_widgets.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}",  // Set the base path here
+            "env": {
+            "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
+            }
+        },
+        // {
+        //     "name": "Pytest: Run test_plot_widgets",
+        //     "type": "debugpy",
+        //     "request": "launch",
+        //     "module": "pytest",            
+        //     "args": [
+        //         "-v",  // Optional: Run pytest in verbose mode
+        //         "${workspaceFolder:project_root}/tests/test_plot_widgets.py"
+        //     ],
+        //     "console": "integratedTerminal",
+        //     "justMyCode": false
+        // }
+        
     ],
     "inputs": [
         {
@@ -60,6 +85,6 @@
                 "${workspaceFolder:project_root}/tests/test_pathtrajectory_reader.py",
                 "${workspaceFolder:project_root}/tests/test_vehicle_multi_files_reader.py",
             ]
-        }
+        },
     ]
 }

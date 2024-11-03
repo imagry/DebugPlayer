@@ -2,7 +2,7 @@ import os
 import sys
 from PySide6.QtCore import Slot
 import importlib.util
-from gui.custom_plot_widget import TemporalPlotWidget, SpatialPlotWidget
+from gui.custom_plot_widget import TemporalPlotWidget_plt, SpatialPlotWidget, TemporalPlotWidget_pg   
 from core.config import temporal_signal_axes
 
 class PlotManager:
@@ -15,7 +15,7 @@ class PlotManager:
         self.plugins = {}  # Plugin registry
         self.signal_plugins = {}  # To track which plugin provides which signal
         self.signal_types = {}  # To track the type of data for each signal
-        self.temporal_plot_widget = TemporalPlotWidget()  # Single instance for temporal signals
+        self.temporal_plot_widget = TemporalPlotWidget_pg()  # Single instance for temporal signals
         self.spatial_plot_widget = SpatialPlotWidget()    # Single instance for spatial signals
 
 
@@ -136,7 +136,7 @@ class PlotManager:
             self.spatial_plot_widget.register_signal(signal)
         else:
             print(f"Warning: Signal type '{signal_type}' is unknown. Using TemporalPlotWidget by default.")
-            plot_widget = TemporalPlotWidget()
+            plot_widget = TemporalPlotWidget_pg()
     
         # Also track the signal in self.signals for PlotManager's use
         if signal not in self.signals:
