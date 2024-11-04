@@ -2,7 +2,7 @@ import numpy as np
 from data_classes.car_state_class import CarStateInfo
 from functools import partial
 from interfaces.PluginBase import PluginBase
-
+import polars as pl
 class CarStatePlugin(PluginBase): 
                
     def __init__(self, file_path):
@@ -54,7 +54,8 @@ class CarStatePlugin(PluginBase):
                 # Call the partial function with the timestamp (converted to seconds)
                 timestamp_in_sec = timestamp / 1000
                 result = signal_func(timestamp_in_sec)
-                print(f"Fetched data for '{signal}' at {timestamp_in_sec}s: {result}")
+                res = np.array(result).flatten()
+                print(f"Fetched data for '{signal}' at {timestamp_in_sec}s: {res[0]}")
                 return result
             else:
                 print(f"Error: Signal function for '{signal}' is not callable.")

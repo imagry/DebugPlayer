@@ -44,8 +44,10 @@ class TemporalPlotWidget_pg(QWidget):
         # List to store registered signals
         self.signals = []
 
-        # Dictionary to store plot lines
-        self.plot_lines = {}
+        # Dictionary to store plot lines per signal per plot
+        # Now supports multiple plots per signal
+        self.plot_lines = {}  # { signal_name: { plot_name: PlotDataItem } }
+
 
         # Current timestamp indicator
         self.timestamp_line = {
@@ -80,32 +82,40 @@ class TemporalPlotWidget_pg(QWidget):
                 
     def register_signal(self, signal, plot_name="plot1", color = None):
         """
-        Register a signal to be displayed on a specific plot (plot1, plot2, or plot3).
+        Register a signal to be displayed on one or more plots based on the mapping.
         """
+        
+        
         if plot_name in self.data_store:
             # Initialize data storage for the signal in the specified plot
             self.data_store[plot_name][signal] = {
                 "timestamps": [],
                 "values": []
             }
-
+            
             # Add signal to signals list if not already present
             if signal not in self.signals:
                 self.signals.append(signal)
-                
+        
             # Assign a color if not specified
             if color is None:
-                color = next(self.color_cycle)                
-
+                color = next(self.color_cycle)  
+        
             # Create a pen with the specified color
             pen = pg.mkPen(color=color, width=2)
             
+            # Initialize plot lines for this signal if not already
+            if signal not in self.plot_lines:
+                self.plot_lines[signal] = {}
+    
+    
             # Plot the signal on the specified plot and store the line for future updates
-            line = getattr(self, plot_name).plot([], [], name=signal, pen=pen)            
-            self.plot_lines[signal] = line  # Correct: line is already a PlotDataItem
+            plot_widget = getattr(self, plot_name)
+            line = plot_widget.plot([], [], name=signal, pen=pen)
+            self.plot_lines[signal][plot_name] = line  # Store line under signal and plot
 
             # Debug message
-            print(f"Added signal '{signal}' to data_store in plot '{plot_name}'")
+            print(f"\033[38;5;214mAdded signal\033[0m '{signal}' to \033[93m data_store \033[0m in plot '{plot_name}'")
         else:
             print(f"Error(register_signal): Plot '{plot_name}' not found in data_store.")
 
@@ -116,28 +126,32 @@ class TemporalPlotWidget_pg(QWidget):
         # Ensure data is in a compatible format
         data_value = data.to_numpy().item() if hasattr(data, 'to_numpy') else data
 
-        for plot_name, plot_data in self.data_store.items():
-            if signal in plot_data:
-                if data_value is not None:
-                    # Append the current timestamp and data value to this signal's list
-                    plot_data[signal]["timestamps"].append(current_timestamp)
-                    plot_data[signal]["values"].append(data_value)
+        if data_value is not None:
+        # Update data in each plot where the signal is registered
+            for plot_name in self.plot_lines.get(signal, {}):
+                # Get the data store for this signal and plot
+                plot_data = self.data_store[plot_name][signal] 
 
-                    # Update the line data for the signal
-                    line = self.plot_lines[signal]
-                    line.setData(plot_data[signal]["timestamps"], plot_data[signal]["values"])
+                # Append the current timestamp and data value to this signal's list
+                plot_data["timestamps"].append(current_timestamp)
+                plot_data["values"].append(data_value)
 
-                    # Update or create the timestamp line
-                    if self.timestamp_line[plot_name] is None:
-                        self.timestamp_line[plot_name] = pg.InfiniteLine(pos=current_timestamp, angle=90, pen=pg.mkPen('r', style=Qt.DashLine))
-                        getattr(self, plot_name).addItem(self.timestamp_line[plot_name])
-                    else:
-                        self.timestamp_line[plot_name].setValue(current_timestamp)
+                # Update the line data for the signal
+                line = self.plot_lines[signal][plot_name]
+                line.setData(plot_data["timestamps"], plot_data["values"])
 
-                    # Auto-update zoom if desired
-                    self.auto_update_zoom()
+                # Update or create the timestamp line
+                if self.timestamp_line[plot_name] is None:
+                    self.timestamp_line[plot_name] = pg.InfiniteLine(pos=current_timestamp, angle=90, pen=pg.mkPen('r', style=Qt.DashLine))
+                    getattr(self, plot_name).addItem(self.timestamp_line[plot_name])
                 else:
-                    print(f"Warning: Received empty or None data for signal {signal}")
+                    self.timestamp_line[plot_name].setValue(current_timestamp)
+
+                # Auto-update zoom if desired
+                self.auto_update_zoom()
+                
+            else:
+                print(f"Warning: Received empty or None data for signal {signal}")
 
     def auto_update_zoom(self):
         """Auto-update zoom to fit the data."""
@@ -189,7 +203,7 @@ class SpatialPlotWidget(QWidget):
             self.plot_elements[signal] = pg.PlotDataItem(pen=None, symbol='o', symbolBrush='g', symbolSize=5)
             self.plot_widget.addItem(self.plot_elements[signal])
             
-        print(f"Registered spatial signal: {signal}")
+        print(f"\033[94mRegistered spatial signal\033[0m: {signal}")
 
         
     def update_data(self, signal, data):
@@ -325,7 +339,7 @@ class TemporalPlotWidget_plt(QWidget):
             self.canvas.draw() # Redraw the canvas
 
             # Debug message
-            print(f"Added signal '{signal}' to data_store in subplot '{ax_name}'") # Debug output
+            print(f"\033[38;5;214mAdded signal\033[0m '{signal}' to \033[94m data_store in subplot \033[0m '{ax_name}'") # Debug output
         else:
             print(f"\033[95mError(register_signal): Subplot '{ax_name}' not found in data_store.\033[0m")
         
@@ -487,7 +501,7 @@ class BasePlotWidget(pg.PlotWidget):
         set.plot_widget.addItem(curve)
         self.curves[signal] = curve
         self.legned.addItem(curve, signal)
-        print(f"Added signal {signal} to plot and legend")
+        print(f"\033[38;5;214mAdded signal\033[0m {signal} to plot and legend")
         
     def update_data(self, signal, data, current_timestamp):
         if signal in self.signals:

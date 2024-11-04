@@ -10,8 +10,7 @@ class PlotManager:
         self.plots = []  # List of all plots (subscribers)
         
         # TODO: do we still need this?
-        self.signals = {}  # Dictionary to manage signal subscriptions
-        
+        self.signals = {}  # Dictionary to manage signal subscriptions        
         self.plugins = {}  # Plugin registry
         self.signal_plugins = {}  # To track which plugin provides which signal
         self.signal_types = {}  # To track the type of data for each signal
@@ -48,7 +47,7 @@ class PlotManager:
                 "type": signal_type
             }
 
-        print(f"Registered signals for plugin '{plugin_name}': {list(plugin_instance.signals.keys())}")
+        print(f"\033[92m Registered signals for plugin \033[0m '{plugin_name}': {list(plugin_instance.signals.keys())}")
 
     
     def load_plugins_from_directory(self, directory_path, plugin_args=None):
@@ -127,16 +126,13 @@ class PlotManager:
         # Create the appropriate plot widget based on signal type
         if signal_type == "temporal":
             # Get the specified axes for the signal, or default to ["ax1"] if not specified
-            axes = temporal_signal_axes.get(signal, ["ax1"])  
-            for ax_name in axes:
-                self.temporal_plot_widget.register_signal(signal, ax_name)
-            
-            self.temporal_plot_widget.register_signal(signal)            
+            plots = temporal_signal_axes.get(signal, ["plot1"])  
+            for plot_name in plots:
+                self.temporal_plot_widget.register_signal(signal, plot_name)            
         elif signal_type == "spatial":
             self.spatial_plot_widget.register_signal(signal)
         else:
-            print(f"Warning: Signal type '{signal_type}' is unknown. Using TemporalPlotWidget by default.")
-            plot_widget = TemporalPlotWidget_pg()
+            print(f"\033[93mWarning: Signal type '{signal_type}' is unknown. Using TemporalPlotWidget by default.\033[0m")
     
         # Also track the signal in self.signals for PlotManager's use
         if signal not in self.signals:
