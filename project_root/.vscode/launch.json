@@ -1,38 +1,26 @@
 {
     "version": "0.2.0",
     "configurations": [
-
-        // {
-        //     "name": "Test: Vehicle Object",
-        //     "type": "debugpy",
-        //     "request": "launch",
-        //     "program": "${workspaceFolder:project_root}/tests/gui_tests/test_vehicle_object.py",
-        //     "console": "integratedTerminal",
-        //     "cwd": "${workspaceFolder:project_root}",  // Set the base path here
-        //     "env": {
-        //         "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
-        //     }
-        // },
-        // {
-        //     "name": "Test: pathtrajectory reader",
-        //     "type": "debugpy",
-        //     "request": "launch",
-        //     "program": "${workspaceFolder:project_root}/tests/test_pathtrajectory_reader.py",
-        //     "console": "integratedTerminal",
-        //     "cwd": "${workspaceFolder:project_root}",  // Set the base path here
-        //     "env": {
-        //         "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
-        //     }
-        // },
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}", 
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}" 
+            }
+        },
         {
             "name": "Python Debugger: Choose Test File",
             "type": "debugpy",
             "request": "launch",
             "program": "${input:chooseTestFile}",
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder:project_root}",  // Set the base path here
+            "cwd": "${workspaceFolder:project_root}", 
             "env": {
-                "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
+                "PYTHONPATH": "${workspaceFolder:project_root}" 
             }
         },
         {
@@ -45,9 +33,9 @@
                 "--trip1",
                 "/home/thh3/data/trips/2024-10-17T13_08_07/"
             ],
-            "cwd": "${workspaceFolder:project_root}",  // Set the base path here
+            "cwd": "${workspaceFolder:project_root}", 
             "env": {
-                "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
+                "PYTHONPATH": "${workspaceFolder:project_root}" 
             }
         },
         {
@@ -56,24 +44,11 @@
             "request": "launch",
             "program": "${workspaceFolder:project_root}/tests/test_plot_widgets.py",
             "console": "integratedTerminal",
-            "cwd": "${workspaceFolder:project_root}",  // Set the base path here
+            "cwd": "${workspaceFolder:project_root}", 
             "env": {
-            "PYTHONPATH": "${workspaceFolder:project_root}"  // Add the project root to PYTHONPATH
+                "PYTHONPATH": "${workspaceFolder:project_root}" 
             }
         },
-        // {
-        //     "name": "Pytest: Run test_plot_widgets",
-        //     "type": "debugpy",
-        //     "request": "launch",
-        //     "module": "pytest",            
-        //     "args": [
-        //         "-v",  // Optional: Run pytest in verbose mode
-        //         "${workspaceFolder:project_root}/tests/test_plot_widgets.py"
-        //     ],
-        //     "console": "integratedTerminal",
-        //     "justMyCode": false
-        // }
-        
     ],
     "inputs": [
         {
