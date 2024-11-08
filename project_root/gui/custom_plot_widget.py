@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from PySide6.QtCore import Qt, QObject, QEvent, QPointF
+from sortedcontainers import SortedList
+from sortedcontainers import SortedDict
 
 
 class TemporalPlotWidget_pg(QWidget):
@@ -48,7 +50,6 @@ class TemporalPlotWidget_pg(QWidget):
         # Now supports multiple plots per signal
         self.plot_lines = {}  # { signal_name: { plot_name: PlotDataItem } }
 
-
         # Current timestamp indicator
         self.timestamp_line = {
             "plot1": None,
@@ -70,11 +71,12 @@ class TemporalPlotWidget_pg(QWidget):
         """Returns a generator that cycles through a list of colors."""
         colors = [
             'r', 'g', 'b', 'c', 'm', 'y', 'k',  # Basic colors
-            '#e6194b', '#3cb44b', '#ffe119', '#4363d8',  # More colors
+            '#a9a9a9', '#ff69b4', '#8a2be2', '#7fff00', # Additional colors
+            '#e6194b', '#3cb44b', '#ffe119', '#4363d8',  
             '#f58231', '#911eb4', '#46f0f0', '#f032e6',
             '#bcf60c', '#fabebe', '#008080', '#e6beff',
             '#9a6324', '#fffac8', '#800000', '#aaffc3',
-            '#808000', '#ffd8b1', '#000075', '#808080'
+            '#808000', '#ffd8b1', '#000075', '#808080'            
         ]
         while True:
             for color in colors:
@@ -84,40 +86,36 @@ class TemporalPlotWidget_pg(QWidget):
         """
         Register a signal to be displayed on one or more plots based on the mapping.
         """
-        
-        
+                
         if plot_name in self.data_store:
-            # Initialize data storage for the signal in the specified plot
-            self.data_store[plot_name][signal] = {
-                "timestamps": [],
-                "values": []
-            }
-            
+          
+            # Initialize a SortedDict for timestamps and values for this signal in the specified plot
+            if signal not in self.data_store[plot_name]:
+                self.data_store[plot_name][signal] = SortedDict()
+                        
             # Add signal to signals list if not already present
             if signal not in self.signals:
                 self.signals.append(signal)
-        
-            # Assign a color if not specified
-            if color is None:
-                color = next(self.color_cycle)  
-        
-            # Create a pen with the specified color
-            pen = pg.mkPen(color=color, width=2)
             
-            # Initialize plot lines for this signal if not already
+            # Assign a color if not specified
+            color = color or next(self.color_cycle)
+            pen = pg.mkPen(color=color, width=2)
+                  
+            # Initialize plot lines for this signal if not already present
             if signal not in self.plot_lines:
                 self.plot_lines[signal] = {}
-    
     
             # Plot the signal on the specified plot and store the line for future updates
             plot_widget = getattr(self, plot_name)
             line = plot_widget.plot([], [], name=signal, pen=pen)
-            self.plot_lines[signal][plot_name] = line  # Store line under signal and plot
-
+            self.plot_lines[signal][plot_name] = line
+            
             # Debug message
             print(f"\033[38;5;214mAdded signal\033[0m '{signal}' to \033[93m data_store \033[0m in plot '{plot_name}'")
+            
         else:
             print(f"Error(register_signal): Plot '{plot_name}' not found in data_store.")
+
 
     def update_data(self, signal, data, current_timestamp):
         """
@@ -128,18 +126,19 @@ class TemporalPlotWidget_pg(QWidget):
 
         if data_value is not None:
         # Update data in each plot where the signal is registered
-            for plot_name in self.plot_lines.get(signal, {}):
-                # Get the data store for this signal and plot
-                plot_data = self.data_store[plot_name][signal] 
+            for plot_name in self.plot_lines.get(signal, {}):                
+                # Insert or update the (timestamp, data_value) pair
+                self.data_store[plot_name][signal][current_timestamp] = data_value
 
-                # Append the current timestamp and data value to this signal's list
-                plot_data["timestamps"].append(current_timestamp)
-                plot_data["values"].append(data_value)
+                # Retrieve timestamps and values in sorted order for plotting
+                timestamps = list(self.data_store[plot_name][signal].keys())
+                values = list(self.data_store[plot_name][signal].values())
 
                 # Update the line data for the signal
                 line = self.plot_lines[signal][plot_name]
-                line.setData(plot_data["timestamps"], plot_data["values"])
-
+                line.setData(timestamps, values)
+                
+                
                 # Update or create the timestamp line
                 if self.timestamp_line[plot_name] is None:
                     self.timestamp_line[plot_name] = pg.InfiniteLine(pos=current_timestamp, angle=90, pen=pg.mkPen('r', style=Qt.DashLine))
@@ -151,7 +150,7 @@ class TemporalPlotWidget_pg(QWidget):
                 self.auto_update_zoom()
                 
             else:
-                print(f"Warning: Received empty or None data for signal {signal}")
+                print(f"\033[93mWarning: Received empty or None data for signal {signal} at time stamp {current_timestamp}\033[0m")
 
     def auto_update_zoom(self):
         """Auto-update zoom to fit the data."""
@@ -391,7 +390,7 @@ class TemporalPlotWidget_plt(QWidget):
 
 
                 else:
-                    print(f"\033[93mWarning: Received empty or None data for signal {signal}\033[0m")            
+                    print(f"\033[93mWarning: Received empty or None data for signal {signal}\033[0m at time stamp {current_timestamp}")            
 
     def auto_update_zoom(self):
         """Auto-update zoom to fit the data."""
@@ -510,7 +509,7 @@ class BasePlotWidget(pg.PlotWidget):
                 self.data_store[signal]['values'].append(data)
                 self.plot_data()
             else:
-                print(f"Warning: Received empty or None data for signal {signal}")
+                print(f"\033[93mWarning: Received empty or None data for signal {signal} at time stamp {current_timestamp}\033[0m")
         else:   
             print(f"Error: Signal '{signal}' not found in signals.")
             

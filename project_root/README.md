@@ -37,6 +37,12 @@ qt.qpa.plugin: Could not find the Qt platform plugin "wayland" in ""
 export QT_QPA_PLATFORM=xcb
 ```
 
+You may need to install the QtCharts development package. For example, if you use a package manager like apt:
+
+```bash
+Copy code
+sudo apt-get install libqt6charts6 libqt6charts6-dev
+```
 
 
 
@@ -121,7 +127,7 @@ Update the plots with data from the signals:
 
 Ensure that the PlotManager requests data from the plugin and updates the plots accordingly.
 
-#Troubleshoot - issue with QCharts
+## Troubleshoot - issue with QCharts
 Exception has occurred: ImportError
 libQt6Charts.so.6: cannot open shared object file: No such file or directory
   File "/home/thh3/dev/DebugPlayer/project_root/gui/custom_plot_widget.py", line 8, in <module>

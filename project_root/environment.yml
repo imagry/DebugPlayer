@@ -1,7 +1,9 @@
 name: DbgPkg
 channels:
-  - conda-forge
   - defaults
+  - conda-forge
+  - https://repo.anaconda.com/pkgs/main
+  - https://repo.anaconda.com/pkgs/r
 dependencies:
   - _libgcc_mutex=0.1
   - _openmp_mutex=4.5
@@ -16,6 +18,7 @@ dependencies:
   - bzip2=1.0.8
   - ca-certificates=2024.9.24
   - cairo=1.18.0
+  - certifi=2024.8.30
   - cffi=1.17.1
   - cfgv=3.4.0
   - colored=1.4.4
@@ -34,19 +37,25 @@ dependencies:
   - fontconfig=2.14.2
   - fonts-anaconda=1
   - fonts-conda-ecosystem=1
+  - fonts-conda-forge=1
   - fonttools=4.51.0
   - freetype=2.12.1
   - gettext=0.22.5
   - gettext-tools=0.22.5
   - glib=2.82.1
   - glib-tools=2.82.1
+  - gmp=6.3.0
+  - gmpy2=2.1.5
   - graphite2=1.3.14
   - gst-plugins-base=1.24.7
   - gstreamer=1.24.7
   - harfbuzz=9.0.0
   - icu=75.1
   - identify=2.5.5
+  - importlib-metadata=8.5.0
+  - importlib_metadata=8.5.0
   - intel-openmp=2022.0.1
+  - keyutils=1.6.1
   - kiwisolver=1.4.4
   - krb5=1.21.3
   - lame=3.100
@@ -86,6 +95,7 @@ dependencies:
   - libglx=1.7.0
   - libgomp=14.1.0
   - libgpg-error=1.50
+  - libhwloc=2.9.0
   - libiconv=1.17
   - libjpeg-turbo=3.0.3
   - libllvm14=14.0.6
@@ -94,6 +104,7 @@ dependencies:
   - libnsl=2.0.1
   - libntlm=1.6
   - libogg=1.3.5
+  - libopenblas=0.3.21
   - libopengl=1.7.0
   - libopus=1.3.1
   - libpciaccess=0.18
@@ -123,21 +134,26 @@ dependencies:
   - mkl-service=2.4.0
   - mkl_fft=1.3.10
   - mkl_random=1.2.7
+  - mpc=1.3.1
+  - mpfr=4.2.1
   - mpg123=1.32.6
   - mpmath=1.3.0
+  - munkres=1.1.4
   - mysql=9.0.1
   - mysql-client=9.0.1
   - mysql-common=9.0.1
   - mysql-devel=9.0.1
   - mysql-libs=9.0.1
   - mysql-server=9.0.1
-  - ncurses=6.4
+  - ncurses=6.4.20240210
   - nodeenv=1.7.0
+  - nomkl=3.0
   - nspr=4.35
   - nss=3.105
   - numexpr=2.8.7
   - numpy=1.26.4
   - numpy-base=1.26.4
+  - openblas=0.3.21
   - openjpeg=2.5.2
   - openssl=3.3.2
   - packaging=24.1
@@ -168,6 +184,7 @@ dependencies:
   - python_abi=3.12
   - pytz=2024.1
   - pyyaml=6.0.1
+  - qhull=2020.2
   - qt-main=5.15.8
   - qt6-main=6.7.3
   - readline=8.2
@@ -175,12 +192,14 @@ dependencies:
   - setuptools=72.1.0
   - sip=6.7.12
   - six=1.16.0
+  - sortedcontainers=2.4.0
   - spatialmath-python=1.1.11
   - sphinxcontrib-jsmath=1.0.1
   - sqlite=3.31.1
   - sympy=1.13.2
   - tbb=2021.8.0
   - tk=8.6.13
+  - tomli=2.0.2
   - tornado=6.4.1
   - typing-extensions=4.11.0
   - typing_extensions=4.11.0
@@ -212,5 +231,10 @@ dependencies:
   - xorg-xorgproto=2024.1
   - xz=5.4.6
   - yaml=0.2.5
+  - zipp=3.20.2
   - zlib=1.3.1
   - zstd=1.5.6
+  - pip:
+      - iniconfig==2.0.0
+      - pluggy==1.5.0
+      - pytest==8.3.3
