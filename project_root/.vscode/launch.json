@@ -13,6 +13,17 @@
             }
         },
         {
+            "name": "Test FSM",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/fsm/fsm_main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}", 
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}" 
+            }
+        },
+        {
             "name": "Python Debugger: Choose Test File",
             "type": "debugpy",
             "request": "launch",

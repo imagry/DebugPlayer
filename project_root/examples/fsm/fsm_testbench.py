@@ -1,3 +1,7 @@
+import sys
+from PySide6.QtWidgets import QApplication, QLabel, QMainWindow, QVBoxLayout, QWidget
+from PySide6.QtGui import QPixmap
+
 # %%
 import os
 # Description: A utility function to read multiple log files to obtain vehicle state
@@ -49,18 +53,56 @@ def create_fsm_diagram():
     # Save the diagram to a file
     # dot.render('fsm_diagram', format='png', cleanup=True)
     
+class FSMViewer(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle('FSM Viewer')
+
+        # Create a central widget
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+
+        # Set up the layout
+        layout = QVBoxLayout(central_widget)
+
+        # Create a label to display the FSM image
+        fsm_label = QLabel()
+        pixmap = QPixmap('fsm_diagram.png')
+        fsm_label.setPixmap(pixmap)
+        layout.addWidget(fsm_label)
+
     
 # %%
-if __name__ == '__main__':
-    # Test the function
-    import os
-    logs_file_path =  os.path.abspath('li_conditions_2024-11-07T15_00_53.csv')
+# if __name__ == '__main__':
+#     # Test the function
+#     import os
+#     logs_file_path =  os.path.abspath('li_conditions_2024-11-07T15_00_53.csv')
     
+#     df_li_fsm = read_li_fsm_logs(logs_file_path)
+#     if df_li_fsm is not None:
+#         print(df_li_fsm.head())
+#         print(df_li_fsm.schema)
+        
+    
+#     create_fsm_diagram()    
+
+    
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    
+    
+    logs_file_path =  os.path.abspath('li_conditions_2024-11-07T15_00_53.csv')
+
     df_li_fsm = read_li_fsm_logs(logs_file_path)
     if df_li_fsm is not None:
         print(df_li_fsm.head())
         print(df_li_fsm.schema)
-        
     
-    create_fsm_diagram()    
 
+    create_fsm_diagram()
+
+
+    viewer = FSMViewer()
+    viewer.show()
+    sys.exit(app.exec())
+        

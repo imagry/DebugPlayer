@@ -43,8 +43,36 @@ class TimestampSlider(QWidget):
         self.speed_slider.setTickInterval(1)
         self.speed_slider.setToolTip("Playback Speed")
         self.speed_slider.valueChanged.connect(self.update_speed_label)
-        # self.slider.sliderMoved.connect(self.on_slider_moved)  # Connect to sliderMoved signal
-
+        
+        # Set custom style for the speed slider
+        self.speed_slider.setStyleSheet("""
+            QSlider::groove:horizontal {
+                border: 1px solid #999999;
+                height: 8px;
+                background: #b0b0b0;
+                margin: 2px 0;
+            }
+            QSlider::handle:horizontal {
+                background: #5c5c5c;
+                border: 1px solid #5c5c5c;
+                width: 18px;
+                margin: -2px 0;
+                border-radius: 3px;
+            }
+            QSlider::sub-page:horizontal {
+                background: #3a3a3a;
+                border: 1px solid #777;
+                height: 8px;
+                border-radius: 2px;
+            }
+            QSlider::add-page:horizontal {
+                background: #d3d3d3;
+                border: 1px solid #777;
+                height: 8px;
+                border-radius: 2px;
+            }
+        """)
+        
         # Speed Label
         self.speed_label = QLabel("Speed: 1x")
         

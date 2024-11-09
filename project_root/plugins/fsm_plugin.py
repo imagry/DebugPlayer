@@ -7,7 +7,7 @@ class FsmPlugin(PluginBase):
                
     def __init__(self, file_path):
         super().__init__(file_path)
-        self.CarStateInfo = CarStateInfo(file_path)        
+        self.LiFsmInfo = CarStateInfo(file_path)        
         self.signals = {
             "current_steering": {"func": partial(self.CarStateInfo.get_current_steering_angle), "type": "temporal", "mode": "dynamic"},
             "current_speed": {"func": partial(self.CarStateInfo.get_current_speed_at_timestamp), "type": "temporal","mode": "dynamic"},
