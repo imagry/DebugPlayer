@@ -7,6 +7,12 @@ from examples.fsm.fsm_plot_manager import GraphView
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from matplotlib.lines import Line2D
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
+from matplotlib.ticker import MaxNLocator
+from matplotlib.ticker import MultipleLocator
+from matplotlib.ticker import AutoLocator
+from matplotlib.ticker import MaxNLocator, FuncFormatter
+
 
 
 class MainWindow(QWidget):
@@ -73,7 +79,7 @@ class MainWindow(QWidget):
             self.traversed_edges = []
             current_state = self.fsm.dataframe["Current State"].iloc[index]
             self.state_label.setText(f"Current State: {current_state}")
-            self.signal_label.setText("Signals: None")
+            # self.signal_label.setText("Signals: None")
             self.view.highlight_node(current_state)
             return  
 
@@ -87,7 +93,8 @@ class MainWindow(QWidget):
         signal_columns = self.fsm.dataframe.columns[2:-1]
         signals = {col: row[col] for col in signal_columns}
         signals_text = ", ".join(str(value) for value in signals.values())
-        self.signal_label.setText(f"Signals: {signals_text}")
+        # TODO: plot only relevant signals, the ones that changed on this tranisiton compared to the previous meaningful transition
+        # self.signal_label.setText(f"Signals: {signals_text}")
 
         self.view.highlight_node(current_state)
 
@@ -111,8 +118,14 @@ class PlotWidget(QWidget):
 
     def initUI(self):
         layout = QVBoxLayout(self)
+
+        # Create the figure and canvas
         self.canvas = FigureCanvas(Figure(figsize=(10, 4)))  # Single figure for signals plot only
         layout.addWidget(self.canvas)
+        
+        # Add the toolbar for interactive functionality
+        self.toolbar = NavigationToolbar(self.canvas, self)
+        layout.addWidget(self.toolbar)  # Add toolbar below the canvas
         
         # Create a single subplot for temporal signals
         self.signal_ax = self.canvas.figure.add_subplot(111)
@@ -126,15 +139,55 @@ class PlotWidget(QWidget):
 
     def plot_signals(self):
         """Plot the temporal signals on the single subplot."""
-        signal_columns = self.fsm.dataframe.columns[2:-1]
+        signal_columns = self.fsm.dataframe.columns[4:-1]
         timestamps = self.fsm.dataframe["time_stamp"]  # Use "time_stamp" as x-axis data
+        
+        # Plot each signal and store its line object for toggling visibility
+        lines = []
         for signal in signal_columns:
-            self.signal_ax.plot(timestamps, self.fsm.dataframe[signal], label=signal)
-        self.signal_ax.legend()
+            line, = self.signal_ax.plot(timestamps, self.fsm.dataframe[signal], label=signal)
+            lines.append(line)
+
+
+        # Create the legend and position it at the top
+        legend = self.signal_ax.legend(
+            loc='upper center',  # Position at the top center
+            bbox_to_anchor=(1.05, 1.15),  # Adjust position to place it outside the plot area
+            ncol=2,  # Arrange legend entries in multiple columns
+            fontsize='small'  # Reduce font size for readability
+        )
+        legend.set_picker(True)  # Enable picking on the legend
+
+        # Set y-axis tick density and formatting
+        self.signal_ax.yaxis.set_major_locator(MaxNLocator(nbins=5))  # Limit to a maximum of 5 ticks
+        self.signal_ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.2f}'))  # Limit to 2 decimal places
+
+
+        # Attach an event handler to each legend item for toggling visibility
+        for legend_entry, line in zip(legend.get_lines(), lines):
+            legend_entry.set_picker(True)  # Make legend item clickable
+            legend_entry.set_pickradius(5)  # Set the area around the label that responds to clicks
+
+            # Define a callback function for toggling visibility
+            def on_pick(event, legend_entry=legend_entry, line=line):
+                if event.artist == legend_entry:
+                    visible = not line.get_visible()
+                    line.set_visible(visible)
+                    legend_entry.set_alpha(1.0 if visible else 0.2)  # Dim legend entry if hidden
+                    self.signal_ax.figure.canvas.draw_idle()
+                    
+                    # auto rescale y-axis if any line is hidden
+                    self.signal_ax.relim()
+                    self.signal_ax.autoscale_view()                    
+                    
+            # Connect the callback to pick events
+            self.canvas.mpl_connect("pick_event", on_pick)                    
+            
+        
         self.signal_ax.set_title("Temporal Signals")
         self.signal_ax.set_xlabel("Time")
         self.signal_ax.set_ylabel("Signal Value")
-
+        
     def update_vertical_bar(self, timestamp):
         """Update the vertical bar position based on the current timestamp in the signals plot."""
         y_min, y_max = self.signal_ax.get_ylim()  # Get the y-axis limits for the line

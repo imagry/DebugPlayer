@@ -236,6 +236,9 @@ class Edge(QGraphicsItem):
             mid_point = (self.line.p1() + self.line.p2()) / 2
             painter.setPen(QPen(QColor("black")))
             signals_text = ", ".join([v for v in self.signals.values()])
+            signals_text = None
+            # TODO: plot only relevant signals, the ones that changed on this tranisiton compared to the previous meaningful transition
+
             painter.drawText(mid_point, signals_text)
             
 
