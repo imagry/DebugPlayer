@@ -19,7 +19,7 @@ class GraphView(QGraphicsView):
         # Map edge keys to Edge objects
         self.edges = {}
 
-        self.graph_scale = 200
+        self.graph_scale = 250
         self.k = 3  # Default number of edges to highlight
 
         self.nx_layout_functions = {
