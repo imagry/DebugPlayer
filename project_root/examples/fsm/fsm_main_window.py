@@ -9,9 +9,9 @@ from examples.fsm.fsm_plot_manager import GraphView
 class MainWindow(QWidget):
     """Main application window"""
 
-    def __init__(self, parent=None):
+    def __init__(self, fsm_file_path = None, parent=None):
         super().__init__(parent)
-        self.fsm = FSM()
+        self.fsm = FSM(fsm_file_path)
         self.current_index = 0
 
         self.view = GraphView(self.fsm)
@@ -104,9 +104,3 @@ class MainWindow(QWidget):
 
 
 
-if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    window.resize(800, 600)
-    sys.exit(app.exec())
