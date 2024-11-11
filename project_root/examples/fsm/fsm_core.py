@@ -22,16 +22,32 @@ class FSM:
         self.states = set() # Set of unique states
         self.transitions = {} # Dictionary of transitions
         self.dataframe = None # DataFrame to store the FSM data
-        self.load_mock_data(k=8, m=3, n=20, self_loops=False)
+        self.time_stamps= None
+        self.path_time_stamps= None
+        if fsm_file_path:
+            self.load_data_from_file(fsm_file_path)
+        else:
+            self.load_mock_data(k=8, m=3, n=20, self_loops=False)
 
     def load_data_from_file(self, file_path):
         """Load FSM data from a CSV file."""
+        # Header: time_stamp,li_state,path_ts,map_obj_ts,
         self.dataframe = pd.read_csv(file_path)
+        first_signal_col_ind = 4
+        signals_inds = range(first_signal_col_ind, len(self.dataframe.columns))
+        # change column name from "li_state" to "Current State"
+        self.dataframe.rename(columns={"li_state": "Current State"}, inplace=True)
         self.states.update(self.dataframe["Current State"].unique())
-        self.states.update(self.dataframe["Next State"].unique())
-        for _, row in self.dataframe.iterrows():
-            transition = (row["Current State"], row["Next State"])
-            self.transitions[transition] = {f"Signal{i+1}": row[f"Signal{i+1}"] for i in range(3)}
+        self.time_stamps=self.dataframe["time_stamp"]
+        self.path_time_stamps=self.dataframe["path_ts"]
+        df_signals = self.dataframe.drop(columns=["time_stamp","path_ts","map_obj_ts", "Current State"])
+        for ind, row in self.dataframe.iterrows():
+            if ind == len(self.dataframe) - 1:
+                break
+            next_state = self.dataframe.loc[ind + 1, "Current State"]
+            transition = (row["Current State"], next_state)
+            signals = df_signals.loc[ind]
+            self.transitions[transition] = signals.to_dict()
             
             
             
@@ -102,8 +118,8 @@ class Node(QGraphicsObject):
         self.default_color = QColor("#5AD469")
         self.highlight_color = QColor("#FFD700")
         self.color = self.default_color
-        self.radius = 30
-        self.rect = QRectF(-self.radius, -self.radius, self.radius * 2, self.radius * 2)
+        self.radius = 40
+        self.rect = QRectF(-self.radius * 2, -self.radius, self.radius * 4, self.radius * 2)
 
         self.setFlags(
             QGraphicsItem.GraphicsItemFlag.ItemIsMovable |
@@ -120,7 +136,7 @@ class Node(QGraphicsObject):
         painter.setPen(pen)
         painter.setBrush(QBrush(self.color))
         painter.drawEllipse(self.boundingRect())
-        painter.setPen(QPen(QColor("white")))
+        painter.setPen(QPen(QColor("black")))
         painter.drawText(self.boundingRect(), Qt.AlignmentFlag.AlignCenter, self.name)
 
     def add_edge(self, edge):
