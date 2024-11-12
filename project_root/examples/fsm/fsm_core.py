@@ -29,6 +29,37 @@ class FSM:
         else:
             self.load_mock_data(k=8, m=3, n=20, self_loops=False)
 
+    def extract_signals_and_signals_data(self):
+        """
+        Input: DataFrame with signals and their data. Columns are arranged such
+        that each signal has prefix 'sig_' followed by the signal_name and each signal 
+        data has the prefix 'data_' + signal_name + '_' + data_value_name. 
+        For example: sig_RWB_1, data_RWB_1_reached_waiting_box, data_RWB_1_hit_point_x_ego_frame.
+        
+        Output: Dictionary of signals and their data such that each signal has a dictionary of 
+        its data and we can later easily retrieve for each signal its data.
+        """
+        signals_data = {}
+        for column in self.dataframe.columns:
+            if column.startswith("sig_"):
+                signal_name = column[4:] # remove the prefix 'sig_'
+                if signal_name not in signals_data: # add the signal if it is not already in the dictionary
+                    signals_data[signal_name] = {"signal": self.dataframe[column].tolist(), "data": {}}
+                else:
+                    signals_data[signal_name]["signal"] = self.dataframe[column].tolist()
+            elif column.startswith("data_"):
+                signal_name = column[5:].split('_')[0]                
+                data_value_name = column[len("data_" + signal_name + "_"):]
+                if signal_name not in signals_data:
+                    signals_data[signal_name] = {"signal": [], "data": {}}
+                signals_data[signal_name]["data"][data_value_name] = self.dataframe[column].tolist()
+        
+        self.signals_data = signals_data
+        self.signals_list = list(signals_data.keys())
+        
+        return 
+    
+    
     def load_data_from_file(self, file_path):
         """Load FSM data from a CSV file."""
         # Header: time_stamp,li_state,path_ts,map_obj_ts,
@@ -36,18 +67,28 @@ class FSM:
         first_signal_col_ind = 4
         signals_inds = range(first_signal_col_ind, len(self.dataframe.columns))
         # change column name from "li_state" to "Current State"
-        self.dataframe.rename(columns={"li_state": "Current State"}, inplace=True)
+        # df_signals_and_data = self.dataframe.drop(columns=["fsm_execution_ts_sec", "current_state", "path_ts_sec", "map_obj_ts_sec"])
+        self.dataframe.rename(columns={"current_state": "Current State"}, inplace=True)
         self.states.update(self.dataframe["Current State"].unique())
+        self.dataframe.rename(columns={"fsm_execution_ts_sec": "time_stamp"}, inplace=True)
         self.time_stamps=self.dataframe["time_stamp"]
-        self.path_time_stamps=self.dataframe["path_ts"]
-        df_signals = self.dataframe.drop(columns=["time_stamp","path_ts","map_obj_ts", "Current State"])
+        self.path_time_stamps=self.dataframe["path_ts_sec"]
+        
+        # Extract signals and their data
+        self.extract_signals_and_signals_data()
+        
         for ind, row in self.dataframe.iterrows():
             if ind == len(self.dataframe) - 1:
                 break
             next_state = self.dataframe.loc[ind + 1, "Current State"]
             transition = (row["Current State"], next_state)
-            signals = df_signals.loc[ind]
-            self.transitions[transition] = signals.to_dict()
+            # signals = df_signals.loc[ind]
+            # find which signals have numeric values (not '-')
+            signals = {signal: self.signals_data[signal]["signal"][ind] for signal in self.signals_list}            
+            # active_signals = {signal: value for signal, value in signals.items() if isinstance(value, (int, float)) and value != '-'}
+            active_signals_values = {signal: self.signals_data[signal]["signal"][ind] for signal in self.signals_list if self.signals_data[signal]["signal"][ind] != '-'}
+            self.transitions[transition] = active_signals_values
+        return
             
             
             

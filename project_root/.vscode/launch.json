@@ -16,7 +16,7 @@
             "name": "Test FSM",
             "type": "debugpy",
             "request": "launch",
-            "program": "${workspaceFolder:project_root}/fsm/fsm_main.py",
+            "program": "${workspaceFolder:project_root}/examples/fsm/fsm_main.py",
             "console": "integratedTerminal",
             "cwd": "${workspaceFolder:project_root}", 
             "env": {

@@ -90,9 +90,9 @@ class MainWindow(QWidget):
         current_state = row["Current State"]
         self.state_label.setText(f"Current State: {current_state}")
 
-        signal_columns = self.fsm.dataframe.columns[2:-1]
-        signals = {col: row[col] for col in signal_columns}
-        signals_text = ", ".join(str(value) for value in signals.values())
+        # signal_columns = self.fsm.dataframe.columns[2:-1]
+        # signals = {col: row[col] for col in signal_columns}
+        # signals_text = ", ".join(str(value) for value in signals.values())
         # TODO: plot only relevant signals, the ones that changed on this tranisiton compared to the previous meaningful transition
         # self.signal_label.setText(f"Signals: {signals_text}")
 
@@ -139,13 +139,15 @@ class PlotWidget(QWidget):
 
     def plot_signals(self):
         """Plot the temporal signals on the single subplot."""
-        signal_columns = self.fsm.dataframe.columns[4:-1]
+        # signal_columns = self.fsm.dataframe.columns[4:-1]
+        signal_names = self.fsm.signals_list
         timestamps = self.fsm.dataframe["time_stamp"]  # Use "time_stamp" as x-axis data
         
         # Plot each signal and store its line object for toggling visibility
         lines = []
-        for signal in signal_columns:
-            line, = self.signal_ax.plot(timestamps, self.fsm.dataframe[signal], label=signal)
+        for signal in signal_names:
+            signal_values = self.fsm.signals_data[signal]["signal"]  # Access the signal values
+            line, = self.signal_ax.plot(timestamps, signal_values, label=signal)    
             lines.append(line)
 
 
