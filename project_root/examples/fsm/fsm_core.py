@@ -29,6 +29,7 @@ class FSM:
         else:
             self.load_mock_data(k=8, m=3, n=20, self_loops=False)
 
+
     def extract_signals_and_signals_data(self):
         """
         Input: DataFrame with signals and their data. Columns are arranged such
@@ -58,7 +59,22 @@ class FSM:
         self.signals_list = list(signals_data.keys())
         
         return 
+
+    def get_signals_data_at_index(self, index):
+        """
+        Get signals and their data at a specific index.
+        """
+        signals_data_at_index = {signal: self.signals_data[signal]["signal"][index] for signal in self.signals_list}
+        return signals_data_at_index
     
+    def get_signals_data_at_timestamp(self, timestamp):
+        """
+        Get signals and their data at a specific timestamp.
+        """
+        index = self.time_stamps[self.time_stamps == timestamp].index[0]
+        signals_data_at_index = {signal: self.signals_data[signal]["signal"][index] for signal in self.signals_list}
+        return signals_data_at_index
+        
     
     def load_data_from_file(self, file_path):
         """Load FSM data from a CSV file."""
@@ -89,8 +105,7 @@ class FSM:
             active_signals_values = {signal: self.signals_data[signal]["signal"][ind] for signal in self.signals_list if self.signals_data[signal]["signal"][ind] != '-'}
             self.transitions[transition] = active_signals_values
         return
-            
-            
+                        
             
     def load_mock_data(self, k=4, m=3, n=10, self_loops=False):
         """Generate mock FSM data with continuous transitions.
@@ -142,8 +157,10 @@ class FSM:
 
         print(self.dataframe)
         
+        
     def get_states(self):
         return list(self.states)
+
 
     def get_transitions(self):
         return list(self.transitions.keys())
@@ -276,7 +293,7 @@ class Edge(QGraphicsItem):
             # Draw the signals or other information if needed
             mid_point = (self.line.p1() + self.line.p2()) / 2
             painter.setPen(QPen(QColor("black")))
-            signals_text = ", ".join([v for v in self.signals.values()])
+            # signals_text = ", ".join([v for v in self.signals.values()])
             signals_text = None
             # TODO: plot only relevant signals, the ones that changed on this tranisiton compared to the previous meaningful transition
 
