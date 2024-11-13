@@ -24,6 +24,10 @@ class FSM:
         self.dataframe = None # DataFrame to store the FSM data
         self.time_stamps= None
         self.path_time_stamps= None
+        self.signals_list = {} # List of signals
+        self.signals_and_data_dict = {} # Dictionary of signals-values and their data data signals -values
+        self.signals_data_dict={} # Dictionary of signals and their data at each index
+        self.signals_dict = {} # Dictionary of signals and their values
         if fsm_file_path:
             self.load_data_from_file(fsm_file_path)
         else:
@@ -33,38 +37,73 @@ class FSM:
     def extract_signals_and_signals_data(self):
         """
         Input: DataFrame with signals and their data. Columns are arranged such
-        that each signal has prefix 'sig_' followed by the signal_name and each signal 
-        data has the prefix 'data_' + signal_name + '_' + data_value_name. 
-        For example: sig_RWB_1, data_RWB_1_reached_waiting_box, data_RWB_1_hit_point_x_ego_frame.
+        that each signal has prefix 'sig-' followed by the signal_name and each signal 
+        data has the prefix 'data-' + signal_name + '-' + data_value_name. 
+        For example: sig-RWB_1, data-RWB_1-reached_waiting_box, data-RWB_1-hit_point_x_ego_frame.
         
         Output: Dictionary of signals and their data such that each signal has a dictionary of 
         its data and we can later easily retrieve for each signal its data.
         """
         signals_data = {}
         for column in self.dataframe.columns:
-            if column.startswith("sig_"):
+            if column.startswith("sig-"):
                 signal_name = column[4:] # remove the prefix 'sig_'
                 if signal_name not in signals_data: # add the signal if it is not already in the dictionary
                     signals_data[signal_name] = {"signal": self.dataframe[column].tolist(), "data": {}}
                 else:
                     signals_data[signal_name]["signal"] = self.dataframe[column].tolist()
-            elif column.startswith("data_"):
-                signal_name = column[5:].split('_')[0]                
-                data_value_name = column[len("data_" + signal_name + "_"):]
-                if signal_name not in signals_data:
-                    signals_data[signal_name] = {"signal": [], "data": {}}
-                signals_data[signal_name]["data"][data_value_name] = self.dataframe[column].tolist()
+            elif column.startswith("data-"):
+                signal_name = column[5:].split('-')[0] # remove the prefix 'data_' and get the signal name                
+                data_value_name = column[len("data-" + signal_name + "-"):] # remove the prefix 'data_' + signal_name + '_'
+                if signal_name not in signals_data: # add the signal if it is not already in the dictionary
+                    signals_data[signal_name] = {"signal": [], "data": {}} # add the signal if it is not already in the dictionary
+                signals_data[signal_name]["data"][data_value_name] = self.dataframe[column].tolist() # add the data to the signal's data dictionary
         
-        self.signals_data = signals_data
-        self.signals_list = list(signals_data.keys())
-        
+        self.signals_and_data_dict = signals_data
+        self.signals_list = list(signals_data.keys())      
+        self.signals_data_dict, self.signals_dict= self.extract_combined_signal_data()  
         return 
 
+
+    
+    def extract_combined_signal_data(self):
+        """
+        Extract combined signal data from self.signals_data.
+        
+        Output: Dictionary where each key is 'signal_name-data_value_name' and the value is the corresponding data value.
+        """
+        combined_data = {}
+        signals_data= {}
+        for signal, signal_data in self.signals_and_data_dict.items():
+            signals_data[signal] = signal_data['signal']
+            for data_value_name, data_value in signal_data["data"].items():
+                combined_key = f"{signal}-{data_value_name}"
+                combined_data[combined_key] = data_value
+        return combined_data, signals_data
+
+
+    def extract_combined_signal_data_at_index(self, index):
+        """
+        Extract combined signal data from self.signals_data at a specific index.
+        
+        Output: Dictionary where each key is 'signal_name-data_value_name' and the value is the corresponding data value.
+        """
+        combined_data = {}
+        for signal, signal_data in self.signals_and_data_dict.items():
+            for data_value_name, data_value in signal_data["data"].items():
+                combined_key = f"{signal}-{data_value_name}"
+                combined_data[combined_key] = data_value[index]
+        return combined_data
+    
+    
     def get_signals_data_at_index(self, index):
         """
         Get signals and their data at a specific index.
         """
-        signals_data_at_index = {signal: self.signals_data[signal]["signal"][index] for signal in self.signals_list}
+        signals_data_at_index = {signal: self.signals_data_dict[signal][index] 
+            for signal in self.signals_data_dict 
+            if index < len(self.signals_data_dict[signal])}
+                                
         return signals_data_at_index
     
     def get_signals_data_at_timestamp(self, timestamp):
@@ -72,7 +111,24 @@ class FSM:
         Get signals and their data at a specific timestamp.
         """
         index = self.time_stamps[self.time_stamps == timestamp].index[0]
-        signals_data_at_index = {signal: self.signals_data[signal]["signal"][index] for signal in self.signals_list}
+        signals_data_at_index = self.get_signals_data_at_index(index)
+        return signals_data_at_index
+    
+    def get_signals_value_at_index(self, index):
+        """
+        Get signals and their data at a specific index.
+        """
+        signals_value_at_index =  {signal: self.signals_dict[signal][index] 
+            for signal in self.signals_dict 
+            if index < len(self.signals_dict[signal])}
+        return signals_value_at_index
+    
+    def get_signals_value_at_timestamp(self, timestamp):
+        """
+        Get signals and their data at a specific timestamp.
+        """
+        index = self.time_stamps[self.time_stamps == timestamp].index[0]
+        signals_data_at_index = self.get_signals_value_at_index(index)
         return signals_data_at_index
         
     
@@ -100,9 +156,9 @@ class FSM:
             transition = (row["Current State"], next_state)
             # signals = df_signals.loc[ind]
             # find which signals have numeric values (not '-')
-            signals = {signal: self.signals_data[signal]["signal"][ind] for signal in self.signals_list}            
+            signals = {signal: self.signals_and_data_dict[signal]["signal"][ind] for signal in self.signals_list}            
             # active_signals = {signal: value for signal, value in signals.items() if isinstance(value, (int, float)) and value != '-'}
-            active_signals_values = {signal: self.signals_data[signal]["signal"][ind] for signal in self.signals_list if self.signals_data[signal]["signal"][ind] != '-'}
+            active_signals_values = {signal: self.signals_and_data_dict[signal]["signal"][ind] for signal in self.signals_list if self.signals_and_data_dict[signal]["signal"][ind] != '-'}
             self.transitions[transition] = active_signals_values
         return
                         

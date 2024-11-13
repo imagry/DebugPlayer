@@ -4,8 +4,7 @@ from examples.fsm.fsm_main_window import MainWindow
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    # fsm_file_path = "/home/thh3/dev/DebugPlayer/project_root/examples/fsm/data/li_fsm_logs.csv"  
-    fsm_file_path = "/home/thh3/dev/DebugPlayer/project_root/examples/fsm/data/li_conditions_FSM_2.csv"
+    fsm_file_path = "/home/thh3/dev/DebugPlayer/project_root/examples/fsm/data/fsm_3.csv"
     # fsm_file_path = None  
     window = MainWindow(fsm_file_path)
     window.show()

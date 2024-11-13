@@ -1,18 +1,9 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QComboBox, QVBoxLayout, QHBoxLayout,
                                QWidget, QSlider, QLabel, QTableWidget, QTableWidgetItem)
-import sys
-from examples.fsm.fsm_core import FSM
-from examples.fsm.fsm_plot_manager import GraphView
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.figure import Figure
-from matplotlib.lines import Line2D
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
-from matplotlib.ticker import MaxNLocator
-from matplotlib.ticker import MaxNLocator, FuncFormatter
-import numpy as np
 from PySide6.QtGui import QFont
-
+from examples.fsm.fsm_core import FSM
+from examples.fsm.fsm_plot_manager import GraphView, PlotWidget
 
 class MainWindow(QWidget):
     """Main application window"""
@@ -23,7 +14,8 @@ class MainWindow(QWidget):
         self.current_index = 0
         
         # Create components for each section of the layout
-        self.table_widget = self.create_table_widget()  # Tabular data section
+        k = min(len(self.fsm.signals_dict), len(self.fsm.signals_data_dict))
+        self.table_widget = self.create_table_widget(k+2)  # Tabular data section
         self.view = GraphView(self.fsm)                 # FSM view section
         self.plot_widget = PlotWidget(self.fsm)         # Signal plot section
 
@@ -105,13 +97,15 @@ class MainWindow(QWidget):
 
         
 
-    def create_table_widget(self):
+    def create_table_widget(self, k = 10):
         """Creates a table widget for displaying tabular data."""
         table = QTableWidget()
-        table.setRowCount(10)  # Set to the number of rows you need
-        table.setColumnCount(2)
-        table.setHorizontalHeaderLabels(["Data Name", "Data Value"])
+        table.setRowCount(k)  # Set to the number of rows you need
+        table.setColumnCount(4)
+        table.setHorizontalHeaderLabels(["Data Name", "Data Value", "Signal Name", "Signal Value"])
         table.verticalHeader().setVisible(False)
+        table.setColumnWidth(0, 400)
+        table.setColumnWidth(2, 150)
         return table
     
     def update_table_data(self, data):
@@ -121,6 +115,12 @@ class MainWindow(QWidget):
             self.table_widget.setItem(row, 0, QTableWidgetItem(name))
             self.table_widget.setItem(row, 1, QTableWidgetItem(str(value)))
 
+    def update_table_signals(self, signals):
+        """Update the table with new signals."""
+        self.table_widget.setRowCount(len(signals))
+        for row, (name, value) in enumerate(signals.items()):
+            self.table_widget.setItem(row, 2, QTableWidgetItem(name))
+            self.table_widget.setItem(row, 3, QTableWidgetItem(str(value)))
 
     def update_timestamp_marker(self, index):
         """Pass the timestamp of the current index to the PlotWidget to update the vertical bar."""
@@ -153,110 +153,11 @@ class MainWindow(QWidget):
 
         # Update the timestamp marker in the PlotWidget
         self.update_timestamp_marker(index)
-        data = self.fsm.get_signals_data_at_index(index)
-        self.update_table_data(data)
-
-
-class PlotWidget(QWidget):
-    """Widget to display only the temporal signals with a vertical line for the current timestamp."""
-
-    def __init__(self, fsm, parent=None):
-        super().__init__(parent)
-        self.fsm = fsm
-        self.initUI()
-
-    def initUI(self):
-        layout = QVBoxLayout(self)
-
-        # Create the figure and canvas
-        self.canvas = FigureCanvas(Figure(figsize=(10, 4)))  # Single figure for signals plot only
-        layout.addWidget(self.canvas)
+        signal_data_values = self.fsm.get_signals_data_at_index(index)
+        self.update_table_data(signal_data_values)
         
-        # Add the toolbar for interactive functionality
-        self.toolbar = NavigationToolbar(self.canvas, self)
-        layout.addWidget(self.toolbar)  # Add toolbar below the canvas
+        signals_values = self.fsm.get_signals_value_at_index(index)
+        self.update_table_signals(signals_values)
         
-        # Create a single subplot for temporal signals
-        self.signal_ax = self.canvas.figure.add_subplot(111)
-
-        # Plot temporal signals
-        self.plot_signals()
-
-        # Initialize the vertical line for marking timestamp in the temporal signals plot
-        self.vertical_bar = Line2D([], [], color='red', linewidth=2)
-        self.signal_ax.add_line(self.vertical_bar)
-
-    def plot_signals(self):
-        """Plot the temporal signals on the single subplot."""
-        # signal_columns = self.fsm.dataframe.columns[4:-1]
-        signal_names = self.fsm.signals_list
-        timestamps = self.fsm.dataframe["time_stamp"]  # Use "time_stamp" as x-axis data
-        
-        # Plot each signal and store its line object for toggling visibility
-        lines = []
-        for signal in signal_names:
-                # Ensure that `signal` and "signal" key exist in `signals_data`
-                if signal in self.fsm.signals_data and "signal" in self.fsm.signals_data[signal]:
-                    # Retrieve signal values
-                    signal_values = self.fsm.signals_data[signal]["signal"]
-                    
-                    # Ensure signal values are numeric and handle None or missing values
-                    if isinstance(signal_values, (list, np.ndarray)):
-                        # Optionally filter out None values if necessary
-                        signal_values = [value if value is not None else 0 for value in signal_values]
-
-                        # Plot the signal
-                        line, = self.signal_ax.plot(timestamps, signal_values, label=signal)
-                        lines.append(line)
-                    else:
-                        print(f"Warning: signal data for {signal} is not in a list or array format.")
-                else:
-                    print(f"Warning: Missing data for signal '{signal}' or missing 'signal' key in signals_data.")
-
-        # Create the legend and position it at the top
-        legend = self.signal_ax.legend(
-            loc='upper center',  # Position at the top center
-            bbox_to_anchor=(1.05, 1.05),  # Adjust position to place it outside the plot area
-            ncol=1,  # Arrange legend entries in multiple columns
-            fontsize='medium'  # Reduce font size for readability
-        )
-        legend.set_picker(True)  # Enable picking on the legend
-
-        # Set y-axis tick density and formatting
-        self.signal_ax.yaxis.set_major_locator(MaxNLocator(nbins=5))  # Limit to a maximum of 5 ticks
-        self.signal_ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.2f}'))  # Limit to 2 decimal places
 
 
-        # Attach an event handler to each legend item for toggling visibility
-        for legend_entry, line in zip(legend.get_lines(), lines):
-            legend_entry.set_picker(True)  # Make legend item clickable
-            legend_entry.set_pickradius(5)  # Set the area around the label that responds to clicks
-
-            # Define a callback function for toggling visibility
-            def on_pick(event, legend_entry=legend_entry, line=line):
-                if event.artist == legend_entry:
-                    visible = not line.get_visible()
-                    line.set_visible(visible)
-                    legend_entry.set_alpha(1.0 if visible else 0.2)  # Dim legend entry if hidden
-                    self.signal_ax.figure.canvas.draw_idle()
-                    
-                    # auto rescale y-axis if any line is hidden
-                            # Only autoscale if visibility changes
-                    if not visible:
-                        self.signal_ax.relim()
-                        self.signal_ax.autoscale_view()
-                                
-                    
-            # Connect the callback to pick events
-            self.canvas.mpl_connect("pick_event", on_pick)                    
-            
-        
-        self.signal_ax.set_title("Temporal Signals")
-        self.signal_ax.set_xlabel("Time")
-        self.signal_ax.set_ylabel("Signal Value")
-        
-    def update_vertical_bar(self, timestamp):
-        """Update the vertical bar position based on the current timestamp in the signals plot."""
-        y_min, y_max = self.signal_ax.get_ylim()  # Get the y-axis limits for the line
-        self.vertical_bar.set_data([timestamp, timestamp], [y_min, y_max])  # Set both x and y data
-        self.signal_ax.figure.canvas.draw_idle()  # Redraw the canvas to update the position
