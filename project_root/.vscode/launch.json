@@ -13,6 +13,17 @@
             }
         },
         {
+            "name": "Test Video_SYNC",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/examples/video_sync/vs_main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}", 
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}" 
+            }
+        },
+        {
             "name": "Test FSM",
             "type": "debugpy",
             "request": "launch",
