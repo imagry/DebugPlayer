@@ -4,42 +4,86 @@ from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PySide6.QtMultimediaWidgets import QVideoWidget
 
 
+from PySide6.QtCore import QUrl
+from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton
+from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
+from PySide6.QtMultimediaWidgets import QVideoWidget
+import sys
+import os
+
+# path_to_your_video = '/home/thh3/dev/DebugPlayer/project_root/examples/video_sync/vs_data/ARIYA_TO_01__2024-11-13T14_16_15.mp4'
+path_to_your_video = '/home/thh3/dev/DebugPlayer/project_root/examples/video_sync/vs_data/ARIYA_TO_01__2024-11-14T14_09_32.mp4'
+from PySide6.QtCore import QUrl, Qt
+from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QSlider
+from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
+from PySide6.QtMultimediaWidgets import QVideoWidget
+import sys
+
 class VideoPlayer(QMainWindow):
-    def __init__(self, timestamps):
+    def __init__(self):
         super().__init__()
         
-        self.timestamps = timestamps  # External timestamps
-        self.current_timestamp_index = 0
+        # Set up the main window layout
+        self.setWindowTitle("Video Player with Slider Control")
+        self.setGeometry(100, 100, 800, 600)
         
-        # Video player setup
+        # Create QMediaPlayer and QVideoWidget
         self.media_player = QMediaPlayer(self)
         self.audio_output = QAudioOutput(self)
         self.media_player.setAudioOutput(self.audio_output)
         
-        # Video display widget
-        self.video_widget = QVideoWidget()
+        self.video_widget = QVideoWidget(self)
         self.media_player.setVideoOutput(self.video_widget)
         
-        # Slider setup
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setRange(0, len(self.timestamps) - 1)
-        self.slider.valueChanged.connect(self.update_frame_position)
+        # Play button
+        self.play_button = QPushButton("Play Video")
+        self.play_button.clicked.connect(self.play_video)
         
-        # Layout setup
+        # Slider to control video position
+        self.slider = QSlider(Qt.Horizontal)
+        self.slider.setRange(0, 1000)  # Arbitrary range; we'll update it based on the video length
+        self.slider.sliderMoved.connect(self.set_position)
+        
+        # Connect the media player's positionChanged and durationChanged signals to update the slider
+        self.media_player.positionChanged.connect(self.update_slider)
+        self.media_player.durationChanged.connect(self.update_duration)
+        
+        # Set up the layout
         layout = QVBoxLayout()
         layout.addWidget(self.video_widget)
+        layout.addWidget(self.play_button)
         layout.addWidget(self.slider)
         
         container = QWidget()
         container.setLayout(layout)
         self.setCentralWidget(container)
+    
+    def play_video(self):
+        # Load the video file
+        video_url = QUrl.fromLocalFile("/path/to/your/video.mp4")  # Replace with your video path
+        self.media_player.setSource(video_url)
         
-    def load_video(self, video_path):
-        """Load video from file path."""
-        self.media_player.setSource(QUrl.fromLocalFile(video_path))
-        
-    def update_frame_position(self, index):
-        """Update video position based on slider."""
-        self.current_timestamp_index = index
-        timestamp = self.timestamps[index]
-        self.media_player.setPosition(timestamp)
+        # Play the video
+        self.media_player.play()
+    
+    def set_position(self, position):
+        """Seek to the position in milliseconds."""
+        duration = self.media_player.duration()
+        new_position = position / 1000 * duration  # Convert slider value to position in ms
+        self.media_player.setPosition(new_position)
+    
+    def update_slider(self, position):
+        """Update the slider position as the video plays."""
+        duration = self.media_player.duration()
+        if duration > 0:
+            self.slider.setValue(int((position / duration) * 1000))
+    
+    def update_duration(self, duration):
+        """Update the slider range based on the video duration."""
+        self.slider.setRange(0, 1000)  # Keep slider at a consistent scale of 0-1000
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    player = VideoPlayer()
+    player.show()
+    sys.exit(app.exec())

@@ -20,10 +20,20 @@ conda install conda-forge::polars
 ```
 
 ### creating the conda environment requirements YML file
+```bash
 conda env export --no-builds | grep -v "prefix" > environment.yml
+```
+
+### Missing xcb
+```bash
+sudp apt update
+sudo apt install libxcb-xinerama0 libxcb-cursor0 libxkbcommon-x11-0
+```
 
 ### Creating conda environment from YML requirments
+```bash
 conda env create -f environment.yml
+```
 
 ### Running the package
 ```bash
