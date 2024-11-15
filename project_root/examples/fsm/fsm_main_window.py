@@ -1,102 +1,138 @@
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QComboBox, QVBoxLayout, QHBoxLayout,
-                               QWidget, QSlider, QLabel, QTableWidget, QTableWidgetItem)
+from PySide6.QtWidgets import (QVBoxLayout, QHBoxLayout, QWidget, QSlider, QLabel,
+                               QTableWidget, QTableWidgetItem, QComboBox, QPushButton, QMainWindow, QLineEdit)
+from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QFont
+from PySide6.QtCore import QTimer
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 from examples.fsm.fsm_core import FSM
 from examples.fsm.fsm_plot_manager import GraphView, PlotWidget
+from examples.fsm.video_player_widget import VideoPlayerWidget
+import os
+import time
+from datetime import datetime
+import pytz  # Import pytz for timezone conversion
 
-class MainWindow(QWidget):
+class MainWindow(QMainWindow):
     """Main application window"""
 
-    def __init__(self, fsm_file_path=None, parent=None):
+    def __init__(self, fsm_file_path=None, trip_video_path = None, parent=None):
         super().__init__(parent)
         self.fsm = FSM(fsm_file_path)
         self.current_index = 0
+        self.video_path = trip_video_path
         
-        # Create components for each section of the layout
-        k = min(len(self.fsm.signals_dict), len(self.fsm.signals_data_dict))
-        self.table_widget = self.create_table_widget(k+2)  # Tabular data section
-        self.view = GraphView(self.fsm)                 # FSM view section
-        self.plot_widget = PlotWidget(self.fsm)         # Signal plot section
-
-        # Assuming `self.table_widget` is your QTableWidget instance
-        font = QFont()
-        font.setPointSize(12)  # Set the desired font size
-        self.table_widget.setFont(font)
-
-        # Main layout
-        main_layout = QVBoxLayout(self)
-
-        # Top row layout (tabular data and FSM view)
-        top_layout = QHBoxLayout()
-        top_layout.addWidget(self.table_widget, 1)  # Stretch factor 1 for table
-        top_layout.addWidget(self.view, 2)          # Stretch factor 2 for FSM view
-
-
-        # Bottom row layout (signals plot)
-        bottom_layout = QVBoxLayout()
-        bottom_layout.addWidget(self.plot_widget)
+        # Calculate time offset between FSM and video
+        self.time_offset = self.calculate_time_offset()
         
-        # Add layouts to the main layout
-        main_layout.addLayout(top_layout)
-        main_layout.addLayout(bottom_layout)
-
-        # Add FSM State Slider with label
-        slider_layout = QHBoxLayout()  # Create a horizontal layout for the slider and its label
-        slider_label = QLabel("FSM State Slider:")
-        self.slider = QSlider(Qt.Horizontal)
-        self.slider.setMinimum(0)
-        self.slider.setMaximum(len(self.fsm.dataframe) - 1)
-        self.slider.setTickInterval(1)
-        self.slider.setTickPosition(QSlider.TicksBelow)
+        # Initialize components
+        self.initialize_components()
         
-        slider_layout.addWidget(slider_label)
-        slider_layout.addWidget(self.slider)
-
-        bottom_layout.addLayout(slider_layout)  # Add slider layout to the bottom layout
-
-
-        # Add Combo Box for selecting layout
-        layout_combo_layout = QHBoxLayout()  # Horizontal layout for layout selection combo box
-        layout_combo_label = QLabel("Select Layout:")
-        self.layout_combo = QComboBox()
-        self.layout_combo.addItems(self.view.get_layout_names())
+        # Set up the main layout
+        self.setup_main_layout()
         
-        layout_combo_layout.addWidget(layout_combo_label)
-        layout_combo_layout.addWidget(self.layout_combo)
+        # Connect signals
+        self.setup_connections()
         
-        bottom_layout.addLayout(layout_combo_layout)  # Add layout combo box layout to the bottom layout
-
-
-        # Add Combo Box for selecting the number of edges to highlight
-        k_combo_layout = QHBoxLayout()  # Horizontal layout for edges combo box
-        k_combo_label = QLabel("Highlight last k edges:")
-        self.k_combo = QComboBox()
-        self.k_combo.addItems([str(i) for i in range(1, 11)])  # k from 1 to 10
-        self.k_combo.setCurrentIndex(2)  # Default k is 3
+        # Initialize FSM-specific data and state
+        self.initialize_fsm_data()
         
-        k_combo_layout.addWidget(k_combo_label)
-        k_combo_layout.addWidget(self.k_combo)
+    def calculate_time_offset(self):
+        """Calculate the offset between the FSM and video timestamps."""
+        # Get the first FSM timestamp
+        fsm_start_time = self.fsm.dataframe["time_stamp"].iloc[0]
         
-        bottom_layout.addLayout(k_combo_layout)  # Add edges combo box layout to the bottom layout
-
-
-        # Connect signals for interactions
-        self.layout_combo.currentTextChanged.connect(self.view.apply_layout)
-        self.slider.valueChanged.connect(self.update_fsm_state)
-        self.k_combo.currentTextChanged.connect(lambda k: self.view.set_k(int(k)))
-
-
-        # Initialize FSM data
-        self.state_sequence = []
-        self.traversed_edges = []
+        # Get the video start time from the filename
+        video_start_time = self.parse_video_start_time(self.video_path)
         
-        # Set up interactions and initial state
-        # self.initialize_interactions()
-        self.update_fsm_state(0)
+        # Calculate and return the offset
+        if video_start_time is not None:
+            return fsm_start_time - video_start_time
+        else:
+            return 0  # Default to 0 if there was an error parsing the video time
 
+    def increase_offset(self):
+        """Increase the offset by a fixed increment."""
+        self.time_offset += 1  # Adjust this value for the increment size
+        self.update_offset_display()
+
+    def decrease_offset(self):
+        """Decrease the offset by a fixed increment."""
+        self.time_offset -= 1  # Adjust this value for the decrement size
+        self.update_offset_display()
+
+    def update_offset_from_text(self):
+        """Update the offset value based on the text entered by the user."""
+        try:
+            # Attempt to parse the value from the QLineEdit
+            new_offset = float(self.offset_edit.text())
+            self.time_offset = new_offset
+            self.update_offset_display()
+        except ValueError:
+            # If parsing fails, reset the QLineEdit to the current offset value
+            self.offset_edit.setText((f"{self.time_offset:.4f}"))
+
+    def update_offset_display(self):
+        """Update the offset display in the QLineEdit."""
+        self.offset_edit.setText((f"{self.time_offset:.4f}"))       
+
+
+    def initialize_components(self):
+            """Initialize all components used in the main window."""
+           
+            k = min(len(self.fsm.signals_dict), len(self.fsm.signals_data_dict))
+            
+            # Create components
+            self.table_widget = self.create_table_widget(k + 2)
+            self.view = GraphView(self.fsm)
+            self.plot_widget = PlotWidget(self.fsm)
+            self.time_plot_widget = TimePlotWidget()  # Add time plot widget
+            # self.time_display_widget = TimeDisplayWidget()  # Add time display widget
+            self.time_display_widget = TimeDisplayWidget(font_size=14, font_color="cyan")  # Set size and color
+
+            # Offset display
+            self.offset_label = QLabel("Time Offset:")
+            self.offset_label.setToolTip("The offset between the FSM and video time (in seconds)")
+            
+            # Editable field for offset value
+            self.offset_edit = QLineEdit(f"{self.time_offset:.4f}")
+            self.offset_edit.setFixedWidth(80)
+            self.offset_edit.setAlignment(Qt.AlignRight)
+            
+            # Increment and decrement buttons for offset
+            self.offset_up_button = QPushButton("▲")
+            self.offset_down_button = QPushButton("▼")
         
+            # Connect buttons and edit field for offset changes
+            self.offset_up_button.clicked.connect(self.increase_offset)
+            self.offset_down_button.clicked.connect(self.decrease_offset)
+            self.offset_edit.returnPressed.connect(self.update_offset_from_text)
 
+            
+            # Initialize the video timer plot widget with the video start time in Unix time
+            self.video_start_time = self.parse_video_start_time(self.video_path)
+            
+
+            # Set font for the table widget
+            font = QFont()
+            font.setPointSize(12)
+            self.table_widget.setFont(font)
+            
+            # Create the FSM state slider
+            self.slider = self.create_slider()
+            
+            # Create combo boxes
+            self.layout_combo = self.create_layout_combo()
+            self.k_combo = self.create_k_combo()
+            
+            # Create button to open video player
+            self.video_button = QPushButton("Open Video Player")
+            self.video_button.clicked.connect(self.open_video_player)
+            
+            # Initialize the video player (it will be shown only when needed)
+            self.video_player = None
+        
     def create_table_widget(self, k = 10):
         """Creates a table widget for displaying tabular data."""
         table = QTableWidget()
@@ -108,6 +144,200 @@ class MainWindow(QWidget):
         table.setColumnWidth(2, 150)
         return table
     
+    def parse_video_start_time(self, video_path):
+        """Extract and convert the video start time from the filename."""
+        # Assume the timestamp is in the format "YYYY-MM-DDTHH_MM_SS" at the end of the filename
+        try:
+            # Extract timestamp part of the filename (e.g., "2024-11-13T14_16_15")
+            timestamp_str = video_path.split("__")[-1].replace(".mp4", "")
+            
+            # Parse timestamp to a datetime object
+            video_start_dt = datetime.strptime(timestamp_str, "%Y-%m-%dT%H_%M_%S")
+            
+            # Define Tokyo timezone
+            tokyo_tz = pytz.timezone("Asia/Tokyo")
+        
+            # Localize the naive datetime to Tokyo time
+            video_start_dt_tokyo = tokyo_tz.localize(video_start_dt)
+                
+            # Convert datetime to Unix time
+            video_start_unix = int(video_start_dt_tokyo.timestamp())
+        
+            return video_start_unix
+        
+        except ValueError:
+            print("Error: Video filename format is incorrect or timestamp is missing.")
+            return None    
+            
+    def create_slider(self):
+        """Create and return a slider for FSM state control."""
+        slider = QSlider(Qt.Horizontal)
+        slider.setMinimum(0)
+        slider.setMaximum(len(self.fsm.dataframe) - 1)
+        slider.setTickInterval(1)
+        slider.setTickPosition(QSlider.TicksBelow)
+        return slider
+    
+    def create_layout_combo(self):
+        """Create and return the combo box for layout selection."""
+        layout_combo = QComboBox()
+        layout_combo.addItems(self.view.get_layout_names())
+        return layout_combo
+
+    def create_k_combo(self):
+        """Create and return the combo box for selecting number of edges to highlight."""
+        k_combo = QComboBox()
+        k_combo.addItems([str(i) for i in range(1, 11)])  # k from 1 to 10
+        k_combo.setCurrentIndex(2)  # Default k is 3
+        return k_combo
+      
+    def setup_main_layout(self):
+        """Set up the main layout with all components and sub-layouts."""
+        central_widget = QWidget()
+        main_layout = QVBoxLayout(central_widget)
+                
+        # Top row layout with table and FSM view
+        top_layout = QHBoxLayout()
+        top_layout.addWidget(self.table_widget, 1)
+        top_layout.addWidget(self.view, 2)
+        # top_layout.addWidget(self.time_plot_widget, 1)  # Add time plot widget here
+        # top_layout.addWidget(self.time_display_widget, 1)  # Add time display widget here
+
+        # Bottom layout with plot widget, slider, and combo boxes
+        bottom_layout = QVBoxLayout()
+        bottom_layout.addWidget(self.plot_widget)
+        
+        # Slider layout
+        slider_layout = QHBoxLayout()
+        slider_layout.addWidget(QLabel("FSM State Slider:"))
+        slider_layout.addWidget(self.slider)
+        bottom_layout.addLayout(slider_layout)
+        
+        # Timer layout (place it directly below the slider)
+        timer_layout = QHBoxLayout()
+        timer_layout.addWidget(self.time_display_widget)  # Add time display widget here
+        
+        # Offset layout with label, edit field, and buttons
+        offset_layout = QHBoxLayout()
+        offset_layout.addWidget(self.offset_label)
+        offset_layout.addWidget(self.offset_edit)
+        offset_layout.addWidget(self.offset_up_button)
+        offset_layout.addWidget(self.offset_down_button)
+        
+        
+        # Add timer and offset layouts to the bottom layout
+        bottom_layout.addLayout(timer_layout)
+        bottom_layout.addLayout(offset_layout)
+        
+        
+        
+        # Layout combo box layout
+        layout_combo_layout = QHBoxLayout()
+        layout_combo_layout.addWidget(QLabel("Select Layout:"))
+        layout_combo_layout.addWidget(self.layout_combo)
+        bottom_layout.addLayout(layout_combo_layout)
+        
+        # k combo box layout
+        k_combo_layout = QHBoxLayout()
+        k_combo_layout.addWidget(QLabel("Highlight last k edges:"))
+        k_combo_layout.addWidget(self.k_combo)
+        bottom_layout.addLayout(k_combo_layout)
+        
+        # Add video button to bottom layout
+        bottom_layout.addWidget(self.video_button)
+        
+        # Add top and bottom layouts to the main layout
+        main_layout.addLayout(top_layout)
+        main_layout.addLayout(bottom_layout) 
+    
+        # Set central widget
+        self.setCentralWidget(central_widget)
+    
+    def setup_connections(self):
+        """Connect signals to their respective slots."""
+    
+        # Connect the FSM slider to update the FSM state
+        self.slider.valueChanged.connect(self.update_fsm_state)
+        
+        # Connect the layout and k combo boxes to their respective slots
+        self.layout_combo.currentTextChanged.connect(self.view.apply_layout)
+        self.k_combo.currentTextChanged.connect(lambda k: self.view.set_k(int(k)))
+
+
+    def update_fsm_timer_on_release(self):
+        """Update the FSM timer based on the final slider position of the video player."""
+        current_video_position = self.video_player.media_player.position()
+        
+        # Apply offset to calculate the FSM time
+        fsm_time = current_video_position / 1000 + self.time_offset
+        
+        # Update FSM timer display
+        self.time_display_widget.update_time(fsm_time)
+        
+            
+    
+    def initialize_fsm_data(self):
+        """Initialize FSM-specific data and set the initial state."""
+        self.state_sequence = []
+        self.traversed_edges = []
+        self.update_fsm_state(0)      
+    
+    def open_video_player(self):
+        """Open the video player window."""
+        if not self.video_player:
+            self.video_player = VideoPlayerWidget(self.video_start_time)
+            self.video_player.setWindowTitle("Video Player")
+            self.video_player.resize(800, 600)
+            if os.path.exists(self.video_path):
+                trip_video_path = self.video_path 
+            else:
+                print("Video file not found.")
+                return            
+            self.video_player.load_video(trip_video_path)
+            
+            # Connect sliderReleased signal to update the FSM timer when slider is released
+            self.video_player.slider.sliderReleased.connect(self.update_fsm_timer_on_release)    
+        
+            # Synchronize video slider with main window slider
+            self.video_player.slider.valueChanged.connect(self.video_slider_moved)
+            self.slider.valueChanged.connect(self.main_slider_moved)
+            
+        
+        self.video_player.show()
+        self.video_player.raise_()
+    
+    def video_slider_moved(self, video_slider_value):
+        """Update main window slider and FSM state when video slider moves."""
+       
+        # Convert video slider value to Unix time using the video start time and time offset
+        video_time = self.video_player.get_current_timestamp()
+        fsm_time = video_time + self.time_offset
+        
+        # Find the corresponding FSM slider position based on `fsm_time`
+        fsm_index = self.find_fsm_index_for_time(fsm_time)
+                  
+        # Block signals to avoid triggering video slider when main slider is updated
+        self.slider.blockSignals(True)
+        self.slider.setValue(video_slider_value)
+        self.slider.blockSignals(False)
+        
+        # Trigger FSM state update
+        self.update_fsm_state(video_slider_value)
+
+    def main_slider_moved(self, fsm_index):
+        """Update video slider when main window slider moves."""
+        if self.video_player:  # Check if video player is initialized
+            # Get the corresponding FSM time
+            fsm_time = self.fsm.dataframe["time_stamp"].iloc[fsm_index]
+            
+            # Calculate the corresponding video time
+            video_time = fsm_time - self.time_offset
+            
+            # Update the video slider to match the video time
+            self.video_player.slider.blockSignals(True)
+            self.video_player.slider.setValue(int(video_time))
+            self.video_player.slider.blockSignals(False)
+            
     def update_table_data(self, data):
         """Update the table with new data."""
         self.table_widget.setRowCount(len(data))
@@ -142,9 +372,17 @@ class MainWindow(QWidget):
 
         row = self.fsm.dataframe.iloc[index]
         current_state = row["Current State"]
-
+           
+        # Get the current FSM time from the dataframe using the slider index
+        current_fsm_time = self.fsm.dataframe["time_stamp"].iloc[index]
+        
+        # Update FSM time display widget with the current Unix time
+        self.time_display_widget.update_time(current_fsm_time)
+        
+        
         self.view.highlight_node(current_state)
 
+        # Highlight traversed edges
         d = len(self.traversed_edges)
         num_edges_to_highlight = min(self.view.k, d)
         self.traversed_edges = [edge for edge in self.traversed_edges if edge[0] != edge[1]]
@@ -158,6 +396,107 @@ class MainWindow(QWidget):
         
         signals_values = self.fsm.get_signals_value_at_index(index)
         self.update_table_signals(signals_values)
+
+
+              
+    def find_fsm_index_for_time(self, fsm_time):
+        """Find the closest FSM index for a given time."""
+        # Find the index in the FSM data closest to the desired time
+        closest_index = (self.fsm.dataframe["time_stamp"] - fsm_time).abs().idxmin()
+        return closest_index
+
+
+class TimePlotWidget(QWidget):
+    """Widget to display current time in Unix time and OS time formats."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
         
+        # Initialize figure and canvas for plotting
+        self.figure = Figure(figsize=(5, 2))
+        self.canvas = FigureCanvas(self.figure)
+        
+        # Set up a layout and add the canvas
+        layout = QVBoxLayout()
+        layout.addWidget(self.canvas)
+        self.setLayout(layout)
+        
+        # Initialize axes for time plots
+        self.ax = self.figure.add_subplot(111)
+        self.ax.set_title("Current Time Plot")
+        self.ax.set_xlabel("Time")
+        
+        # Initialize empty lines for Unix time and OS time
+        self.unix_line, = self.ax.plot([], [], label="Unix Time (Linux)")
+        self.os_line, = self.ax.plot([], [], label="OS Time (Local)")
+        self.ax.legend()
 
+        # Store timestamps and initialize data lists
+        self.timestamps = []
+        self.unix_times = []
+        self.os_times = []
 
+    def update_time(self, current_time_unix):
+        """Update the time plot with a new timestamp."""
+        # Convert Unix time to local time
+        current_time_local = datetime.fromtimestamp(current_time_unix)
+        
+        # Update data lists
+        self.timestamps.append(len(self.timestamps))  # Use index as the x-axis
+        self.unix_times.append(current_time_unix)
+        self.os_times.append(current_time_local.timestamp())
+        
+        # Update plot data
+        self.unix_line.set_data(self.timestamps, self.unix_times)
+        self.os_line.set_data(self.timestamps, self.os_times)
+        
+        # Adjust plot limits
+        self.ax.relim()
+        self.ax.autoscale_view()
+
+        # Refresh canvas
+        self.canvas.draw_idle()
+            
+    
+class TimeDisplayWidget(QWidget):
+    """Widget to display the current FSM time in Unix and local time formats based on the slider position."""
+
+    def __init__(self, font_size=12, font_color="white", parent=None):
+        super().__init__(parent)
+        
+        # Set up labels to show Unix time and local time
+        self.unix_time_label = QLabel("Unix Time: ")
+        self.tokyo_time_label = QLabel("Tokyo Time: ")
+        
+        # Apply font size and color
+        self.set_font_size(font_size)
+        self.set_font_color(font_color)
+        
+        # Arrange labels in a vertical layout
+        layout = QVBoxLayout()
+        layout.addWidget(self.unix_time_label)
+        layout.addWidget(self.tokyo_time_label)
+        self.setLayout(layout)
+    
+    def set_font_size(self, size):
+        """Set the font size for the labels."""
+        font = QFont()
+        font.setPointSize(size)
+        self.unix_time_label.setFont(font)
+        self.tokyo_time_label.setFont(font)
+    
+    def set_font_color(self, color):
+        """Set the font color for the labels."""
+        self.unix_time_label.setStyleSheet(f"color: {color};")
+        self.tokyo_time_label.setStyleSheet(f"color: {color};")
+    
+    
+    def update_time(self, fsm_unix_time):
+        """Update the displayed time based on the FSM's current time in Unix and Tokyo time."""
+        # Convert Unix time to Tokyo time
+        tokyo_tz = pytz.timezone("Asia/Tokyo")
+        current_tokyo_time = datetime.fromtimestamp(fsm_unix_time, tokyo_tz).strftime('%Y-%m-%d %H:%M:%S')
+        
+        # Update labels
+        self.unix_time_label.setText(f"Unix Time: {fsm_unix_time:.4f}")
+        self.tokyo_time_label.setText(f"Tokyo Time: {current_tokyo_time}")

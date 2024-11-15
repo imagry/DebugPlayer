@@ -9,8 +9,7 @@ from PySide6.QtCore import QStandardPaths, Qt, Slot
 from PySide6.QtGui import QAction, QIcon, QKeySequence
 from PySide6.QtWidgets import (QApplication, QDialog, QFileDialog,
                                QMainWindow, QSlider, QStyle, QToolBar)
-from PySide6.QtMultimedia import (QAudioOutput, QMediaFormat,
-                                  QMediaPlayer)
+from PySide6.QtMultimedia import (QMediaFormat, QMediaPlayer)
 from PySide6.QtMultimediaWidgets import QVideoWidget
 
 
@@ -35,9 +34,7 @@ class MainWindow(QMainWindow):
 
         self._playlist = []  # FIXME 6.3: Replace by QMediaPlaylist?
         self._playlist_index = -1
-        self._audio_output = QAudioOutput()
         self._player = QMediaPlayer()
-        self._player.setAudioOutput(self._audio_output)
 
         self._player.errorOccurred.connect(self._player_error)
 

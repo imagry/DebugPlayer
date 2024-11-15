@@ -54,6 +54,20 @@ Copy code
 sudo apt-get install libqt6charts6 libqt6charts6-dev
 ```
 
+3. Verify LD_LIBRARY_PATH and QT_PLUGIN_PATH
+Ensure that your Anaconda environment is set up correctly to find the Qt plugins:
+
+Set LD_LIBRARY_PATH to prioritize libraries within your environment:
+
+bash
+Copy code
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+Set QT_PLUGIN_PATH to locate Qt plugins:
+
+bash
+Copy code
+export QT_PLUGIN_PATH=$CONDA_PREFIX/lib/Qt/plugins
+
 
 
 

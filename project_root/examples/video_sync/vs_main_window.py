@@ -1,21 +1,6 @@
 from PySide6.QtCore import Qt, QUrl
-from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QSlider
-from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
-from PySide6.QtMultimediaWidgets import QVideoWidget
-
-
-from PySide6.QtCore import QUrl
-from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton
-from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
-from PySide6.QtMultimediaWidgets import QVideoWidget
-import sys
-import os
-
-# path_to_your_video = '/home/thh3/dev/DebugPlayer/project_root/examples/video_sync/vs_data/ARIYA_TO_01__2024-11-13T14_16_15.mp4'
-path_to_your_video = '/home/thh3/dev/DebugPlayer/project_root/examples/video_sync/vs_data/ARIYA_TO_01__2024-11-14T14_09_32.mp4'
-from PySide6.QtCore import QUrl, Qt
 from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, QSlider
-from PySide6.QtMultimedia import QMediaPlayer, QAudioOutput
+from PySide6.QtMultimedia import QMediaPlayer
 from PySide6.QtMultimediaWidgets import QVideoWidget
 import sys
 
@@ -29,8 +14,6 @@ class VideoPlayer(QMainWindow):
         
         # Create QMediaPlayer and QVideoWidget
         self.media_player = QMediaPlayer(self)
-        self.audio_output = QAudioOutput(self)
-        self.media_player.setAudioOutput(self.audio_output)
         
         self.video_widget = QVideoWidget(self)
         self.media_player.setVideoOutput(self.video_widget)
