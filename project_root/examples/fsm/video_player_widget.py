@@ -60,8 +60,6 @@ class VideoPlayerWidget(QWidget):
         
         # Create QMediaPlayer and QVideoWidget
         self.media_player = QMediaPlayer(self)
-
-        
         self.video_widget = QVideoWidget(self)
         self.media_player.setVideoOutput(self.video_widget)
 
@@ -70,8 +68,6 @@ class VideoPlayerWidget(QWidget):
                         
         # Set the video widget to expand with the window
         self.video_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        # self.setMinimumSize(400, 300)  # Example minimum size
-        # self.setMaximumSize(1920, 1080)  # Example maximum size
         
         # Play button
         self.play_button = QPushButton("Play")
@@ -80,7 +76,6 @@ class VideoPlayerWidget(QWidget):
         # Slider to control video position
         self.slider = QSlider(Qt.Horizontal)
         self.slider.setRange(0, 1000)  # Arbitrary range; we’ll scale it with the video duration
-        self.slider.sliderMoved.connect(self.set_position)
         
         # Connect slider events to update functions
         self.slider.sliderPressed.connect(self.on_slider_pressed)
@@ -94,7 +89,7 @@ class VideoPlayerWidget(QWidget):
         
         # Connect the media player’s positionChanged and durationChanged signals to update the slider
         self.media_player.positionChanged.connect(self.update_slider)
-        self.media_player.positionChanged.connect(self.update_timer_plot)  # Connect to update the timer plot
+        self.media_player.positionChanged.connect(self.update_timer_plot)
         self.media_player.durationChanged.connect(self.update_duration)
         
         # Set up the layout
@@ -117,6 +112,10 @@ class VideoPlayerWidget(QWidget):
         final_slider_position = self.slider.value()
         self.set_position(final_slider_position)
             
+        # Notify MainWindow to update FSM timer based on the final slider value
+        if self.parent():  # Check if there's a parent (i.e., MainWindow)
+            self.parent().update_fsm_timer(final_slider_position)            
+            
     def load_video(self, trip_video_path):
         """Load a video from the given path."""
         video_url = QUrl.fromLocalFile(trip_video_path)  # Use the preferred path method
@@ -132,8 +131,6 @@ class VideoPlayerWidget(QWidget):
             self.play_button.setText("Pause")
     
     def set_position(self, position):
-        # """Set video position based on slider, only if not dragging."""
-        # if not self.is_slider_dragging:
         """Set video position based on slider."""
         duration = self.media_player.duration()
         if duration > 0:
@@ -162,8 +159,8 @@ class VideoPlayerWidget(QWidget):
             
     def update_duration(self, duration):
         """Update the slider range based on video duration."""
-        self.slider.setRange(0, 1000)  # Fixed scale of 0-1000
-
+        self.slider.setRange(0, duration)  # Duration is in milliseconds
+        
     def update_timer_plot(self, position):
         """Update the video timer plot widget with the current video position."""
         self.video_timer_widget.update_timer(position)

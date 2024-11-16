@@ -63,8 +63,8 @@ class VideoPlayer(QMainWindow):
     
     def update_duration(self, duration):
         """Update the slider range based on the video duration."""
-        self.slider.setRange(0, 1000)  # Keep slider at a consistent scale of 0-1000
-
+        self.slider.setRange(0, duration)  # Duration is in milliseconds
+        
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     player = VideoPlayer()

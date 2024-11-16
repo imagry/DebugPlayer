@@ -23,6 +23,10 @@ class MainWindow(QMainWindow):
         self.current_index = 0
         self.video_path = trip_video_path
         
+                    
+        # Initialize the video timer plot widget with the video start time in Unix time
+        self.video_start_time = self.parse_video_start_time(self.video_path)            
+        
         # Calculate time offset between FSM and video
         self.time_offset = self.calculate_time_offset()
         
@@ -44,11 +48,12 @@ class MainWindow(QMainWindow):
         fsm_start_time = self.fsm.dataframe["time_stamp"].iloc[0]
         
         # Get the video start time from the filename
-        video_start_time = self.parse_video_start_time(self.video_path)
+        video_start_time =  self.video_start_time
         
         # Calculate and return the offset
         if video_start_time is not None:
-            return fsm_start_time - video_start_time
+            time_offset = fsm_start_time - video_start_time
+            return time_offset
         else:
             return 0  # Default to 0 if there was an error parsing the video time
 
@@ -108,11 +113,6 @@ class MainWindow(QMainWindow):
             self.offset_up_button.clicked.connect(self.increase_offset)
             self.offset_down_button.clicked.connect(self.decrease_offset)
             self.offset_edit.returnPressed.connect(self.update_offset_from_text)
-
-            
-            # Initialize the video timer plot widget with the video start time in Unix time
-            self.video_start_time = self.parse_video_start_time(self.video_path)
-            
 
             # Set font for the table widget
             font = QFont()
@@ -266,14 +266,16 @@ class MainWindow(QMainWindow):
 
     def update_fsm_timer_on_release(self):
         """Update the FSM timer based on the final slider position of the video player."""
-        current_video_position = self.video_player.media_player.position()
+        # Get the final position in milliseconds from the video player
+        current_video_position_ms = self.video_player.media_player.position()
+                
+        current_video_position_s = current_video_position_ms / 1000  # Convert ms to s
+
+        # Calculate FSM time using the same consistent logic
+        fsm_time = self.video_start_time + (current_video_position_ms / 1000) + self.time_offset
         
-        # Apply offset to calculate the FSM time
-        fsm_time = current_video_position / 1000 + self.time_offset
-        
-        # Update FSM timer display
-        self.time_display_widget.update_time(fsm_time)
-        
+        # Update the FSM time display
+        self.time_display_widget.update_time(fsm_time)        
             
     
     def initialize_fsm_data(self):
@@ -297,6 +299,9 @@ class MainWindow(QMainWindow):
             
             # Connect sliderReleased signal to update the FSM timer when slider is released
             self.video_player.slider.sliderReleased.connect(self.update_fsm_timer_on_release)    
+            
+            # Connect positionChanged signal to update FSM timer when video position changes
+            self.video_player.media_player.positionChanged.connect(self.update_fsm_timer_continuous)
         
             # Synchronize video slider with main window slider
             self.video_player.slider.valueChanged.connect(self.video_slider_moved)
@@ -305,38 +310,58 @@ class MainWindow(QMainWindow):
         
         self.video_player.show()
         self.video_player.raise_()
-    
-    def video_slider_moved(self, video_slider_value):
-        """Update main window slider and FSM state when video slider moves."""
-       
-        # Convert video slider value to Unix time using the video start time and time offset
-        video_time = self.video_player.get_current_timestamp()
-        fsm_time = video_time + self.time_offset
+
+    def update_fsm_timer_continuous(self, current_video_position_ms):
+        """Update the FSM timer continuously based on the current video position."""
+        # Convert video position to seconds and apply the offset to get FSM time
+        fsm_time = self.video_start_time + (current_video_position_ms / 1000) + self.time_offset
         
-        # Find the corresponding FSM slider position based on `fsm_time`
-        fsm_index = self.find_fsm_index_for_time(fsm_time)
-                  
-        # Block signals to avoid triggering video slider when main slider is updated
+        # Update FSM timer display
+        self.time_display_widget.update_time(fsm_time)
+            
+    def video_slider_moved(self, current_video_position_ms):
+        """Update main window slider and FSM state when video slider moves."""
+    
+        # Calculate the current video time in seconds
+        current_video_time_s = current_video_position_ms / 1000  # Convert from ms to s
+
+        # Calculate the absolute video time (Unix timestamp)
+        absolute_video_time = self.video_start_time + current_video_time_s + self.time_offset
+        
+        # Update FSM time display
+        self.time_display_widget.update_time(absolute_video_time)
+    
+        # Find the closest FSM index corresponding to the absolute video time
+        fsm_index = self.find_fsm_index_for_time(absolute_video_time)
+           
+        # Update the FSM slider without triggering signals
         self.slider.blockSignals(True)
-        self.slider.setValue(video_slider_value)
+        self.slider.setValue(fsm_index)
         self.slider.blockSignals(False)
         
-        # Trigger FSM state update
-        self.update_fsm_state(video_slider_value)
+        # Update FSM state and display
+        self.update_fsm_state(fsm_index)
 
     def main_slider_moved(self, fsm_index):
-        """Update video slider when main window slider moves."""
+        """Update video slider when main window FSM slider moves."""
         if self.video_player:  # Check if video player is initialized
-            # Get the corresponding FSM time
+            # Get the corresponding FSM time for the slider's index position
             fsm_time = self.fsm.dataframe["time_stamp"].iloc[fsm_index]
             
-            # Calculate the corresponding video time
-            video_time = fsm_time - self.time_offset
-            
-            # Update the video slider to match the video time
-            self.video_player.slider.blockSignals(True)
-            self.video_player.slider.setValue(int(video_time))
-            self.video_player.slider.blockSignals(False)
+            # Calculate the video time by subtracting the video start time and time offset
+            video_time_s = fsm_time - self.video_start_time - self.time_offset
+        
+            # Convert video time to milliseconds
+            video_position_ms = video_time_s * 1000
+
+            # Ensure the calculated position is within the video duration
+            video_duration_ms = self.video_player.media_player.duration()
+            if 0 <= video_position_ms <= video_duration_ms:
+                # Update the video slider and playback position without triggering signals
+                self.video_player.slider.blockSignals(True)
+                self.video_player.slider.setValue(video_position_ms)
+                self.video_player.media_player.setPosition(video_position_ms)
+                self.video_player.slider.blockSignals(False)
             
     def update_table_data(self, data):
         """Update the table with new data."""
@@ -397,13 +422,16 @@ class MainWindow(QMainWindow):
         signals_values = self.fsm.get_signals_value_at_index(index)
         self.update_table_signals(signals_values)
 
-
-              
+    
     def find_fsm_index_for_time(self, fsm_time):
-        """Find the closest FSM index for a given time."""
-        # Find the index in the FSM data closest to the desired time
-        closest_index = (self.fsm.dataframe["time_stamp"] - fsm_time).abs().idxmin()
-        return closest_index
+        """Find the closest FSM index for a given absolute time."""
+        # Calculate the absolute difference between each timestamp and the target time
+        time_diffs = (self.fsm.dataframe["time_stamp"] - fsm_time).abs()
+        
+        # Find the index of the minimum difference
+        closest_index = time_diffs.idxmin()
+        
+        return int(closest_index)
 
 
 class TimePlotWidget(QWidget):
