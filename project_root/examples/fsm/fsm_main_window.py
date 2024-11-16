@@ -13,6 +13,7 @@ import os
 import time
 from datetime import datetime
 import pytz  # Import pytz for timezone conversion
+import sys
 
 class MainWindow(QMainWindow):
     """Main application window"""
@@ -25,10 +26,7 @@ class MainWindow(QMainWindow):
         
                     
         # Initialize the video timer plot widget with the video start time in Unix time
-        self.video_start_time = self.parse_video_start_time(self.video_path)            
-        
-        # Calculate time offset between FSM and video
-        self.time_offset = self.calculate_time_offset()
+        self.video_start_time = self.parse_video_start_time(self.video_path)                   
         
         # Initialize components
         self.initialize_components()
@@ -52,36 +50,11 @@ class MainWindow(QMainWindow):
         
         # Calculate and return the offset
         if video_start_time is not None:
-            time_offset = fsm_start_time - video_start_time
+            # time_offset = fsm_start_time - video_start_time
+            time_offset = 0 # Set to 0 for now - ideally, user will match the offset by looking at the video timer time to the actual time in the window. 
             return time_offset
         else:
             return 0  # Default to 0 if there was an error parsing the video time
-
-    def increase_offset(self):
-        """Increase the offset by a fixed increment."""
-        self.time_offset += 1  # Adjust this value for the increment size
-        self.update_offset_display()
-
-    def decrease_offset(self):
-        """Decrease the offset by a fixed increment."""
-        self.time_offset -= 1  # Adjust this value for the decrement size
-        self.update_offset_display()
-
-    def update_offset_from_text(self):
-        """Update the offset value based on the text entered by the user."""
-        try:
-            # Attempt to parse the value from the QLineEdit
-            new_offset = float(self.offset_edit.text())
-            self.time_offset = new_offset
-            self.update_offset_display()
-        except ValueError:
-            # If parsing fails, reset the QLineEdit to the current offset value
-            self.offset_edit.setText((f"{self.time_offset:.4f}"))
-
-    def update_offset_display(self):
-        """Update the offset display in the QLineEdit."""
-        self.offset_edit.setText((f"{self.time_offset:.4f}"))       
-
 
     def initialize_components(self):
             """Initialize all components used in the main window."""
@@ -95,24 +68,7 @@ class MainWindow(QMainWindow):
             self.time_plot_widget = TimePlotWidget()  # Add time plot widget
             # self.time_display_widget = TimeDisplayWidget()  # Add time display widget
             self.time_display_widget = TimeDisplayWidget(font_size=14, font_color="cyan")  # Set size and color
-
-            # Offset display
-            self.offset_label = QLabel("Time Offset:")
-            self.offset_label.setToolTip("The offset between the FSM and video time (in seconds)")
-            
-            # Editable field for offset value
-            self.offset_edit = QLineEdit(f"{self.time_offset:.4f}")
-            self.offset_edit.setFixedWidth(80)
-            self.offset_edit.setAlignment(Qt.AlignRight)
-            
-            # Increment and decrement buttons for offset
-            self.offset_up_button = QPushButton("▲")
-            self.offset_down_button = QPushButton("▼")
-        
-            # Connect buttons and edit field for offset changes
-            self.offset_up_button.clicked.connect(self.increase_offset)
-            self.offset_down_button.clicked.connect(self.decrease_offset)
-            self.offset_edit.returnPressed.connect(self.update_offset_from_text)
+           
 
             # Set font for the table widget
             font = QFont()
@@ -217,20 +173,9 @@ class MainWindow(QMainWindow):
         timer_layout = QHBoxLayout()
         timer_layout.addWidget(self.time_display_widget)  # Add time display widget here
         
-        # Offset layout with label, edit field, and buttons
-        offset_layout = QHBoxLayout()
-        offset_layout.addWidget(self.offset_label)
-        offset_layout.addWidget(self.offset_edit)
-        offset_layout.addWidget(self.offset_up_button)
-        offset_layout.addWidget(self.offset_down_button)
-        
-        
         # Add timer and offset layouts to the bottom layout
         bottom_layout.addLayout(timer_layout)
-        bottom_layout.addLayout(offset_layout)
-        
-        
-        
+                
         # Layout combo box layout
         layout_combo_layout = QHBoxLayout()
         layout_combo_layout.addWidget(QLabel("Select Layout:"))
@@ -261,23 +206,8 @@ class MainWindow(QMainWindow):
         
         # Connect the layout and k combo boxes to their respective slots
         self.layout_combo.currentTextChanged.connect(self.view.apply_layout)
-        self.k_combo.currentTextChanged.connect(lambda k: self.view.set_k(int(k)))
-
-
-    def update_fsm_timer_on_release(self):
-        """Update the FSM timer based on the final slider position of the video player."""
-        # Get the final position in milliseconds from the video player
-        current_video_position_ms = self.video_player.media_player.position()
-                
-        current_video_position_s = current_video_position_ms / 1000  # Convert ms to s
-
-        # Calculate FSM time using the same consistent logic
-        fsm_time = self.video_start_time + (current_video_position_ms / 1000) + self.time_offset
-        
-        # Update the FSM time display
-        self.time_display_widget.update_time(fsm_time)        
+        self.k_combo.currentTextChanged.connect(lambda k: self.view.set_k(int(k)))  
             
-    
     def initialize_fsm_data(self):
         """Initialize FSM-specific data and set the initial state."""
         self.state_sequence = []
@@ -286,47 +216,48 @@ class MainWindow(QMainWindow):
     
     def open_video_player(self):
         """Open the video player window."""
-        if not self.video_player:
-            self.video_player = VideoPlayerWidget(self.video_start_time)
-            self.video_player.setWindowTitle("Video Player")
-            self.video_player.resize(800, 600)
-            if os.path.exists(self.video_path):
-                trip_video_path = self.video_path 
-            else:
-                print("Video file not found.")
-                return            
-            self.video_player.load_video(trip_video_path)
+        try:
+            if not self.video_player:
+                self.video_player = VideoPlayerWidget(self.video_start_time)
+                self.video_player.setWindowTitle("Video Player")
+                self.video_player.resize(800, 600)
+                if os.path.exists(self.video_path):
+                    trip_video_path = self.video_path 
+                else:
+                    print("Video file not found.")
+                    return            
+                self.video_player.load_video(trip_video_path)
+                
+                # Connect positionChanged signal to update FSM timer when video position changes
+                self.video_player.media_player.positionChanged.connect(self.video_slider_moved)            
+                # Synchronize video slider with main window slider
+                self.video_player.slider.valueChanged.connect(self.video_slider_moved)
+                self.slider.valueChanged.connect(self.main_slider_moved)
+                
+                # Connect the destroyed signal to a slot to clean up the reference
+                self.video_player.destroyed.connect(self.on_video_player_closed)
             
-            # Connect sliderReleased signal to update the FSM timer when slider is released
-            self.video_player.slider.sliderReleased.connect(self.update_fsm_timer_on_release)    
             
-            # Connect positionChanged signal to update FSM timer when video position changes
-            self.video_player.media_player.positionChanged.connect(self.update_fsm_timer_continuous)
-        
-            # Synchronize video slider with main window slider
-            self.video_player.slider.valueChanged.connect(self.video_slider_moved)
-            self.slider.valueChanged.connect(self.main_slider_moved)
+            self.video_player.show()
+            self.video_player.raise_()
+        except Exception as e:
+            print(f"Error in open_video_player: {e}")
             
-        
-        self.video_player.show()
-        self.video_player.raise_()
-
-    def update_fsm_timer_continuous(self, current_video_position_ms):
-        """Update the FSM timer continuously based on the current video position."""
-        # Convert video position to seconds and apply the offset to get FSM time
-        fsm_time = self.video_start_time + (current_video_position_ms / 1000) + self.time_offset
-        
-        # Update FSM timer display
-        self.time_display_widget.update_time(fsm_time)
-            
-    def video_slider_moved(self, current_video_position_ms):
+    def video_slider_moved(self, video_position_ms):
         """Update main window slider and FSM state when video slider moves."""
     
         # Calculate the current video time in seconds
-        current_video_time_s = current_video_position_ms / 1000  # Convert from ms to s
+        current_video_position_s = video_position_ms / 1000  # Convert from ms to s
 
+        # Use the offset from the video player
+        if self.video_player:
+            time_offset = self.video_player.time_offset
+        else:
+            time_offset = 0.0  # Default to zero if video_player is not initialized
+        
+        
         # Calculate the absolute video time (Unix timestamp)
-        absolute_video_time = self.video_start_time + current_video_time_s + self.time_offset
+        absolute_video_time = self.video_start_time + current_video_position_s + time_offset
         
         # Update FSM time display
         self.time_display_widget.update_time(absolute_video_time)
@@ -348,8 +279,11 @@ class MainWindow(QMainWindow):
             # Get the corresponding FSM time for the slider's index position
             fsm_time = self.fsm.dataframe["time_stamp"].iloc[fsm_index]
             
+            # Use the offset from the video player
+            time_offset = self.video_player.time_offset
+        
             # Calculate the video time by subtracting the video start time and time offset
-            video_time_s = fsm_time - self.video_start_time - self.time_offset
+            video_time_s = fsm_time - self.video_start_time - time_offset
         
             # Convert video time to milliseconds
             video_position_ms = video_time_s * 1000
@@ -357,11 +291,14 @@ class MainWindow(QMainWindow):
             # Ensure the calculated position is within the video duration
             video_duration_ms = self.video_player.media_player.duration()
             if 0 <= video_position_ms <= video_duration_ms:
-                # Update the video slider and playback position without triggering signals
+                # Update the video player's slider and media player position without emitting signals
                 self.video_player.slider.blockSignals(True)
                 self.video_player.slider.setValue(video_position_ms)
-                self.video_player.media_player.setPosition(video_position_ms)
                 self.video_player.slider.blockSignals(False)
+
+                self.video_player.media_player.blockSignals(True)
+                self.video_player.media_player.setPosition(video_position_ms)
+                self.video_player.media_player.blockSignals(False)
             
     def update_table_data(self, data):
         """Update the table with new data."""
@@ -400,10 +337,16 @@ class MainWindow(QMainWindow):
            
         # Get the current FSM time from the dataframe using the slider index
         current_fsm_time = self.fsm.dataframe["time_stamp"].iloc[index]
-        
-        # Update FSM time display widget with the current Unix time
-        self.time_display_widget.update_time(current_fsm_time)
-        
+        # Use the offset from the video player
+        if self.video_player:
+            time_offset = self.video_player.time_offset
+        else:
+            time_offset = 0.0
+        # adjusted_fsm_time = current_fsm_time + time_offset
+        # Update FSM time display widget with the adjusted time
+
+        # Update FSM time display widget with the current FSM time
+        self.time_display_widget.update_time(current_fsm_time)      
         
         self.view.highlight_node(current_state)
 
@@ -421,7 +364,6 @@ class MainWindow(QMainWindow):
         
         signals_values = self.fsm.get_signals_value_at_index(index)
         self.update_table_signals(signals_values)
-
     
     def find_fsm_index_for_time(self, fsm_time):
         """Find the closest FSM index for a given absolute time."""
@@ -433,6 +375,23 @@ class MainWindow(QMainWindow):
         
         return int(closest_index)
 
+    def on_video_player_closed(self):
+        """Handle the video player window being closed."""
+        print("Video player window closed.")
+        self.video_player = None  # Remove the reference to allow garbage collection
+
+    def closeEvent(self, event):
+        """Handle the event when the main window is closed."""
+        # Stop any remaining processes or threads if necessary
+        # For example, stop the video player if it's still open
+        if self.video_player:
+            self.video_player.close()
+
+        # Call the base class implementation (optional but recommended)
+        super().closeEvent(event)
+
+        # Exit the application
+        sys.exit()
 
 class TimePlotWidget(QWidget):
     """Widget to display current time in Unix time and OS time formats."""
