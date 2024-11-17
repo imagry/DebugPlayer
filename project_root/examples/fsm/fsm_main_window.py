@@ -1,9 +1,9 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (QVBoxLayout, QHBoxLayout, QWidget, QSlider, QLabel,
-                               QTableWidget, QTableWidgetItem, QComboBox, QPushButton, QMainWindow, QLineEdit)
+                               QTableWidget, QTableWidgetItem, QComboBox, QPushButton, QMainWindow, QLineEdit, QSplitter)
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QFont
-from PySide6.QtCore import QTimer
+from PySide6.QtCore import QTimer, QSettings
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from examples.fsm.fsm_core import FSM
@@ -149,13 +149,21 @@ class MainWindow(QMainWindow):
       
     def setup_main_layout(self):
         """Set up the main layout with all components and sub-layouts."""
+              # Set up the central widget and main layout
         central_widget = QWidget()
-        main_layout = QVBoxLayout(central_widget)
-                
-        # Top row layout with table and FSM view
-        top_layout = QHBoxLayout()
-        top_layout.addWidget(self.table_widget, 1)
-        top_layout.addWidget(self.view, 2)
+        self.setCentralWidget(central_widget)
+        main_layout = QVBoxLayout()
+        central_widget.setLayout(main_layout)
+                    
+        # Create a splitter
+        top_splitter_H = QSplitter(Qt.Horizontal)
+                        
+        # Top row layout with table and FSM view        
+        top_splitter_H.addWidget(self.table_widget)
+        top_splitter_H.addWidget(self.view)
+        
+        main_layout.addWidget(top_splitter_H)
+
         # top_layout.addWidget(self.time_plot_widget, 1)  # Add time plot widget here
         # top_layout.addWidget(self.time_display_widget, 1)  # Add time display widget here
 
@@ -192,7 +200,6 @@ class MainWindow(QMainWindow):
         bottom_layout.addWidget(self.video_button)
         
         # Add top and bottom layouts to the main layout
-        main_layout.addLayout(top_layout)
         main_layout.addLayout(bottom_layout) 
     
         # Set central widget
