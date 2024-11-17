@@ -156,6 +156,8 @@ class PlotWidget(QWidget):
         self.vertical_bar = Line2D([], [], color='red', linewidth=2)
         self.signal_ax.add_line(self.vertical_bar)
 
+        # Redraw the canvas
+        self.canvas.draw()
 
     def on_scroll(self, event):
         """Handle scroll events to limit zoom to horizontal axis."""
@@ -194,7 +196,9 @@ class PlotWidget(QWidget):
                     if isinstance(signal_values, (list, np.ndarray)):
                         # Optionally filter out None values if necessary
                         signal_values = [value if value is not None else 0 for value in signal_values]
-
+                        # convert to numpy array
+                        signal_values = np.array(signal_values)
+                        print(signal_values)
                         # Plot the signal
                         line, = self.signal_ax.plot(timestamps, signal_values, label=signal, marker='o', markersize=3, linestyle='--')
                         lines.append(line)
@@ -213,8 +217,8 @@ class PlotWidget(QWidget):
         legend.set_picker(True)  # Enable picking on the legend
 
         # Set y-axis tick density and formatting
-        self.signal_ax.yaxis.set_major_locator(MaxNLocator(nbins=5))  # Limit to a maximum of 5 ticks
-        self.signal_ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.2f}'))  # Limit to 2 decimal places
+        # self.signal_ax.yaxis.set_major_locator(MaxNLocator(nbins=5))  # Limit to a maximum of 5 ticks
+        # self.signal_ax.yaxis.set_major_formatter(FuncFormatter(lambda x, _: f'{x:.2f}'))  # Limit to 2 decimal places
 
 
         # Attach an event handler to each legend item for toggling visibility
@@ -232,9 +236,9 @@ class PlotWidget(QWidget):
                     
                     # auto rescale y-axis if any line is hidden
                             # Only autoscale if visibility changes
-                    if not visible:
-                        self.signal_ax.relim()
-                        self.signal_ax.autoscale_view()
+                    # if not visible:
+                    #     self.signal_ax.relim()
+                    #     self.signal_ax.autoscale_view()
                                 
                     
             # Connect the callback to pick events

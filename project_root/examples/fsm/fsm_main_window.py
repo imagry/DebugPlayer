@@ -65,8 +65,6 @@ class MainWindow(QMainWindow):
             self.table_widget = self.create_table_widget(k + 2)
             self.view = GraphView(self.fsm)
             self.plot_widget = PlotWidget(self.fsm)
-            self.time_plot_widget = TimePlotWidget()  # Add time plot widget
-            # self.time_display_widget = TimeDisplayWidget()  # Add time display widget
             self.time_display_widget = TimeDisplayWidget(font_size=14, font_color="cyan")  # Set size and color
            
 
@@ -403,58 +401,7 @@ class MainWindow(QMainWindow):
 
         # Exit the application
         sys.exit()
-
-class TimePlotWidget(QWidget):
-    """Widget to display current time in Unix time and OS time formats."""
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        
-        # Initialize figure and canvas for plotting
-        self.figure = Figure(figsize=(5, 2))
-        self.canvas = FigureCanvas(self.figure)
-        
-        # Set up a layout and add the canvas
-        layout = QVBoxLayout()
-        layout.addWidget(self.canvas)
-        self.setLayout(layout)
-        
-        # Initialize axes for time plots
-        self.ax = self.figure.add_subplot(111)
-        self.ax.set_title("Current Time Plot")
-        self.ax.set_xlabel("Time")
-        
-        # Initialize empty lines for Unix time and OS time
-        self.unix_line, = self.ax.plot([], [], label="Unix Time (Linux)")
-        self.os_line, = self.ax.plot([], [], label="OS Time (Local)")
-        self.ax.legend()
-
-        # Store timestamps and initialize data lists
-        self.timestamps = []
-        self.unix_times = []
-        self.os_times = []
-
-    def update_time(self, current_time_unix):
-        """Update the time plot with a new timestamp."""
-        # Convert Unix time to local time
-        current_time_local = datetime.fromtimestamp(current_time_unix)
-        
-        # Update data lists
-        self.timestamps.append(len(self.timestamps))  # Use index as the x-axis
-        self.unix_times.append(current_time_unix)
-        self.os_times.append(current_time_local.timestamp())
-        
-        # Update plot data
-        self.unix_line.set_data(self.timestamps, self.unix_times)
-        self.os_line.set_data(self.timestamps, self.os_times)
-        
-        # Adjust plot limits
-        self.ax.relim()
-        self.ax.autoscale_view()
-
-        # Refresh canvas
-        self.canvas.draw_idle()
-            
+          
     
 class TimeDisplayWidget(QWidget):
     """Widget to display the current FSM time in Unix and local time formats based on the slider position."""
