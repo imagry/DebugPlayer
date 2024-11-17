@@ -162,15 +162,19 @@ class MainWindow(QMainWindow):
         top_splitter_H.addWidget(self.table_widget)
         top_splitter_H.addWidget(self.view)
         
-        main_layout.addWidget(top_splitter_H)
+        # main_layout.addWidget(top_splitter_H)
 
         # top_layout.addWidget(self.time_plot_widget, 1)  # Add time plot widget here
         # top_layout.addWidget(self.time_display_widget, 1)  # Add time display widget here
 
+        middle_splitter_V = QSplitter(Qt.Vertical)
+        middle_splitter_V.addWidget(top_splitter_H)
+        middle_splitter_V.addWidget(self.plot_widget)
+        
+        main_layout.addWidget(middle_splitter_V)
         # Bottom layout with plot widget, slider, and combo boxes
         bottom_layout = QVBoxLayout()
-        bottom_layout.addWidget(self.plot_widget)
-        
+               
         # Slider layout
         slider_layout = QHBoxLayout()
         slider_layout.addWidget(QLabel("FSM State Slider:"))
