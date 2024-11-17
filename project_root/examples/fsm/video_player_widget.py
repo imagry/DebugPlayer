@@ -85,21 +85,6 @@ class VideoPlayerWidget(QWidget):
         # layout.addWidget(self.timestamp_label) # Optional
         self.setLayout(layout)
     
-    # def on_slider_pressed(self):
-    #     """Handle slider press event to mark the beginning of dragging."""
-    #     self.is_slider_dragging = True
-    
-    # def on_slider_released(self):
-    #     """Handle slider release event to finalize the dragging."""
-    #     self.is_slider_dragging = False
-    #     # Explicitly set the video position to the slider’s final value
-    #     final_slider_position = self.slider.value()
-    #     self.set_position(final_slider_position)
-            
-    #     # Notify MainWindow to update FSM timer based on the final slider value
-    #     if self.parent():  # Check if there's a parent (i.e., MainWindow)
-    #         self.parent().update_fsm_timer(final_slider_position)            
-
     def on_slider_pressed(self):
         """Handle slider press event to mark the beginning of dragging and pause video playback."""
         self.is_slider_dragging = True
@@ -135,9 +120,9 @@ class VideoPlayerWidget(QWidget):
     
     def set_position(self, position):
         """Set video position based on slider."""
-        duration = self.media_player.duration()
-        if duration > 0:
-            new_position = position / 1000 * duration  # Convert slider value to position in ms
+        video_duration_ms = self.media_player.duration()
+        if video_duration_ms > 0:
+            new_position = position / video_duration_ms  # Convert slider value to position in ms
             
             # Block signals to avoid feedback loops during updates
             self.media_player.blockSignals(True)
@@ -147,9 +132,9 @@ class VideoPlayerWidget(QWidget):
     
     def update_slider(self, position):
         """Update the slider position and FSM timer during video playback."""
-        duration = self.media_player.duration()
-        if duration > 0:
-            slider_value = int((position / duration) * 1000)
+        video_duration_ms = self.media_player.duration()
+        if video_duration_ms > 0:
+            slider_value = int((position / video_duration_ms) * 1000)
             
             # Update slider only if not dragging
             if not self.is_slider_dragging:
@@ -170,6 +155,7 @@ class VideoPlayerWidget(QWidget):
         """Update the video time display widget with the current video position."""
         try:
             self.video_time_display.update_time(position, self.video_start_time, self.time_offset)
+            print(f"update_time_display called with position: {position}")
         except Exception as e:
             print(f"Error in update_time_display: {e}")
             
