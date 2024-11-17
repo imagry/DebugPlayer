@@ -96,9 +96,9 @@ class VideoPlayerWidget(QWidget):
         final_slider_position = self.slider.value()
         self.set_position(final_slider_position)
         
-        # Force a frame refresh at the new position
+        # # Force a frame refresh at the new position
         self.media_player.play()   # Start playing momentarily
-        self.media_player.pause()   # Pause again to show the frame at the set position
+        # self.media_player.pause()   # Pause again to show the frame at the set position
 
         # Notify MainWindow to update FSM timer if applicable
         if self.parent():  # Check if there's a parent (i.e., MainWindow)
@@ -119,32 +119,36 @@ class VideoPlayerWidget(QWidget):
             self.play_button.setText("Pause")
     
     def set_position(self, position):
-        """Set video position based on slider."""
+        """Set video position based on slider - 
+           This is a method that sets the playback position of the media to the position indicated by the slider. 
+        """
         video_duration_ms = self.media_player.duration()
-        if video_duration_ms > 0:
-            new_position = position / video_duration_ms  # Convert slider value to position in ms
-            
-            # Block signals to avoid feedback loops during updates
-            self.media_player.blockSignals(True)
-            print(f"set_position called with position: {position}")
-            self.media_player.setPosition(new_position)
-            self.media_player.blockSignals(False)
-    
+        if position>video_duration_ms:
+            new_position = video_duration_ms
+        elif position < 0:
+            new_position = 0
+        else:
+            new_position = position
+                        
+        # Block signals to avoid feedback loops during updates
+        self.media_player.blockSignals(True)
+        print(f"set_position called with position: {position}")
+        self.media_player.setPosition(new_position)
+        self.media_player.blockSignals(False)
+
     def update_slider(self, position):
-        """Update the slider position and FSM timer during video playback."""
+        """Update the slider position and FSM timer during video playback - 
+           updates the position of the slider to reflect the current playback position of the media.
+        """
         video_duration_ms = self.media_player.duration()
         if video_duration_ms > 0:
-            slider_value = int((position / video_duration_ms) * 1000)
-            
+            slider_value = position            
             # Update slider only if not dragging
             if not self.is_slider_dragging:
                 self.slider.blockSignals(True)
                 self.slider.setValue(slider_value)
                 self.slider.blockSignals(False)
         
-        # Update the timestamp label and video timer plot
-        # self.timestamp_label.setText(f"Timestamp: {position} ms")
-        # self.video_timer_widget.update_timer(position)
             
     def update_duration(self, duration):
         """Update the slider range based on video duration."""
