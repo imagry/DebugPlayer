@@ -85,21 +85,40 @@ class VideoPlayerWidget(QWidget):
         # layout.addWidget(self.timestamp_label) # Optional
         self.setLayout(layout)
     
-    def on_slider_pressed(self):
-        """Handle slider press event to mark the beginning of dragging."""
-        self.is_slider_dragging = True
+    # def on_slider_pressed(self):
+    #     """Handle slider press event to mark the beginning of dragging."""
+    #     self.is_slider_dragging = True
     
+    # def on_slider_released(self):
+    #     """Handle slider release event to finalize the dragging."""
+    #     self.is_slider_dragging = False
+    #     # Explicitly set the video position to the slider’s final value
+    #     final_slider_position = self.slider.value()
+    #     self.set_position(final_slider_position)
+            
+    #     # Notify MainWindow to update FSM timer based on the final slider value
+    #     if self.parent():  # Check if there's a parent (i.e., MainWindow)
+    #         self.parent().update_fsm_timer(final_slider_position)            
+
+    def on_slider_pressed(self):
+        """Handle slider press event to mark the beginning of dragging and pause video playback."""
+        self.is_slider_dragging = True
+        self.media_player.pause()  # Pause video playback when starting to drag
+
     def on_slider_released(self):
-        """Handle slider release event to finalize the dragging."""
+        """Handle slider release event to finalize dragging and refresh video."""
         self.is_slider_dragging = False
-        # Explicitly set the video position to the slider’s final value
         final_slider_position = self.slider.value()
         self.set_position(final_slider_position)
-            
-        # Notify MainWindow to update FSM timer based on the final slider value
+        
+        # Force a frame refresh at the new position
+        self.media_player.play()   # Start playing momentarily
+        self.media_player.pause()   # Pause again to show the frame at the set position
+
+        # Notify MainWindow to update FSM timer if applicable
         if self.parent():  # Check if there's a parent (i.e., MainWindow)
-            self.parent().update_fsm_timer(final_slider_position)            
-            
+            self.parent().update_fsm_timer(final_slider_position)
+                    
     def load_video(self, trip_video_path):
         """Load a video from the given path."""
         video_url = QUrl.fromLocalFile(trip_video_path)  # Use the preferred path method

@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
 )
 import pandas as pd
 import networkx as nx
+from pathlib import Path
 
 class FSM:
     """Finite State Machine Data Class"""
@@ -29,7 +30,8 @@ class FSM:
         self.signals_data_dict={} # Dictionary of signals and their data at each index
         self.signals_dict = {} # Dictionary of signals and their values
         if fsm_file_path:
-            self.load_data_from_file(fsm_file_path)
+            fsm_abs_path = Path(fsm_file_path + "li_conditions.csv")
+            self.load_data_from_file(fsm_abs_path)
         else:
             self.load_mock_data(k=8, m=3, n=20, self_loops=False)
 
