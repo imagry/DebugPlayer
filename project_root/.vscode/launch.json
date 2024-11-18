@@ -13,6 +13,21 @@
             }
         },
         {
+            "name": "Test Lane Dividers",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/examples/scene_understanding_lane_dividers/main_su_ld.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}", 
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}" 
+            },
+            "args": [
+                "--trip_path",
+                "/home/thh3/data/trips/nissan/2024-11-15T10_51_52/",            
+            ]
+        },
+        {
             "name": "Test Video_SYNC",
             "type": "debugpy",
             "request": "launch",
