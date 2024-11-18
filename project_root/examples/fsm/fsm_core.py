@@ -213,7 +213,7 @@ class FSM:
         # Create DataFrame from the generated data
         self.dataframe = pd.DataFrame(data, columns=column_names)
 
-        print(self.dataframe)
+        # print(self.dataframe)
         
         
     def get_states(self):

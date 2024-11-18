@@ -198,7 +198,7 @@ class PlotWidget(QWidget):
                         signal_values = [value if value is not None else 0 for value in signal_values]
                         # convert to numpy array
                         signal_values = np.array(signal_values)
-                        print(signal_values)
+                        # print(signal_values)
                         # Plot the signal
                         line, = self.signal_ax.plot(timestamps, signal_values, label=signal, marker='o', markersize=3, linestyle='--')
                         lines.append(line)

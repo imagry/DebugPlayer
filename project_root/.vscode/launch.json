@@ -56,6 +56,25 @@
             ]
         },
         {
+            "name": "Test Bench: csv_watch_dog",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/examples/csv_watch_dog/test_bench_csvw.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}", 
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}" 
+            },
+            "args": [
+                "--file_path",
+                "/home/thh3/data/trips/nissan/2024-11-15T10_51_52/",
+            ]
+        },
+
+
+        
+        
+        {
             "name": "Python Debugger: Choose Test File",
             "type": "debugpy",
             "request": "launch",
