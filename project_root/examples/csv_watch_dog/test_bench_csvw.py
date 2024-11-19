@@ -1,3 +1,10 @@
+import matplotlib
+import time
+import numpy as np
+
+# Set the backend to ensure compatibility in standalone scripts
+matplotlib.use("TkAgg")
+
 import threading
 import time
 import csv
@@ -9,8 +16,9 @@ import matplotlib.pyplot as plt
 from examples.csv_watch_dog.cvs_file_handler import CSVFileHandler, watch_csv
 import logging 
 
+
 # Test Bench to simulate real-time writing to CSV file
-def write_to_csv_simulator(file_path, duration=10, frequency=20):
+def write_to_csv_simulator(file_path, duration=10, frequency=0.5):
     start_time = time.time()
     fields = ['Time', 'Value']
 
@@ -28,7 +36,7 @@ def write_to_csv_simulator(file_path, duration=10, frequency=20):
             value = round(random.uniform(0, 100), 2)
             writer.writerow([current_time, value])
             f.flush()  # Ensure data is flushed immediately
-            time.sleep(1 / frequency)
+            time.sleep(1 / frequency)  # Sleep for the desired frequency in seconds
 
 
 # Plotting function that runs in the main thread
@@ -38,29 +46,50 @@ def update_plot(data_queue):
     line, = ax.plot([], [], 'b-')
     df = pd.DataFrame()
 
+    plot_mode = 0
+    data_count = 0
+    x_data, y_data = [], []  # Accumulate data points for plotting
+
     while True:
         try:
-            # Continuously check the queue for new data
+            # Fetch all data currently in the queue without waiting
             while not data_queue.empty():
-                new_lines_df = data_queue.get_nowait()
+                new_lines_df = data_queue.get_nowait()  # Dequeue the data
                 df = pd.concat([df, new_lines_df], ignore_index=True)
                 logging.debug("New data dequeued for plotting.")
 
-            if not df.empty:
-                x_data = df.iloc[:, 0]  # Assuming first column is x-axis data
-                y_data = df.iloc[:, 1]  # Assuming second column is y-axis data
-                line.set_xdata(x_data)
-                line.set_ydata(y_data)
-                ax.relim()
-                ax.autoscale_view()
-                plt.draw()
-                plt.pause(0.01)  # Pause to update the plot
+                if not plot_mode:
+                    data_count += 1
+                    # Log the entire data frame for verification
+                    if not new_lines_df.empty:
+                        print(f"Data frame {data_count} dequeued:\n{new_lines_df}")
+                    
+                    # Convert new_lines_df to numpy array for additional verification
+                    np_new_lines_df = new_lines_df.to_numpy()
+                    if np_new_lines_df.size > 0:
+                        x, y = np_new_lines_df[-1, 0], np_new_lines_df[-1, 1]
+                        print(f'Count {data_count}, x_new = {x}, y_new = {y}')
+                        
+                        # Append new point to data lists
+                        x_data.append(x)
+                        y_data.append(y)
+                        
+                        # Update scatter plot with all points
+                        ax.clear()  # Clear to prevent overwriting
+                        ax.scatter(x_data, y_data, color='red')
+                        ax.relim()
+                        ax.autoscale_view()
+
+                        plt.draw()  # Redraw the plot
+                        plt.pause(0.01)  # Pause briefly to allow GUI update
 
         except queue.Empty:
             logging.debug("Queue is empty, waiting for new data.")
             pass
 
-        time.sleep(0.01)  # Brief sleep to prevent tight loop, allows frequent checks
+        # Minimal sleep to allow continuous queue checking
+        time.sleep(0.01)
+        
 # Main function to run the test bench
 if __name__ == "__main__":
     csv_file_path = "examples/csv_watch_dog/csvw_data/test_data.csv"
@@ -76,9 +105,11 @@ if __name__ == "__main__":
     sniffer_thread.start()
 
     # Start writing data to the CSV file in a separate thread
-    writer_thread = threading.Thread(target=write_to_csv_simulator, args=(csv_file_path, 10, 20))
+    writer_thread = threading.Thread(target=write_to_csv_simulator, args=(csv_file_path, 20,   1))
     writer_thread.daemon = True
     writer_thread.start()
 
     # Start plotting in the main thread
     update_plot(data_queue)
+
+
