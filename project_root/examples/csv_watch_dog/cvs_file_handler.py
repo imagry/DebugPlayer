@@ -5,6 +5,10 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from io import StringIO
 import queue
+import logging
+
+# Set up basic logging configuration
+logging.basicConfig(level=logging.DEBUG, format='%(threadName)s: %(message)s')
 
 class CSVFileHandler(FileSystemEventHandler):
     def __init__(self, file_path, data_queue):
@@ -14,10 +18,10 @@ class CSVFileHandler(FileSystemEventHandler):
 
     def on_modified(self, event):
         if event.src_path == self.file_path:
+            logging.debug("File modified detected, reading new data.")
             self.read_new_data()
 
     def read_new_data(self):
-        # Open the CSV file and read any new lines
         try:
             with open(self.file_path, 'r') as f:
                 f.seek(self.last_position)
@@ -25,12 +29,12 @@ class CSVFileHandler(FileSystemEventHandler):
                 self.last_position = f.tell()
 
             if new_data:
-                # Append new data to the queue for processing in the main thread
+                logging.debug("New data detected and added to the queue.")
                 new_lines_df = pd.read_csv(StringIO(''.join(new_data)))
                 self.data_queue.put(new_lines_df)
 
         except Exception as e:
-            print(f"Error reading or updating data: {e}")
+            logging.error(f"Error reading or updating data: {e}")
 
 def watch_csv(file_path, event_handler):
     observer = Observer()
