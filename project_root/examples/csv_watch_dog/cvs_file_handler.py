@@ -17,6 +17,7 @@ class CSVFileHandler(FileSystemEventHandler):
         self.file_path = file_path
         self.last_position = 0
         self.data_queue = data_queue
+        self.linesread = 0
 
     def on_modified(self, event):
         if event.src_path == self.file_path: # Only read the file if the event is from the file being watched
@@ -41,12 +42,17 @@ class CSVFileHandler(FileSystemEventHandler):
                 header=None,                # Treat all rows as data (no header row)
                 names=['Time', 'Value'],    # Explicitly assign column names
             )
-
-            if 'Time' in new_lines_df.columns and 'Value' in new_lines_df.columns:
-                self.data_queue.put(new_lines_df, block=True)
-                print(f'[CSVFileHandler::read_new_data] New data detected and added to the queue: {new_lines_df}')
-            else:
-                print(f"[CSVFileHandler::read_new_data] Error: 'Time' or 'Value' column not found in new_data:\n{new_lines_df}")
+            if self.linesread == 0:
+                self.linesread +=1
+                return
+            
+            self.linesread +=1
+            
+            # if 'Time' in new_lines_df.columns and 'Value' in new_lines_df.columns:
+            self.data_queue.put(new_lines_df, block=True)
+            print(f'[CSVFileHandler::read_new_data] New data detected and added to the queue: {new_lines_df}')
+            # else:
+            #     print(f"[CSVFileHandler::read_new_data] Error: 'Time' or 'Value' column not found in new_data:\n{new_lines_df}")
 
         except Exception as e:
             logging.error(f"Error reading or updating data: {e}")
