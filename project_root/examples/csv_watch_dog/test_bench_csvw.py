@@ -1,33 +1,23 @@
+import os
 import sys
 import queue
 import threading
 import numpy as np
 import pandas as pd
 from PySide6 import QtWidgets, QtCore
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 import pyqtgraph as pg
 from examples.csv_watch_dog.cvs_file_handler import CSVFileHandler, watch_csv
 import time 
-    
 import matplotlib
-import time
-import numpy as np
-from PySide6 import QtWidgets, QtCore
-import pyqtgraph as pg
-import sys
-
 
 # Set the backend to ensure compatibility in standalone scripts
 # matplotlib.use("TkAgg")
 matplotlib.use("Qt5Agg")
-import threading
-import time
 import csv
 import random
-import os
-import queue
-import pandas as pd
 import matplotlib.pyplot as plt
-from examples.csv_watch_dog.cvs_file_handler import CSVFileHandler, watch_csv
 import logging 
 
 
@@ -59,7 +49,44 @@ def write_to_csv_simulator(file_path, duration=10, frequency=0.5):
             f.flush()  # Ensure data is flushed immediately
             time.sleep(1 / frequency)  # Sleep for the desired frequency in seconds
 
+class PlotUpdaterMPL(QtCore.QObject):
+    data_signal = QtCore.Signal(object)
 
+    def __init__(self, data_queue, plot_widget):
+        super().__init__()
+        self.data_queue = data_queue
+        self.plot_widget = plot_widget
+        self.x_data = []
+        self.y_data = []
+
+        # Create a matplotlib figure and axis
+        self.figure = Figure()
+        self.ax = self.figure.add_subplot(111)
+        self.canvas = FigureCanvas(self.figure)
+        self.plot_widget.layout().addWidget(self.canvas)
+
+    def start(self):
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.update_plot)
+        self.timer.start(100)  # Update every 100 ms
+
+    def update_plot(self):
+        while not self.data_queue.empty():
+            new_data = self.data_queue.get()
+            print(f"New data received: {new_data}")  # Debugging statement
+            if 'Time' in new_data.columns and 'Value' in new_data.columns:
+                self.x_data.extend(new_data['Time'].tolist())
+                self.y_data.extend(new_data['Value'].tolist())
+            else:
+                print("Error: 'Time' or 'Value' column not found in new_data")  # Debugging statement
+        
+        # print(f"x_data: {self.x_data}")  # Debugging statement
+        # print(f"y_data: {self.y_data}")  # Debugging statement
+
+        self.ax.clear()
+        self.ax.scatter(self.x_data, self.y_data, color='red')  # Use scatter plot
+        self.canvas.draw()
+        
 class PlotUpdater(QtCore.QObject):
     data_signal = QtCore.Signal(object)
 
@@ -107,6 +134,10 @@ if __name__ == "__main__":
     sniffer_thread.daemon = True
     sniffer_thread.start()
 
+    plotmodes = ['pyqtgraph', 'matplotlib']
+    
+    PLOTMODE = plotmodes[1]
+    
     # Define QT main window and add a timeseries layout where the data will be plotted
     app = QtWidgets.QApplication(sys.argv)
     window = QtWidgets.QMainWindow()
@@ -115,7 +146,13 @@ if __name__ == "__main__":
     central_widget = QtWidgets.QWidget()
     layout = QtWidgets.QVBoxLayout(central_widget)
     window.setCentralWidget(central_widget)
-    timeseries = pg.PlotWidget()
+    
+    if PLOTMODE == 'matplotlib':
+        timeseries = QtWidgets.QWidget()
+        timeseries.setLayout(QtWidgets.QVBoxLayout())
+    elif PLOTMODE == 'pyqtgraph':
+        timeseries = pg.PlotWidget()
+    
     layout.addWidget(timeseries)
     window.show()
 
@@ -127,7 +164,11 @@ if __name__ == "__main__":
     writer_thread.start()
 
     # Create and start the plot updater
-    plot_updater = PlotUpdater(data_queue, timeseries)
+    if PLOTMODE == 'matplotlib':
+        plot_updater = PlotUpdaterMPL(data_queue, timeseries)
+    elif PLOTMODE == 'pyqtgraph':
+        plot_updater = PlotUpdater(data_queue, timeseries)
+
     plot_updater.start()
     
     sys.exit(app.exec())
