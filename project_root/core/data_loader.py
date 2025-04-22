@@ -1,17 +1,118 @@
 import argparse
+import os
+import sys
+from typing import Union, Tuple, Optional
 
-def parse_arguments():
-    # Create an argument parser
-    parser = argparse.ArgumentParser(description="Main Analysis Manager")    
-    # Add the --trip argument
-    parser.add_argument('--trip1', type=str, help='Path to the first trip file')
-    parser.add_argument('--trip2', type=str, default=None, help='Path to the second trip file')
+
+class DataLoadError(Exception):
+    """Exception raised for errors in the data loading process."""
+    pass
+
+
+def validate_trip_path(path: str) -> str:
+    """
+    Validate if a trip path exists and is accessible.
+    
+    Args:
+        path (str): The path to validate.
+        
+    Returns:
+        str: The validated path.
+        
+    Raises:
+        DataLoadError: If the path doesn't exist or isn't accessible.
+    """
+    if not path:
+        raise DataLoadError("Trip path cannot be empty.")
+        
+    # Expand user directory if present (e.g., ~/)
+    expanded_path = os.path.expanduser(path)
+    
+    # Check if the path exists
+    if not os.path.exists(expanded_path):
+        raise DataLoadError(f"Trip path does not exist: {expanded_path}")
+    
+    # Check if it's a directory (most trip data is stored in directories)
+    if not os.path.isdir(expanded_path):
+        # If it's a file, check if it's readable
+        if not os.path.isfile(expanded_path):
+            raise DataLoadError(f"Trip path is neither a file nor a directory: {expanded_path}")
+        elif not os.access(expanded_path, os.R_OK):
+            raise DataLoadError(f"Trip file exists but is not readable: {expanded_path}")
+    
+    return expanded_path
+
+
+def parse_arguments() -> Union[str, Tuple[str, str]]:
+    """
+    Parse command-line arguments and validate trip paths.
+    
+    Returns:
+        Union[str, Tuple[str, str]]: The validated trip path(s).
+        
+    Raises:
+        DataLoadError: If no valid trip paths are provided.
+    """
+    # Create an argument parser with more descriptive help
+    parser = argparse.ArgumentParser(
+        description="Debug Player: A tool for visualizing and analyzing trip data.",
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )  
+    
+    # Add the trip arguments with better descriptions
+    parser.add_argument(
+        '--trip1', 
+        type=str, 
+        help='Path to the first trip data directory or file (required)'
+    )
+    parser.add_argument(
+        '--trip2', 
+        type=str, 
+        default=None, 
+        help='Path to the second trip data directory or file (optional for comparison)'
+    )
+    
     # Parse the command-line arguments
-    args = parser.parse_args()    
-    # Check if the --trip flag is provided
-    if args.trip1 and args.trip2:
-        return args.trip1, args.trip2
-    elif args.trip1:
-        return args.trip1
-    else:
-        raise ValueError("Please provide the paths to both trip files using the --trip1 and --trip2 flags")
+    args = parser.parse_args()
+    
+    try:
+        # Check if at least one trip path is provided
+        if not args.trip1:
+            raise DataLoadError(
+                "No trip path provided. Please specify at least one trip path using --trip1."
+            )
+        
+        # Validate the primary trip path
+        trip1_path = validate_trip_path(args.trip1)
+        
+        # If second trip is provided, validate it too
+        if args.trip2:
+            trip2_path = validate_trip_path(args.trip2)
+            return trip1_path, trip2_path
+        
+        # If only one trip is provided, return just that path
+        return trip1_path
+        
+    except DataLoadError as e:
+        # Print the error message in red for better visibility
+        print(f"\033[91mError: {str(e)}\033[0m", file=sys.stderr)
+        parser.print_help()
+        sys.exit(1)
+
+
+def get_available_signals(trip_path: str) -> dict:
+    """
+    Scan trip data and return available signals.
+    
+    Args:
+        trip_path (str): Path to trip data.
+        
+    Returns:
+        dict: Dictionary of available signals and their types.
+    """
+    # This is a placeholder for future implementation
+    # In the future, this could scan the trip directory structure
+    # and find available signals based on file patterns or metadata
+    
+    # For now, return an empty dict to indicate no automatic detection
+    return {}

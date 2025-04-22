@@ -6,16 +6,49 @@ from gui.custom_plot_widget import TemporalPlotWidget_plt, SpatialPlotWidget, Te
 from core.config import temporal_signal_axes
 
 class PlotManager:
+    """
+    PlotManager is the central coordinator for the Debug Player system.
+    
+    This class manages the flow of data between plugins (data providers) and plot widgets
+    (data visualizers). It handles plugin registration, signal management, and plot updates.
+    It serves as the mediator between all components of the system.
+    
+    The PlotManager:
+    1. Loads and manages plugins that provide data signals
+    2. Registers plots that visualize these signals
+    3. Coordinates data requests from the UI and routes them to the appropriate plugins
+    4. Updates plots with data from plugins when timestamps change
+    """
+    
     def __init__(self):
-        self.plots = []  # List of all plots (subscribers)
+        """
+        Initialize the PlotManager with empty registries for plugins, signals, and plots.
         
-        # TODO: do we still need this?
-        self.signals = {}  # Dictionary to manage signal subscriptions        
-        self.plugins = {}  # Plugin registry
-        self.signal_plugins = {}  # To track which plugin provides which signal
-        self.signal_types = {}  # To track the type of data for each signal
-        self.temporal_plot_widget = TemporalPlotWidget_pg()  # Single instance for temporal signals
-        self.spatial_plot_widget = SpatialPlotWidget()    # Single instance for spatial signals
+        This constructor creates the basic data structures needed for the PlotManager to
+        coordinate data flow between plugins and plot widgets.
+        """
+        # List of all plot widgets that can subscribe to signals
+        self.plots = []  
+        
+        # Dictionary mapping signal names to lists of plot widgets that display them
+        # Format: {signal_name: [plot_widget1, plot_widget2, ...]}
+        self.signals = {}  
+        
+        # Dictionary of plugin instances registered with the system
+        # Format: {plugin_name: plugin_instance}
+        self.plugins = {}  
+        
+        # Dictionary mapping signals to their source plugin and metadata
+        # Format: {signal_name: {"plugin": plugin_name, "func": callable, "type": signal_type, ...}}
+        self.signal_plugins = {}  
+        
+        # Tracks signal types for type checking and validation
+        self.signal_types = {}  
+        
+        # Central widget instances for each visualization type
+        # Note: In future versions, these could be dynamically created based on need
+        self.temporal_plot_widget = TemporalPlotWidget_pg()  # For time-based signals
+        self.spatial_plot_widget = SpatialPlotWidget()      # For spatial data (2D/3D)
 
 
     def register_plugin(self, plugin_name, plugin_instance):
@@ -25,29 +58,55 @@ class PlotManager:
         Args:
             plugin_name (str): The name of the plugin to register.
             plugin_instance (object): The instance of the plugin to register.
+            
+        Raises:
+            ValueError: If the plugin name is empty or already registered.
         """
+        # Input validation
+        if not plugin_name or not isinstance(plugin_name, str):
+            raise ValueError(f"Invalid plugin name: {plugin_name}")
+            
+        if plugin_name in self.plugins:
+            print(f"\033[93mWarning: Plugin '{plugin_name}' is already registered. Overwriting previous instance.\033[0m")
+        
+        # Register the plugin instance
         self.plugins[plugin_name] = plugin_instance
+        
+        # Import signal validation after ensuring the plugin is valid
+        # This avoids circular imports
+        from core.signal_validation import validate_signal_definition, check_required_signal_fields, SignalValidationError
+        
+        # Count registered signals for summary
+        registered_signals = []
+        validation_warnings = []
 
+        # Register each signal provided by the plugin
         for signal, signal_info in plugin_instance.signals.items():
-            signal_func = signal_info.get("func")
-            signal_type = signal_info.get("type", "temporal")  # Default to "temporal" if type is missing.
-
-            if not callable(signal_func):
-                print(f"\033[95mError: Signal '{signal}' in plugin '{plugin_name}' does not have a valid method.\033[0m]")                
+            try:
+                # Validate and normalize the signal definition
+                normalized_signal = validate_signal_definition(signal, signal_info, plugin_name)
+                
+                # Check for missing required fields
+                missing_fields = check_required_signal_fields(signal, signal_info, plugin_name)
+                if missing_fields:
+                    validation_warnings.append(
+                        f"Signal '{signal}' is missing required fields: {', '.join(missing_fields)}"
+                    )
+                
+                # Store the normalized signal in signal_plugins
+                self.signal_plugins[signal] = normalized_signal
+                registered_signals.append(signal)
+                
+            except SignalValidationError as e:
+                print(f"\033[95mError: {str(e)}\033[0m")
                 continue
 
-            if signal_type not in ["temporal", "spatial"]:
-                print(f"Warning: Signal '{signal}' in plugin '{plugin_name}' has an unknown type '{signal_type}'. Defaulting to 'temporal'.")
-                signal_type = "temporal"
-
-            # Store the signal, its function, and type in self.signal_plugins.
-            self.signal_plugins[signal] = {
-                "plugin": plugin_name,
-                "func": signal_func,
-                "type": signal_type
-            }
-
-        print(f"\033[92m Registered signals for plugin \033[0m '{plugin_name}': {list(plugin_instance.signals.keys())}")
+        # Print summary of registered signals
+        print(f"\033[92m Registered signals for plugin \033[0m'{plugin_name}': {registered_signals}")
+        
+        # Print any validation warnings
+        for warning in validation_warnings:
+            print(f"\033[93mWarning: {warning}\033[0m")
 
     
     def load_plugins_from_directory(self, directory_path, plugin_args=None):

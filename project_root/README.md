@@ -1,189 +1,358 @@
-Requirements
+# Debug Player
 
-## Manually installing the requirments
-```bash
-conda create --name dbgenv python = 3.12
-conda activate dbgenv
-conda install 
-conda create --name DbgPkg python=3.12
-conda activate DbgPkg
-conda install numpy -y
-conda install scipy -y
-conda install pip -y
-conda install matplotlib -y
-conda install conda-forge::spatialmath-python
-conda install conda-forge::pyside6 -y
-conda install conda-forge::pyqtgraph -y
-conda install conda-forge::pyinstaller -y
-conda install pandas -y
-conda install conda-forge::polars
-```
+## Overview
 
-### creating the conda environment requirements YML file
-```bash
-conda env export --no-builds | grep -v "prefix" > environment.yml
-conda env export --no-builds | grep -v "prefix" > environment_pyqt_pip_env.yml
-```
+Debug Player is a framework for visualizing and analyzing recorded data through a plugin-based architecture. It allows you to load trips (recording sessions), visualize signals through various plot widgets, and navigate through the data with a timestamp slider.
 
-### Missing xcb
-```bash
-sudp apt update
-sudo apt install libxcb-xinerama0 libxcb-cursor0 libxkbcommon-x11-0
-```
+![Debug Player Screenshot](fsm_diagram.png)
 
-### Creating conda environment from YML requirments
+### Key Features
+
+- Plugin-based architecture for extensibility
+- Temporal and spatial data visualization
+- Interactive timestamp navigation
+- Support for multiple signal types
+- Dockable and customizable UI
+
+## Installation
+
+### System Requirements
+
+- Python 3.12
+- PySide6 (Qt for Python)
+- Linux environment with appropriate Qt libraries
+
+### Quick Start with Conda
+
+The recommended way to install Debug Player is using the provided conda environment file:
+
 ```bash
+# Create the conda environment from the environment.yml file
 conda env create -f environment.yml
+
+# Activate the environment
+conda activate DbgPkg
+
+# On Linux, you may need these system libraries
+sudo apt update
+sudo apt install libxcb-xinerama0 libxcb-cursor0 libxkbcommon-x11-0
+
+# If QtCharts is missing, you may need to install these packages
+sudo apt-get install libqt6charts6 libqt6charts6-dev
 ```
 
-### Running the package
+### Environment Variables
+
+Some environment variables need to be set for proper operation, especially for Qt plugins:
+
 ```bash
-./main --trip1 /home/thh3/data/trips/nissan/2024-10-01T13_46_59/
-```
+# Set library path to prioritize conda environment libraries
+export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
 
-### FAQ
-### Issue with 'wayland'-
-``` bash
-qt.qpa.plugin: Could not find the Qt platform plugin "wayland" in ""
+# Set Qt plugin path
+export QT_PLUGIN_PATH=$CONDA_PREFIX/lib/Qt/plugins
+
+# If you're having Wayland issues
 export QT_QPA_PLATFORM=xcb
 ```
 
-You may need to install the QtCharts development package. For example, if you use a package manager like apt:
+These environment variables are automatically set by the provided `run_debug_player.sh` script.
+
+## Running Debug Player
+
+The easiest way to run Debug Player is using the provided script:
 
 ```bash
-Copy code
-sudo apt-get install libqt6charts6 libqt6charts6-dev
+# Make the script executable (first time only)
+chmod +x run_debug_player.sh
+
+# Run with a trip path
+./run_debug_player.sh /path/to/your/trip/data/
 ```
 
-3. Verify LD_LIBRARY_PATH and QT_PLUGIN_PATH
-Ensure that your Anaconda environment is set up correctly to find the Qt plugins:
+Manually, you can run:
 
-Set LD_LIBRARY_PATH to prioritize libraries within your environment:
+```bash
+# Activate the conda environment
+conda activate DbgPkg
 
-bash
-Copy code
+# Set environment variables
 export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
-Set QT_PLUGIN_PATH to locate Qt plugins:
-
-bash
-Copy code
 export QT_PLUGIN_PATH=$CONDA_PREFIX/lib/Qt/plugins
 
-
-
-
-## **Some collected notes that needs to be organized**
-
-
-
-2. Is the loading of plugins via PluginManager handled elsewhere?
-Yes. Plugin registration and loading are now handled by the PlotManager.
-
-When a plugin is initialized (like CarPosePlugin), it registers its signals and handles data provision directly via the PlotManager.
-The PlotManager is responsible for coordinating between plugins and plots—so plugins no longer manage plotting directly but instead provide data to PlotManager for plots to render.
-
-3. Handling Multiple Signals from a Single Plugin
-If a plugin provides more than one signal, such as the CarPosePlugin providing both the route (a series of 2D points) and car pose (SE2 objects), the plugin can manage multiple signals and register them accordingly.
-
-Updated Example for Handling Multiple Signals in a Plugin:
-We can modify the CarPosePlugin to handle more than one signal. The plugin would advertise which signals it supports, and the PlotManager will query for the specific signal when necessary.
-
-
-Debuging plotting issue- 
-Recap of What to Do:
-Add debugging to CarPosePlugin to confirm it’s providing data for the signal.
-Add debugging to CustomPlotWidget to confirm it’s receiving the data and plotting.
-Check the TimestampSlider to ensure it’s requesting data when the slider is moved.
-Verify the data flow in PlotManager to ensure the correct signals are being requested and updated in the plots.
-
-In not notes otherwise, units are meters, milliseconds, ENU, Right-Hand, x-fwd, carpose - center of front axle
-
-
-Important windows - 
-
-create_main_window - This where you register signals for plotting
-        Note that there are two similar appearences: 
-                # Initialize CustomPlotWidget and register signals
-                car_pose_plot = CustomPlotWidget(signals=["car_pose(t)", "route"])
-                route_plot = CustomPlotWidget(signals=["route"])
-
-                # Register the plots with the PlotManager
-                plot_manager.register_plot(car_pose_plot, ["car_pose(t)"])
-                plot_manager.register_plot(route_plot, ["route"])
-        
-
-
-## **Quick overview over main components**
-
-
-## How to construct a new plugin
-Great! Let's move forward with Option 2: Explicit class registry for your plugins.
-
-Here’s a step-by-step process to implement this across the system:
-
-1. Update Each Plugin File
-In each plugin file (like carpose_plugin.py), explicitly define the class to be used with a plugin_class variable.
-
-Example in carpose_plugin.py:
-```python
-class CarPosePlugin:
-    def __init__(self, file_path):
-        self.file_path = file_path
-        # Plugin initialization logic here...
-        pass
-
-# Explicitly define which class is the plugin
-plugin_class = CarPosePlugin
+# Run with arguments
+python main.py --trip1 /path/to/your/trip/data/
 ```
 
+## Architecture
 
-### Adding new signals to plot
+Debug Player is built around several key components:
 
-To add signals from PathViewPlugin to the plots, you need to ensure that the PlotManager correctly registers the plugin and its signals, and then updates the plots with the data from these signals. Here’s how you can achieve this:
+### Core Components
 
-Ensure PathViewPlugin is correctly registered with PlotManager.
-Update the plots with data from the signals provided by PathViewPlugin.
-Step-by-Step Implementation:
-Register PathViewPlugin with PlotManager:
+- **PlotManager**: Coordinates data flow between plugins and plots
+- **Data Loader**: Handles loading trip data and validation
+- **Signal Validation**: Ensures signals are properly defined and typed
 
-Ensure that PathViewPlugin is instantiated and registered with PlotManager.
-This can be done in the main script where the PlotManager is initialized.
-Update the plots with data from the signals:
+### Plugins
 
-Ensure that the PlotManager requests data from the plugin and updates the plots accordingly.
+Plugins provide data from various sources and expose signals that can be visualized. The system includes these plugins:
 
-## Troubleshoot - issue with QCharts
-Exception has occurred: ImportError
-libQt6Charts.so.6: cannot open shared object file: No such file or directory
-  File "/home/thh3/dev/DebugPlayer/project_root/gui/custom_plot_widget.py", line 8, in <module>
-    from PySide6.QtCharts import QChart, QChartView, QLineSeries
-  File "/home/thh3/dev/DebugPlayer/project_root/gui/main_window.py", line 3, in <module>
-    from gui.custom_plot_widget import SpatialPlotWidget
-  File "/home/thh3/dev/DebugPlayer/project_root/main.py", line 2, in <module>
-    from gui.main_window import create_main_window
-ImportError: libQt6Charts.so.6: cannot open shared object file: No such file or directory
+- **CarPosePlugin**: Provides car position, orientation, and route data
+- **PathViewPlugin**: Shows path data in world coordinates
+- **CarStatePlugin**: Displays vehicle state data like speed and steering
 
-ChatGPT said:
-ChatGPT
-The error ImportError: libQt6Charts.so.6: cannot open shared object file: No such file or directory indicates that the required QtCharts library for PySide6 is missing or not properly installed on your system.
+### GUI Components
 
-How to Fix This:
-To resolve this issue, you'll need to ensure that PySide6 and its QtCharts module are correctly installed. Here’s how you can do this:
+- **Main Window**: Overall UI container and coordination
+- **Spatial Plot Widget**: Visualizes 2D spatial data
+- **Temporal Plot Widget**: Shows time-series data
+- **Timestamp Slider**: For navigating through time
 
-1. Install or Reinstall PySide6:
-If PySide6 is not installed or if the installation is missing components, you can install or reinstall it using pip:
+## Plugin Development
 
-bash
-Copy code
-pip install PySide6
-This command installs the PySide6 library, which should include QtCharts.
+Debug Player is designed to be extended with custom plugins. Follow these steps to create your own plugin:
 
-2. Check System Libraries:
-On Linux, missing libQt6Charts.so.6 might mean that the necessary Qt libraries are not properly linked or installed.
+### 1. Create Your Plugin Class
 
-You may need to install the QtCharts development package. For example, if you use a package manager like apt:
+Create a new Python file in the `plugins` directory (e.g., `my_plugin.py`) and implement your plugin class that inherits from `PluginBase`:
+
+```python
+from interfaces.PluginBase import PluginBase
+
+class MyPlugin(PluginBase):
+    def __init__(self, file_path):
+        super().__init__(file_path)
+        
+        # Set up your data sources
+        self.data = self.load_my_data(file_path)
+        
+        # Define signals that your plugin provides
+        self.signals = {
+            "my_temporal_signal": {
+                "func": self.get_my_temporal_data,
+                "type": "temporal",
+                "description": "My temporal data signal",
+                "units": "meters"
+            },
+            "my_spatial_signal": {
+                "func": self.get_my_spatial_data,
+                "type": "spatial",
+                "description": "My spatial data signal"
+            }
+        }
+    
+    def load_my_data(self, file_path):
+        # Load your data from file_path
+        return {}
+    
+    def get_my_temporal_data(self):
+        # Return temporal data
+        return {"timestamps": [1, 2, 3], "values": [10, 20, 30]}
+    
+    def get_my_spatial_data(self):
+        # Return spatial data
+        return {"x": [1, 2, 3], "y": [10, 20, 30]}
+    
+    def has_signal(self, signal):
+        # Check if this plugin provides the requested signal
+        return signal in self.signals
+    
+    def get_data_for_timestamp(self, signal, timestamp):
+        # Return the data for the requested signal at the specified timestamp
+        if not self.has_signal(signal):
+            return None
+        
+        # Implement timestamp-specific data retrieval logic here
+        # For example:
+        if signal == "my_temporal_signal":
+            return self.get_temporal_data_at_timestamp(timestamp)
+        elif signal == "my_spatial_signal":
+            return self.get_spatial_data()
+        
+        return None
+
+# This line is REQUIRED for plugin discovery
+plugin_class = MyPlugin
+```
+
+### 2. Signal Definition
+
+Signals must have a type and a function that provides the data. Valid signal types are:
+
+- **temporal**: Time-series data that changes with timestamp
+- **spatial**: 2D or 3D spatial data (points, lines, polygons)
+- **categorical**: Discrete category/state data
+- **boolean**: Binary true/false data
+
+Each signal definition must include:
+
+- **func**: The function to call to retrieve data
+- **type**: The signal type (from the list above)
+
+Optional fields include:
+
+- **description**: Human-readable description
+- **units**: Units of measurement
+- **valid_range**: Expected range of values
+- **coordinate_system**: For spatial data
+
+### 3. Data Format
+
+Your data retrieval functions should return data in the expected format:
+
+- **Temporal data**: Dictionary with keys like `value`, `values`, or type-specific fields
+- **Spatial data**: Dictionary with `x` and `y` arrays (and optionally `z` for 3D)
+- **Categorical data**: Dictionary with `category` or `state` field
+- **Boolean data**: Dictionary with `value` as a boolean
+
+## Troubleshooting
+
+### Qt / PySide6 Issues
+
+If you encounter Qt-related errors:
+
+1. **Missing Libraries**:
+   ```
+   ImportError: libQt6Charts.so.6: cannot open shared object file: No such file or directory
+   ```
+   Solution: Install the missing Qt libraries:
+   ```bash
+   sudo apt-get install libqt6charts6 libqt6charts6-dev
+   ```
+
+2. **Plugin Path Issues**:
+   ```
+   qt.qpa.plugin: Could not find the Qt platform plugin "wayland" in ""
+   ```
+   Solution: Set the platform to xcb:
+   ```bash
+   export QT_QPA_PLATFORM=xcb
+   ```
+
+3. **Library Path Issues**:
+   Solution: Use the environment variables:
+   ```bash
+   export LD_LIBRARY_PATH=$CONDA_PREFIX/lib:$LD_LIBRARY_PATH
+   export QT_PLUGIN_PATH=$CONDA_PREFIX/lib/Qt/plugins
+   ```
+
+### Units and Conventions
+
+Unless noted otherwise, Debug Player uses these conventions:
+
+- Distance: meters
+- Time: milliseconds
+- Coordinate system: ENU (East-North-Up)
+- Orientation: Right-Hand rule
+- Vehicle forward direction: x-axis
+- Car pose reference point: center of front axle
+
+## Development Notes
+
+For developers working on the Debug Player framework itself:
+
+### Development Roadmap
+
+The Debug Player development follows a structured roadmap with 4 phases:
+
+1. **Foundation Strengthening (Current Phase)**
+   - ✅ Fix dependency management and environment setup
+   - ✅ Complete plugin interface definition
+   - ✅ Add robust error handling and validation
+   - ✅ Implement comprehensive testing framework
+   - ✅ Enhance documentation
+
+2. **Core Features Enhancement**
+   - Refactor signal management system
+   - Develop customizable view system
+   - Enhance UI controls and interaction
+   - Add data export capabilities
+   - Implement timeline markers and annotations
+
+3. **LLM Integration**
+   - Add natural language query interface
+   - Implement intelligent visualization recommendations
+   - Create context-aware help system
+   - Integrate insights generation
+
+4. **Advanced Features**
+   - Develop multi-view coordination system
+   - Add collaboration tools
+   - Optimize performance for large datasets
+   - Create configuration management system
+
+### Development Priorities
+
+- Regular testing throughout development
+- Atomic commits at major milestones
+- Maintaining >80% test coverage
+- Thorough documentation of APIs and interfaces
+
+### Error Handling and Validation
+
+Debug Player implements a comprehensive error handling system:
+
+1. **Data Validation**
+   - Trip path validation in `data_loader.py`
+   - Custom `DataLoadError` exception for clear error messages
+   - Early validation of input data with helpful error messages
+
+2. **Signal Validation**
+   - Dedicated `signal_validation.py` module to validate signal definitions
+   - Type checking and format validation for all signals
+   - Standardized signal format enforcement
+
+3. **Plugin System**
+   - Robust plugin loading with detailed error reporting
+   - Plugin interface validation to ensure compatibility
+   - Signal availability checking before data requests
+
+### Testing
+
+Run the test suite to verify your changes:
 
 ```bash
-Copy code
-sudo apt-get install libqt6charts6 libqt6charts6-dev
+conda activate DbgPkg
+python -m pytest tests/
 ```
+
+Individual tests can be run as:
+
+```bash
+python -m pytest tests/test_plot_manager.py -v
+```
+
+### Component Interaction
+
+1. **PlotManager Coordination**:
+   - Plugins provide signals via `signals` dictionary
+   - PlotManager queries plugins for signal data as needed
+   - Widgets subscribe to signals and receive updates
+
+2. **Signal Flow**:
+   - User moves timestamp slider
+   - PlotManager requests data for new timestamp
+   - Plugins provide timestamp-specific data
+   - Plot widgets visualize the data
+   - Validated data is passed to appropriate plot widgets
+
+## Contributing
+
+Contributions to Debug Player are welcome! Please follow these steps:
+
+1. Fork the repository
+2. Create a feature branch
+3. Add tests for your changes
+4. Ensure all tests pass
+5. Submit a pull request
+
+## License
+
+This project is proprietary and confidential.
+
+---
+
+For additional help or to report issues, please contact the development team.
+
+*Documentation last updated: May 2024*
