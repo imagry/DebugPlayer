@@ -16,6 +16,7 @@ from core.bookmark_manager import BookmarkManager
 from gui.bookmark_panel import BookmarkPanel
 from gui.minimap_widget import MinimapWidget
 from gui.signal_filter_panel import SignalFilterPanel
+from gui.views import register_views
 
 # Constants for view types
 VIEW_TYPE_TEMPORAL = 'temporal'
@@ -84,6 +85,9 @@ def create_main_window(plot_manager: PlotManager) -> tuple[QMainWindow, PlotMana
     
     # Initialize the view manager
     view_manager = ViewManager()
+    
+    # Register all view types with the view manager
+    register_views(view_manager)
     
     # Create bookmark manager with save path
     save_dir = os.path.join(os.path.expanduser("~"), ".debug_player")
@@ -401,17 +405,34 @@ def setup_menu_bar(win, plot_manager, view_manager, current_timestamp):
     view_menu.addAction(load_layout_action)
     
     # Add view creation actions
+    create_temporal_action = QAction("New Temporal View", win)
+    create_temporal_action.triggered.connect(lambda: add_new_view(win, view_manager, VIEW_TYPE_TEMPORAL))
+    view_menu.addAction(create_temporal_action)
+    
+    create_spatial_action = QAction("New Spatial View", win)
+    create_spatial_action.triggered.connect(lambda: add_new_view(win, view_manager, VIEW_TYPE_SPATIAL))
+    view_menu.addAction(create_spatial_action)
+    
+    # Add separator between standard and advanced views
     view_menu.addSeparator()
-    add_view_menu = QMenu("Add View", win)
-    view_menu.addMenu(add_view_menu)
     
-    add_temporal_action = QAction("Add Temporal View", win)
-    add_temporal_action.triggered.connect(lambda: add_new_view(win, view_manager, VIEW_TYPE_TEMPORAL))
-    add_view_menu.addAction(add_temporal_action)
+    # Add actions for creating new advanced view types
+    advanced_menu = view_menu.addMenu("Advanced Views")
     
-    add_spatial_action = QAction("Add Spatial View", win)
-    add_spatial_action.triggered.connect(lambda: add_new_view(win, view_manager, VIEW_TYPE_SPATIAL))
-    add_view_menu.addAction(add_spatial_action)
+    # Table view option
+    create_table_action = QAction("Data Table View", win)
+    create_table_action.triggered.connect(lambda: add_new_view(win, view_manager, 'table'))
+    advanced_menu.addAction(create_table_action)
+    
+    # Text view option
+    create_text_action = QAction("Text/Log View", win)
+    create_text_action.triggered.connect(lambda: add_new_view(win, view_manager, 'text'))
+    advanced_menu.addAction(create_text_action)
+    
+    # Metrics view option
+    create_metrics_action = QAction("Metrics Dashboard", win)
+    create_metrics_action.triggered.connect(lambda: add_new_view(win, view_manager, 'metrics'))
+    advanced_menu.addAction(create_metrics_action)
 
 
 def setup_timestamp_slider(win, plot_manager, view_manager, current_timestamp):
@@ -526,41 +547,84 @@ def add_new_view(win, view_manager, view_type):
     Args:
         win: Main window to add view to
         view_manager: ViewManager instance
-        view_type: Type of view to add (e.g., 'temporal', 'spatial')
+        view_type: Type of view to add (e.g., 'temporal', 'spatial', 'table', 'text', 'metrics')
     """
     # Generate a unique ID for the new view
     view_count = len([v_id for v_id in view_manager.views.keys() if view_type in v_id])
     view_id = f"{view_type}_view_{view_count + 1}"
     
     # Create the view based on type
+    template_name = None
+    title = None
+    
+    # Map view types to their template names
     if view_type == VIEW_TYPE_TEMPORAL:
-        view = view_manager.create_view_from_template(view_id, 'temporal_default')
+        template_name = 'temporal_default'
+        title = f"Temporal View {view_count + 1}"
     elif view_type == VIEW_TYPE_SPATIAL:
-        view = view_manager.create_view_from_template(view_id, 'spatial_default')
+        template_name = 'spatial_default'
+        title = f"Spatial View {view_count + 1}"
+    elif view_type == 'table':
+        template_name = 'data_table'
+        title = f"Data Table {view_count + 1}"
+    elif view_type == 'text':
+        template_name = 'log_viewer'
+        title = f"Text/Log View {view_count + 1}"
+    elif view_type == 'metrics':
+        template_name = 'dashboard'
+        title = f"Metrics Dashboard {view_count + 1}"
     else:
         print(f"Warning: Unsupported view type {view_type}")
         return
-        
+    
+    # Create the view from the template
+    view = view_manager.create_view_from_template(view_id, template_name)
     if not view:
-        print(f"Error: Failed to create view of type {view_type}")
+        print(f"Error: Failed to create view of type {view_type} using template {template_name}")
         return
         
     # Create a dock widget for the view
-    dock = QDockWidget(f"{view_type.title()} View {view_count + 1}", win)
+    dock = QDockWidget(title, win)
     dock.setObjectName(f"{view_type}ViewDock{view_count + 1}")
     dock.setWidget(view.get_widget())
     dock.setFeatures(QDockWidget.DockWidgetMovable | QDockWidget.DockWidgetClosable | QDockWidget.DockWidgetFloatable)
     
-    # Add the dock to the right area
-    win.addDockWidget(Qt.RightDockWidgetArea, dock)
+    # Determine dock area based on view type
+    if view_type in [VIEW_TYPE_TEMPORAL, VIEW_TYPE_SPATIAL]:
+        # Traditional plot views go on the right
+        dock_area = Qt.RightDockWidgetArea
+    elif view_type == 'table':
+        # Tables go at the bottom
+        dock_area = Qt.BottomDockWidgetArea
+    elif view_type == 'text':
+        # Text/logs go at the bottom
+        dock_area = Qt.BottomDockWidgetArea
+    elif view_type == 'metrics':
+        # Metrics dashboards go at the left
+        dock_area = Qt.LeftDockWidgetArea
+    else:
+        # Default placement
+        dock_area = Qt.RightDockWidgetArea
+    
+    # Add the dock to the appropriate area
+    win.addDockWidget(dock_area, dock)
     
     # Connect appropriate signals based on view type
+    # For temporal and spatial views, we'll connect the default signals
     if view_type == VIEW_TYPE_TEMPORAL:
-        for signal in view_manager.get_view('temporal_view').view_id:
-            view_manager.connect_signal_to_view(signal, view_id)
+        main_temporal = view_manager.get_view('temporal_view')
+        if main_temporal:
+            for signal_name in view_manager.signal_views:
+                if signal_name in view_manager.signal_views.get('temporal_view', []):
+                    view_manager.connect_signal_to_view(signal_name, view_id)
     elif view_type == VIEW_TYPE_SPATIAL:
-        for signal in view_manager.get_view('spatial_view').view_id:
-            view_manager.connect_signal_to_view(signal, view_id)
+        main_spatial = view_manager.get_view('spatial_view')
+        if main_spatial:
+            for signal_name in view_manager.signal_views:
+                if signal_name in view_manager.signal_views.get('spatial_view', []):
+                    view_manager.connect_signal_to_view(signal_name, view_id)
+    
+    # For other view types, we'll let the user connect signals through the filter panel
     
     return view
 
