@@ -18,35 +18,40 @@ class PlotManager:
     2. Registers plots that visualize these signals
     3. Coordinates data requests from the UI and routes them to the appropriate plugins
     4. Updates plots with data from plugins when timestamps change
+    
+    Note: As of v2.0, PlotManager delegates signal management to the SignalRegistry class
+    for better separation of concerns and enhanced signal handling capabilities.
     """
     
     def __init__(self):
         """
-        Initialize the PlotManager with empty registries for plugins, signals, and plots.
+        Initialize the PlotManager with empty registries for plugins and plots.
         
         This constructor creates the basic data structures needed for the PlotManager to
-        coordinate data flow between plugins and plot widgets.
+        coordinate data flow between plugins and plot widgets. Signal management is
+        delegated to the SignalRegistry class.
         """
+        # Import here to avoid circular imports
+        from core.signal_registry import SignalRegistry
+        
+        # Signal registry for centralized signal management
+        self.signal_registry = SignalRegistry()
+        
         # List of all plot widgets that can subscribe to signals
         self.plots = []  
         
-        # Dictionary mapping signal names to lists of plot widgets that display them
-        # Format: {signal_name: [plot_widget1, plot_widget2, ...]}
-        self.signals = {}  
-        
         # Dictionary of plugin instances registered with the system
         # Format: {plugin_name: plugin_instance}
-        self.plugins = {}  
+        self.plugins = {}
         
-        # Dictionary mapping signals to their source plugin and metadata
-        # Format: {signal_name: {"plugin": plugin_name, "func": callable, "type": signal_type, ...}}
-        self.signal_plugins = {}  
-        
-        # Tracks signal types for type checking and validation
-        self.signal_types = {}  
+        # For backward compatibility (these will be deprecated in future versions)
+        # Applications should use signal_registry instead of these attributes
+        self.signals = {}  # Maps signal names to lists of plot widgets
+        self.signal_plugins = {}  # Maps signals to plugins
+        self.signal_types = {}  # Tracks signal types
         
         # Central widget instances for each visualization type
-        # Note: In future versions, these could be dynamically created based on need
+        # Note: In future versions, these could be dynamically created by ViewManager
         self.temporal_plot_widget = TemporalPlotWidget_pg()  # For time-based signals
         self.spatial_plot_widget = SpatialPlotWidget()      # For spatial data (2D/3D)
 
@@ -72,38 +77,50 @@ class PlotManager:
         # Register the plugin instance
         self.plugins[plugin_name] = plugin_instance
         
-        # Import signal validation after ensuring the plugin is valid
-        # This avoids circular imports
-        from core.signal_validation import validate_signal_definition, check_required_signal_fields, SignalValidationError
-        
-        # Count registered signals for summary
+        # Register all signals provided by the plugin
         registered_signals = []
         validation_warnings = []
-
-        # Register each signal provided by the plugin
-        for signal, signal_info in plugin_instance.signals.items():
-            try:
-                # Validate and normalize the signal definition
-                normalized_signal = validate_signal_definition(signal, signal_info, plugin_name)
-                
-                # Check for missing required fields
-                missing_fields = check_required_signal_fields(signal, signal_info, plugin_name)
-                if missing_fields:
-                    validation_warnings.append(
-                        f"Signal '{signal}' is missing required fields: {', '.join(missing_fields)}"
-                    )
-                
-                # Store the normalized signal in signal_plugins
-                self.signal_plugins[signal] = normalized_signal
-                registered_signals.append(signal)
-                
-            except SignalValidationError as e:
-                print(f"\033[95mError: {str(e)}\033[0m")
-                continue
-
-        # Print summary of registered signals
-        print(f"\033[92m Registered signals for plugin \033[0m'{plugin_name}': {registered_signals}")
         
+        for signal_name, signal_info in plugin_instance.signals.items():
+            # Skip unimplemented methods
+            if signal_info.get("func") is None:
+                validation_warnings.append(f"Signal '{signal_name}' does not have a proper function.")
+                continue
+                
+            # Check if signal already exists in registry
+            if self.signal_registry.has_signal(signal_name):
+                validation_warnings.append(f"Signal '{signal_name}' already has a provider. Skipping.")
+                continue
+                
+            try:
+                # Register with the signal registry
+                normalized_signal = self.signal_registry.register_signal(
+                    signal_name, signal_info, plugin_name)
+                
+                # For backward compatibility (deprecated)
+                signal_type = normalized_signal.get("type", "temporal")
+                self.signal_plugins[signal_name] = {
+                    "plugin": plugin_name,
+                    "func": signal_info.get("func"),
+                    "type": signal_type
+                }
+                self.signal_types[signal_name] = signal_type
+                
+                # Initialize an empty list of subscribers for this signal
+                if signal_name not in self.signals:
+                    self.signals[signal_name] = []
+                    
+                registered_signals.append(signal_name)
+                
+            except Exception as e:
+                validation_warnings.append(f"Error registering signal '{signal_name}': {str(e)}")
+
+        # Print summary and any validation warnings
+        if registered_signals:
+            print(f"\033[92mRegistered signals for plugin '{plugin_name}': {', '.join(registered_signals)}\033[0m")
+        else:
+            print(f"\033[93mNo signals registered for plugin '{plugin_name}'\033[0m")
+            
         # Print any validation warnings
         for warning in validation_warnings:
             print(f"\033[93mWarning: {warning}\033[0m")
@@ -208,38 +225,88 @@ class PlotManager:
         """
         Request new data for all signals at the given timestamp.
 
-        This method iterates over all registered signals and fetches the 
-        corresponding data from the associated plugins. If a plugin provides 
-        data for a signal, it retrieves the data for the specified timestamp 
-        and updates the signal with the new data.
+        This method uses the SignalRegistry to fetch data for all registered signals
+        at the specified timestamp, and then updates the appropriate plot widgets.
+        The data flow is:
+        1. Get signal function from registry
+        2. Call the function to get data for the timestamp
+        3. Send the data to all subscribed plot widgets
 
         Args:
-            timestamp (int): The timestamp for which to request data.
+            timestamp (int or float): The timestamp (in milliseconds) for which to request data.
         """
         print(f"Requesting data for timestamp {timestamp}")
-        for signal, plot_list in self.signals.items(): # Iterate over all registered signals
-            # Fetch data for each signal from all plugins that provide it
-            signal_info = self.signal_plugins.get(signal) # Get the plugin info for the signal
-            if not signal_info:
-                        print(f"\033[93mWarning: No plugin found for signal '{signal}'\033[0m")
-                        continue
-                    
-            # Fetch the plugin instance for the signal
-            plugin_name = signal_info["plugin"]
-            plugin = self.plugins.get(plugin_name) # Get the plugin instance
+        
+        # Get all signals from the registry
+        temporal_signals = self.signal_registry.get_signals_by_type("temporal")
+        spatial_signals = self.signal_registry.get_signals_by_type("spatial")
+        
+        # Process temporal signals
+        for signal in temporal_signals:
+            # Get the function that provides data for this signal
+            signal_func = self.signal_registry.get_signal_function(signal)
+            if not signal_func:
+                continue
+                
+            # Get plugin information from registry or the old way
+            provider = self.signal_registry.signal_providers.get(signal)
+            plugin = self.plugins.get(provider) if provider else None
+            
             if plugin and plugin.has_signal(signal):
                 # Fetch data for this signal at the given timestamp
                 data = plugin.get_data_for_timestamp(signal, timestamp)
-
-                # Update the correct plot widget
-                if signal_info["type"] == "temporal":
-                    # Send data to TemporalPlotWidget
+                
+                # Update temporal plot widget
+                if data:
                     self.temporal_plot_widget.update_data(signal, data, timestamp)
-                elif signal_info["type"] == "spatial":
-                    # Send data to SpatialPlotWidget
+            else:
+                print(f"\033[93mWarning: No valid plugin found for temporal signal '{signal}'\033[0m")
+        
+        # Process spatial signals
+        for signal in spatial_signals:
+            # Get the function that provides data for this signal
+            signal_func = self.signal_registry.get_signal_function(signal)
+            if not signal_func:
+                continue
+                
+            # Get plugin information from registry
+            provider = self.signal_registry.signal_providers.get(signal)
+            plugin = self.plugins.get(provider) if provider else None
+            
+            if plugin and plugin.has_signal(signal):
+                # Fetch data for this signal at the given timestamp
+                data = plugin.get_data_for_timestamp(signal, timestamp)
+                
+                # Update spatial plot widget
+                if data:
                     self.spatial_plot_widget.update_data(signal, data)
             else:
-                print(f"\033[95mError: Plugin '{plugin_name}' for signal '{signal}' not found.\033[0m")
+                print(f"\033[93mWarning: No valid plugin found for spatial signal '{signal}'\033[0m")
+                
+        # For backward compatibility, also process signals the old way
+        # This can be removed in future versions
+        for signal, plot_list in self.signals.items():
+            # Skip if we already processed this signal via registry
+            if signal in temporal_signals or signal in spatial_signals:
+                continue
+                
+            # Get signal information the old way
+            signal_info = self.signal_plugins.get(signal)
+            if not signal_info:
+                print(f"\033[93mWarning: No plugin found for signal '{signal}'\033[0m")
+                continue
+                
+            # Process using old method
+            plugin_name = signal_info["plugin"]
+            plugin = self.plugins.get(plugin_name)
+            if plugin and plugin.has_signal(signal):
+                data = plugin.get_data_for_timestamp(signal, timestamp)
+                
+                # Update appropriate widget
+                if signal_info["type"] == "temporal":
+                    self.temporal_plot_widget.update_data(signal, data, timestamp)
+                elif signal_info["type"] == "spatial":
+                    self.spatial_plot_widget.update_data(signal, data)
 
                         
     def assign_signal_to_plot(self, plot_widget, signal):
