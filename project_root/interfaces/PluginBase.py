@@ -48,7 +48,7 @@ class PluginBase(ABC):
     """
     
     @abstractmethod
-    def __init__(self, file_path: str) -> None:
+    def __init__(self, file_path: Optional[str] = None) -> None:
         """
         Initialize the plugin with the given file path.
 
@@ -58,11 +58,14 @@ class PluginBase(ABC):
 
         Parameters:
         -----------
-        file_path : str
+        file_path : Optional[str]
             The path to the data file or directory containing the data.
             This is passed to the plugin by the PlotManager during loading.
+            If None, the plugin should use mock data for development/testing.
         """
         self.file_path = file_path
+        # Flag to indicate if we're using mock data
+        self.use_mock_data = (file_path is None)
         
         # The signals dictionary is a key component of every plugin.
         # It maps signal names to dictionaries containing metadata about each signal.

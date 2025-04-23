@@ -257,7 +257,7 @@ class PlotManager:
                 data = plugin.get_data_for_timestamp(signal, timestamp)
                 
                 # Update temporal plot widget
-                if data:
+                if data is not None:
                     self.temporal_plot_widget.update_data(signal, data, timestamp)
             else:
                 print(f"\033[93mWarning: No valid plugin found for temporal signal '{signal}'\033[0m")
@@ -278,7 +278,7 @@ class PlotManager:
                 data = plugin.get_data_for_timestamp(signal, timestamp)
                 
                 # Update spatial plot widget
-                if data:
+                if data is not None:
                     self.spatial_plot_widget.update_data(signal, data)
             else:
                 print(f"\033[93mWarning: No valid plugin found for spatial signal '{signal}'\033[0m")
@@ -302,11 +302,12 @@ class PlotManager:
             if plugin and plugin.has_signal(signal):
                 data = plugin.get_data_for_timestamp(signal, timestamp)
                 
-                # Update appropriate widget
-                if signal_info["type"] == "temporal":
-                    self.temporal_plot_widget.update_data(signal, data, timestamp)
-                elif signal_info["type"] == "spatial":
-                    self.spatial_plot_widget.update_data(signal, data)
+                # Update appropriate widget if data is valid
+                if data is not None:
+                    if signal_info["type"] == "temporal":
+                        self.temporal_plot_widget.update_data(signal, data, timestamp)
+                    elif signal_info["type"] == "spatial":
+                        self.spatial_plot_widget.update_data(signal, data)
 
                         
     def assign_signal_to_plot(self, plot_widget, signal):

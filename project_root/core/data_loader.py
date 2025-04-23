@@ -43,15 +43,12 @@ def validate_trip_path(path: str) -> str:
     return expanded_path
 
 
-def parse_arguments() -> Union[str, Tuple[str, str]]:
+def parse_arguments() -> Optional[Union[str, Tuple[str, str]]]:
     """
     Parse command-line arguments and validate trip paths.
     
     Returns:
-        Union[str, Tuple[str, str]]: The validated trip path(s).
-        
-    Raises:
-        DataLoadError: If no valid trip paths are provided.
+        Optional[Union[str, Tuple[str, str]]]: The validated trip path(s) or None if using mock data.
     """
     # Create an argument parser with more descriptive help
     parser = argparse.ArgumentParser(
@@ -63,7 +60,8 @@ def parse_arguments() -> Union[str, Tuple[str, str]]:
     parser.add_argument(
         '--trip1', 
         type=str, 
-        help='Path to the first trip data directory or file (required)'
+        default=None,
+        help='Path to the first trip data directory or file (optional)'
     )
     parser.add_argument(
         '--trip2', 
@@ -71,16 +69,25 @@ def parse_arguments() -> Union[str, Tuple[str, str]]:
         default=None, 
         help='Path to the second trip data directory or file (optional for comparison)'
     )
+    parser.add_argument(
+        '--mock', 
+        action='store_true',
+        help='Use mock data instead of loading from files (for development)'
+    )
     
     # Parse the command-line arguments
     args = parser.parse_args()
     
     try:
-        # Check if at least one trip path is provided
+        # If mock flag is set, return None to indicate using mock data
+        if args.mock:
+            print("Using mock data for development.")
+            return None
+        
+        # Check if trip paths are provided
         if not args.trip1:
-            raise DataLoadError(
-                "No trip path provided. Please specify at least one trip path using --trip1."
-            )
+            print("No trip path provided. Using mock data for development.")
+            return None
         
         # Validate the primary trip path
         trip1_path = validate_trip_path(args.trip1)
