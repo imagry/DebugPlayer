@@ -36,22 +36,69 @@ SIGNAL_TYPES = {
     "temporal": {
         "description": "Time-series data that changes with timestamp",
         "required_fields": ["func", "type"],
-        "optional_fields": ["description", "units", "valid_range"],
+        "optional_fields": [
+            "description",  # Human-readable description of the signal
+            "units",        # Units of measurement (e.g., 'm/s', 'deg')
+            "valid_range",  # Tuple of (min, max) valid values
+            "precision",    # Number of decimal places for display
+            "category",     # Signal category for grouping (e.g., 'vehicle', 'environment')
+            "tags",        # List of tags for filtering and grouping
+            "color",       # Default color for plotting
+            "critical_values", # Dict of named critical values to highlight
+            "sampling_rate",  # Sampling rate of the signal
+            "interpolation"   # Interpolation method ('linear', 'step', etc.)
+        ],
     },
     "spatial": {
         "description": "Spatial data that may be 2D or 3D",
         "required_fields": ["func", "type"],
-        "optional_fields": ["description", "coordinate_system", "units", "valid_range"],
+        "optional_fields": [
+            "description",      # Human-readable description of the signal
+            "coordinate_system", # Description of coordinate system used
+            "units",            # Units of measurement (e.g., 'm', 'deg')
+            "valid_range",      # Tuple of (min, max) valid values
+            "precision",        # Number of decimal places for display
+            "category",         # Signal category for grouping
+            "tags",            # List of tags for filtering and grouping
+            "color",           # Default color for plotting
+            "style",           # Plotting style (e.g., 'points', 'line', 'polygon')
+            "dimensions"        # Number of dimensions (2 or 3)
+        ],
     },
     "categorical": {
         "description": "Data with discrete categories or states",
         "required_fields": ["func", "type", "categories"],
-        "optional_fields": ["description"],
+        "optional_fields": [
+            "description",     # Human-readable description of the signal
+            "category",        # Signal category for grouping
+            "tags",           # List of tags for filtering and grouping
+            "default_category", # Default category when no data is available
+            "category_colors"   # Dict mapping categories to colors
+        ],
     },
     "boolean": {
         "description": "Binary true/false data",
         "required_fields": ["func", "type"],
-        "optional_fields": ["description", "true_label", "false_label"],
+        "optional_fields": [
+            "description",   # Human-readable description of the signal
+            "true_label",    # Label for true state (default: 'True')
+            "false_label",   # Label for false state (default: 'False')
+            "true_color",    # Color for true state (default: green)
+            "false_color",   # Color for false state (default: red)
+            "category",      # Signal category for grouping
+            "tags"           # List of tags for filtering and grouping
+        ],
+    },
+    "text": {
+        "description": "Textual data that may change over time",
+        "required_fields": ["func", "type"],
+        "optional_fields": [
+            "description",  # Human-readable description of the signal
+            "category",     # Signal category for grouping
+            "tags",        # List of tags for filtering and grouping
+            "max_length",   # Maximum character length
+            "text_format"   # Format specification (e.g., 'plain', 'markdown', 'html')
+        ],
     },
 }
 
@@ -65,6 +112,7 @@ def validate_signal_definition(signal_name: str, signal_info: Dict[str, Any], pl
     2. Verifies that the 'func' field contains a callable
     3. Checks that the 'type' field is one of the supported signal types
     4. Validates that all required fields for the specific signal type are present
+    5. Normalizes metadata fields according to their expected format
     
     The function also normalizes the signal definition by adding the plugin name
     and ensuring all fields follow the expected format.
@@ -76,7 +124,7 @@ def validate_signal_definition(signal_name: str, signal_info: Dict[str, Any], pl
         
     Returns:
         Dict[str, Any]: A normalized signal definition with all required fields,
-                        ready to be registered with the PlotManager
+                        ready to be registered with the SignalRegistry
         
     Raises:
         SignalValidationError: If the signal definition is invalid or missing required fields
@@ -107,16 +155,78 @@ def validate_signal_definition(signal_name: str, signal_info: Dict[str, Any], pl
         )
         signal_type = "temporal"
     
-    # Create a normalized signal definition
+    # Check required fields for this signal type
+    missing_fields = check_required_signal_fields(signal_name, signal_info, plugin_name)
+    if missing_fields:
+        raise SignalValidationError(
+            f"Signal '{signal_name}' in plugin '{plugin_name}' "
+            f"is missing required fields for type '{signal_type}': {missing_fields}"
+        )
+    
+    # Create a normalized signal definition with basic fields
     normalized_signal = {
+        "name": signal_name,
         "plugin": plugin_name,
         "func": signal_func,
         "type": signal_type,
     }
     
-    # Copy over any additional fields from the original definition
+    # Add description if not present
+    if "description" not in signal_info:
+        normalized_signal["description"] = f"Signal '{signal_name}' from plugin '{plugin_name}'"
+    
+    # Normalize metadata fields based on signal type
+    type_metadata = SIGNAL_TYPES[signal_type]
+    optional_fields = type_metadata.get("optional_fields", [])
+    
+    # Process each field according to its expected type
     for key, value in signal_info.items():
-        if key not in ["func", "type"]:
+        if key in ["func", "type", "plugin"]: 
+            continue  # Skip fields we've already handled
+        
+        # Handle specific field normalizations
+        if key == "valid_range" and value is not None:
+            # Ensure valid_range is a tuple of two numbers
+            if not isinstance(value, (tuple, list)) or len(value) != 2:
+                print(f"Warning: valid_range for signal '{signal_name}' should be a tuple of (min, max)")
+                continue
+            normalized_signal[key] = tuple(value)
+        
+        elif key == "tags" and value is not None:
+            # Ensure tags is a list of strings
+            if not isinstance(value, (list, tuple)):
+                print(f"Warning: tags for signal '{signal_name}' should be a list of strings")
+                continue
+            normalized_signal[key] = list(value)
+        
+        elif key == "precision" and value is not None:
+            # Ensure precision is a positive integer
+            try:
+                precision = int(value)
+                if precision < 0:
+                    print(f"Warning: precision for signal '{signal_name}' should be a positive integer")
+                    continue
+                normalized_signal[key] = precision
+            except (ValueError, TypeError):
+                print(f"Warning: precision for signal '{signal_name}' should be a positive integer")
+                continue
+        
+        elif key == "category" and value is not None:
+            # Ensure category is a string
+            if not isinstance(value, str):
+                print(f"Warning: category for signal '{signal_name}' should be a string")
+                continue
+            normalized_signal[key] = value
+        
+        elif key == "critical_values" and value is not None:
+            # Ensure critical_values is a dictionary mapping strings to numbers
+            if not isinstance(value, dict):
+                print(f"Warning: critical_values for signal '{signal_name}' should be a dictionary")
+                continue
+            normalized_signal[key] = value
+            
+        else:
+            # For other fields, copy directly
             normalized_signal[key] = value
     
     return normalized_signal

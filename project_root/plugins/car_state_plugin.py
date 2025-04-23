@@ -20,31 +20,217 @@ class CarStatePlugin(PluginBase):
                 self._setup_mock_data()
         
         # Set up signal handlers based on data source (mock or real)
+        # Define common metadata for each signal type
+        steering_metadata = {
+            "description": "Steering angle of the vehicle",
+            "units": "deg",
+            "valid_range": (-45.0, 45.0),  # Typical range in degrees
+            "precision": 1,
+            "category": "vehicle_control",
+            "tags": ["steering", "control", "driving"],
+            "critical_values": {
+                "max_left": -30.0,
+                "max_right": 30.0,
+                "neutral": 0.0
+            },
+            "color": "#3498db"  # Blue color for steering signals
+        }
+        
+        speed_metadata = {
+            "description": "Vehicle speed",
+            "units": "m/s",
+            "valid_range": (0.0, 40.0),  # Range in meters per second
+            "precision": 2,
+            "category": "vehicle_state",
+            "tags": ["speed", "state", "motion"],
+            "critical_values": {
+                "standstill": 0.0,
+                "urban_limit": 13.89,  # 50 km/h in m/s
+                "highway_limit": 27.78  # 100 km/h in m/s
+            },
+            "color": "#2ecc71"  # Green color for speed signals
+        }
+        
+        driving_mode_metadata = {
+            "description": "Current driving mode of the vehicle",
+            "type": "categorical",
+            "categories": {
+                0: "MANUAL",
+                1: "AUTOMATED",
+                2: "STANDBY",
+                3: "ERROR"
+            },
+            "category": "vehicle_status",
+            "tags": ["mode", "status", "automation"],
+            "category_colors": {
+                0: "#e74c3c",  # Red for manual
+                1: "#2ecc71",  # Green for automated
+                2: "#f39c12",  # Orange for standby
+                3: "#c0392b"   # Dark red for error
+            }
+        }
+        
         if self.use_mock_data:
             self.signals = {
-                "current_steering": {"func": self.mock_get_current_steering_angle, "type": "temporal", "mode": "dynamic"},
-                "current_speed": {"func": self.mock_get_current_speed, "type": "temporal", "mode": "dynamic"},
-                "driving_mode": {"func": self.mock_get_driving_mode, "type": "temporal", "mode": "dynamic"},
-                "target_speed": {"func": self.mock_get_target_speed, "type": "temporal", "mode": "dynamic"},
-                "target_steering_angle": {"func": self.mock_get_target_steering_angle, "type": "temporal", "mode": "dynamic"},
-                "all_steering_data": {"func": self.handler_get_all_current_steering_angle_data, "type": "temporal", "mode": "static"},
-                "all_current_speed_data": {"func": self.handler_get_all_current_speed_data, "type": "temporal", "mode": "static"},
-                "all_driving_mode_data": {"func": self.handler_get_all_driving_mode_data, "type": "temporal", "mode": "static"},
-                "all_target_speed_data": {"func": self.handler_get_all_target_speed_data, "type": "temporal", "mode": "static"},
-                "all_target_steering_angle_data": {"func": self.handler_get_all_target_steering_angle_data, "type": "temporal", "mode": "static"},
+                # Dynamic signals with individual data points
+                "current_steering": {
+                    "func": self.mock_get_current_steering_angle, 
+                    "type": "temporal", 
+                    "mode": "dynamic",
+                    "description": "Current steering angle of the vehicle",
+                    **steering_metadata
+                },
+                "current_speed": {
+                    "func": self.mock_get_current_speed, 
+                    "type": "temporal", 
+                    "mode": "dynamic",
+                    "description": "Current speed of the vehicle",
+                    **speed_metadata
+                },
+                "driving_mode": {
+                    "func": self.mock_get_driving_mode, 
+                    "type": "categorical", 
+                    "mode": "dynamic",
+                    **driving_mode_metadata
+                },
+                "target_speed": {
+                    "func": self.mock_get_target_speed, 
+                    "type": "temporal", 
+                    "mode": "dynamic",
+                    "description": "Target speed of the vehicle's control system",
+                    **speed_metadata,
+                    "tags": ["speed", "target", "control"],
+                    "color": "#27ae60"  # Darker green for target speed
+                },
+                "target_steering_angle": {
+                    "func": self.mock_get_target_steering_angle, 
+                    "type": "temporal", 
+                    "mode": "dynamic",
+                    "description": "Target steering angle for the vehicle's control system",
+                    **steering_metadata,
+                    "tags": ["steering", "target", "control"],
+                    "color": "#2980b9"  # Darker blue for target steering
+                },
+                
+                # Static signals with full time series data
+                "all_steering_data": {
+                    "func": self.handler_get_all_current_steering_angle_data, 
+                    "type": "temporal", 
+                    "mode": "static",
+                    "description": "Full time series of steering angle data",
+                    **steering_metadata
+                },
+                "all_current_speed_data": {
+                    "func": self.handler_get_all_current_speed_data, 
+                    "type": "temporal", 
+                    "mode": "static",
+                    "description": "Full time series of vehicle speed data",
+                    **speed_metadata
+                },
+                "all_driving_mode_data": {
+                    "func": self.handler_get_all_driving_mode_data, 
+                    "type": "temporal", 
+                    "mode": "static",
+                    "description": "Full time series of driving mode data",
+                    **driving_mode_metadata
+                },
+                "all_target_speed_data": {
+                    "func": self.handler_get_all_target_speed_data, 
+                    "type": "temporal", 
+                    "mode": "static",
+                    "description": "Full time series of target speed data",
+                    **speed_metadata,
+                    "tags": ["speed", "target", "control", "time_series"],
+                },
+                "all_target_steering_angle_data": {
+                    "func": self.handler_get_all_target_steering_angle_data, 
+                    "type": "temporal", 
+                    "mode": "static",
+                    "description": "Full time series of target steering angle data",
+                    **steering_metadata,
+                    "tags": ["steering", "target", "control", "time_series"],
+                },
             }
         else:
+            # For real data, use the same metadata structure but with the real data functions
             self.signals = {
-                "current_steering": {"func": partial(self.CarStateInfo.get_current_steering_angle), "type": "temporal", "mode": "dynamic"},
-                "current_speed": {"func": partial(self.CarStateInfo.get_current_speed_at_timestamp), "type": "temporal", "mode": "dynamic"},
-                "driving_mode": {"func": partial(self.CarStateInfo.get_driving_mode_at_timestamp), "type": "temporal", "mode": "dynamic"},
-                "target_speed": {"func": partial(self.CarStateInfo.get_target_speed_at_timestamp), "type": "temporal", "mode": "dynamic"},
-                "target_steering_angle": {"func": partial(self.CarStateInfo.get_target_steering_angle_at_timestamp), "type": "temporal", "mode": "dynamic"},
-                "all_steering_data": {"func": self.handler_get_all_current_steering_angle_data, "type": "temporal", "mode": "static"},
-                "all_current_speed_data": {"func": self.handler_get_all_current_speed_data, "type": "temporal", "mode": "static"},
-                "all_driving_mode_data": {"func": self.handler_get_all_driving_mode_data, "type": "temporal", "mode": "static"},
-                "all_target_speed_data": {"func": self.handler_get_all_target_speed_data, "type": "temporal", "mode": "static"},
-                "all_target_steering_angle_data": {"func": self.handler_get_all_target_steering_angle_data, "type": "temporal", "mode": "static"},
+                "current_steering": {
+                    "func": partial(self.CarStateInfo.get_current_steering_angle), 
+                    "type": "temporal", 
+                    "mode": "dynamic",
+                    "description": "Current steering angle of the vehicle",
+                    **steering_metadata
+                },
+                "current_speed": {
+                    "func": partial(self.CarStateInfo.get_current_speed_at_timestamp), 
+                    "type": "temporal", 
+                    "mode": "dynamic",
+                    "description": "Current speed of the vehicle",
+                    **speed_metadata
+                },
+                "driving_mode": {
+                    "func": partial(self.CarStateInfo.get_driving_mode_at_timestamp), 
+                    "type": "categorical", 
+                    "mode": "dynamic",
+                    **driving_mode_metadata
+                },
+                "target_speed": {
+                    "func": partial(self.CarStateInfo.get_target_speed_at_timestamp), 
+                    "type": "temporal", 
+                    "mode": "dynamic",
+                    "description": "Target speed of the vehicle's control system",
+                    **speed_metadata,
+                    "tags": ["speed", "target", "control"],
+                    "color": "#27ae60"  # Darker green for target speed
+                },
+                "target_steering_angle": {
+                    "func": partial(self.CarStateInfo.get_target_steering_angle_at_timestamp), 
+                    "type": "temporal", 
+                    "mode": "dynamic",
+                    "description": "Target steering angle for the vehicle's control system",
+                    **steering_metadata,
+                    "tags": ["steering", "target", "control"],
+                    "color": "#2980b9"  # Darker blue for target steering
+                },
+                
+                # Static signals with full time series data
+                "all_steering_data": {
+                    "func": self.handler_get_all_current_steering_angle_data, 
+                    "type": "temporal", 
+                    "mode": "static",
+                    "description": "Full time series of steering angle data",
+                    **steering_metadata
+                },
+                "all_current_speed_data": {
+                    "func": self.handler_get_all_current_speed_data, 
+                    "type": "temporal", 
+                    "mode": "static",
+                    "description": "Full time series of vehicle speed data",
+                    **speed_metadata
+                },
+                "all_driving_mode_data": {
+                    "func": self.handler_get_all_driving_mode_data, 
+                    "type": "temporal", 
+                    "mode": "static",
+                    "description": "Full time series of driving mode data",
+                    **driving_mode_metadata
+                },
+                "all_target_speed_data": {
+                    "func": self.handler_get_all_target_speed_data, 
+                    "type": "temporal", 
+                    "mode": "static",
+                    "description": "Full time series of target speed data",
+                    **speed_metadata,
+                    "tags": ["speed", "target", "control", "time_series"],
+                },
+                "all_target_steering_angle_data": {
+                    "func": self.handler_get_all_target_steering_angle_data, 
+                    "type": "temporal", 
+                    "mode": "static",
+                    "description": "Full time series of target steering angle data",
+                    **steering_metadata,
+                    "tags": ["steering", "target", "control", "time_series"],
+                },
             }
 
 

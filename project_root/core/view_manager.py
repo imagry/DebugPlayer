@@ -325,6 +325,56 @@ class ViewManager:
         return [self.views[view_id] for view_id in self.signal_views[signal_name]
                 if view_id in self.views]
                 
+    def update_view_signals(self, selected_signals: List[str]) -> None:
+        """
+        Update views to display only the selected signals.
+        
+        This method is used to filter which signals are displayed in views based
+        on user selection. It disconnects signals that are not in the selected list
+        and connects those that are.
+        
+        Args:
+            selected_signals: List of signal names to display
+        """
+        if not selected_signals:
+            # If no signals selected, don't change anything
+            logger.debug("No signals selected, keeping current connections")
+            return
+            
+        logger.debug(f"Updating views to display signals: {selected_signals}")
+        
+        # Get current signal connections
+        current_connections = {}
+        for signal, view_ids in self.signal_views.items():
+            current_connections[signal] = view_ids.copy()
+        
+        # For each view, update its signals
+        for view_id, view in self.views.items():
+            # Get template or config for this view to know its intended signals
+            view_config = self.view_configs.get(view_id, {})
+            intended_signals = view_config.get("signals", [])
+            
+            # Filter intended signals to only those selected
+            filtered_signals = [s for s in intended_signals if s in selected_signals]
+            
+            # Disconnect signals not in the filtered list
+            current_view_signals = [s for s, v_ids in current_connections.items() 
+                                   if view_id in v_ids]
+            
+            for signal in current_view_signals:
+                if signal not in filtered_signals:
+                    self.disconnect_signal_from_view(signal, view_id)
+                    logger.debug(f"Disconnected signal {signal} from view {view_id}")
+            
+            # Connect signals in the filtered list
+            for signal in filtered_signals:
+                if signal not in current_view_signals:
+                    self.connect_signal_to_view(signal, view_id)
+                    logger.debug(f"Connected signal {signal} to view {view_id}")
+        
+        logger.info(f"Updated views to display {len(selected_signals)} signals")
+
+                
     def save_layout(self) -> Dict[str, Any]:
         """
         Save the current view layout configuration.

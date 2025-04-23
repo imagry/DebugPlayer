@@ -15,6 +15,7 @@ from core.signal_registry import SignalRegistry
 from core.bookmark_manager import BookmarkManager
 from gui.bookmark_panel import BookmarkPanel
 from gui.minimap_widget import MinimapWidget
+from gui.signal_filter_panel import SignalFilterPanel
 
 # Constants for view types
 VIEW_TYPE_TEMPORAL = 'temporal'
@@ -119,6 +120,9 @@ def create_main_window(plot_manager: PlotManager) -> tuple[QMainWindow, PlotMana
     # Create minimap for timeline navigation
     minimap_dock, minimap = setup_minimap(win, plot_manager, bookmark_manager, current_timestamp)
     
+    # Create signal filter panel
+    filter_dock, filter_panel = setup_signal_filter_panel(win, plot_manager.signal_registry, view_manager)
+    
     # Set up the menu bar with new features
     setup_menu_bar(win, plot_manager, view_manager, current_timestamp)
     
@@ -132,6 +136,9 @@ def create_main_window(plot_manager: PlotManager) -> tuple[QMainWindow, PlotMana
     # Update bookmark panel and minimap when timestamp changes
     slider.timestamp_changed.connect(bookmark_panel.set_current_timestamp)
     slider.timestamp_changed.connect(minimap.set_current_timestamp)
+    
+    # Initialize the signal filter panel with available signals
+    filter_panel.refresh_signals()
     
     # Extract docks for layout management
     spatial_dock = view_docks.get('spatial_dock')
@@ -152,6 +159,35 @@ def create_main_window(plot_manager: PlotManager) -> tuple[QMainWindow, PlotMana
     
     return win, plot_manager, view_manager
 
+
+def setup_signal_filter_panel(win: QMainWindow, signal_registry: SignalRegistry, view_manager: ViewManager) -> Tuple[QDockWidget, SignalFilterPanel]:
+    """
+    Set up the signal filter panel for searching and filtering signals.
+    
+    Args:
+        win: Main window to add the panel to
+        signal_registry: SignalRegistry instance
+        view_manager: ViewManager instance
+        
+    Returns:
+        Tuple of (dock widget, signal filter panel instance)
+    """
+    # Create signal filter panel
+    filter_panel = SignalFilterPanel(signal_registry, win)
+    
+    # Connect signal selection changes to view updates
+    filter_panel.signal_selection_changed.connect(
+        lambda signals: view_manager.update_view_signals(signals)
+    )
+    
+    # Create dock widget for the filter panel
+    filter_dock = QDockWidget("Signal Filters", win)
+    filter_dock.setObjectName("SignalFilterDock")
+    filter_dock.setWidget(filter_panel)
+    filter_dock.setFeatures(QDockWidget.DockWidgetMovable | QDockWidget.DockWidgetClosable | QDockWidget.DockWidgetFloatable)
+    win.addDockWidget(Qt.RightDockWidgetArea, filter_dock)
+    
+    return filter_dock, filter_panel
 
 def setup_bookmark_panel(win: QMainWindow, bookmark_manager: BookmarkManager, current_timestamp: float) -> Tuple[QDockWidget, BookmarkPanel]:
     """
