@@ -13,6 +13,101 @@
             }
         },
         {
+            "name": "Debug Player: Main App",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}", 
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}",
+                "LOG_LEVEL": "INFO"
+            },
+            "args": []
+        },
+        {
+            "name": "Debug Player: With Example Plugin",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/main.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}", 
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}",
+                "LOG_LEVEL": "DEBUG",
+                "EXTRA_PLUGIN_DIRS": "${workspaceFolder:project_root}/plugins/user_plugins"
+            },
+            "args": []
+        },
+        {
+            "name": "Debug Player: View System Demo",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/examples/view_system_demo.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}", 
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}",
+                "LOG_LEVEL": "INFO"
+            }
+        },
+        {
+            "name": "Debug Player: Signal Filtering Demo",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/examples/signal_filtering_demo.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}", 
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}",
+                "LOG_LEVEL": "INFO"
+            }
+        },
+        {
+            "name": "Run Plugin Validator",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/tools/plugin_validator.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}", 
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}"
+            },
+            "args": [
+                "--plugin-dir",
+                "${workspaceFolder:project_root}/plugins/user_plugins"
+            ]
+        },
+        {
+            "name": "Run Tests: All",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder:project_root}/run_tests.py",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}", 
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}",
+                "LOG_LEVEL": "ERROR"
+            }
+        },
+        {
+            "name": "Run Tests: Plugin System",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "console": "integratedTerminal",
+            "cwd": "${workspaceFolder:project_root}", 
+            "env": {
+                "PYTHONPATH": "${workspaceFolder:project_root}",
+                "LOG_LEVEL": "ERROR"
+            },
+            "args": [
+                "tests/test_plugin_manager.py",
+                "tests/test_plugins.py",
+                "-v"
+            ]
+        },
+        {
             "name": "Test Lane Dividers",
             "type": "debugpy",
             "request": "launch",
@@ -24,7 +119,7 @@
             },
             "args": [
                 "--trip_path",
-                "/home/thh3/data/trips/nissan/2024-11-15T10_51_52/",            
+                "/home/thh3/data/trips/nissan/2024-11-15T10_51_52/"            
             ]
         },
         {

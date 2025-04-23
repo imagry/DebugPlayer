@@ -41,6 +41,14 @@
 ### 1. Add Consule that will allow some limited custom manipulations
 ### 2. connect tehe wheels angle from the current steering to the angle of the wheels in the vehicle object icon
 
+### 3. Add a way to save the current state of the application
+### 4. Add a way to load the current state of the application
+### 5. Add a way to save the current state of the application to a file
+### 6. Add a way to load the current state of the application from a file
+### 7. Add a way to save the current state of the application to a database
+### 8. Add a way to load the current state of the application from a database
+### 9. Create Plugin helper - GUI based tool where you can safely define a new plugin or widget
+
 
 
 

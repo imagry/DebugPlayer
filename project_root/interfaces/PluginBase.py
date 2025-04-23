@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional, Union, List, Set, Tuple
 
 class PluginBase(ABC):
     """
@@ -12,26 +12,55 @@ class PluginBase(ABC):
     The plugin system follows these key principles:
     1. Each plugin handles a specific type of data source
     2. Plugins expose signals that provide data for visualization
-    3. Plugins are dynamically discovered and loaded by the PlotManager
+    3. Plugins are dynamically discovered and loaded by the PluginManager
     4. All plugins must implement the methods defined in this interface
+    5. All plugins must provide metadata for versioning and discoverability
+    
+    Plugin Metadata:
+    Each plugin must provide metadata using the METADATA class attribute, including:
+    - name: The display name of the plugin
+    - version: The semantic version (e.g., "1.0.0")
+    - description: A brief description of what the plugin does
+    - author: The name or organization that created the plugin
+    - type: Optional, the plugin type ("data_source", "visualization", etc.)
+    - url: Optional, a URL for more information about the plugin
+    - dependencies: Optional, a dictionary of required plugins and their min versions
     
     To create a custom plugin:
     1. Create a new class that inherits from PluginBase
-    2. Implement all abstract methods
-    3. Define signals in the self.signals dictionary
-    4. Export the plugin class via the plugin_class variable
+    2. Define the METADATA class attribute with required fields
+    3. Implement all abstract methods
+    4. Define signals in the self.signals dictionary
+    5. Export the plugin class via the plugin_class variable
     
     Example implementation:
     ```python
     class MyPlugin(PluginBase):
+        # Required plugin metadata
+        METADATA = {
+            "name": "My Plugin",
+            "version": "1.0.0",
+            "description": "A plugin that does something useful",
+            "author": "Your Name",
+            "type": "data_source",
+            "url": "https://example.com/my-plugin",
+            "dependencies": {
+                "core_plugin": ">=0.5.0"
+            }
+        }
+        
         def __init__(self, file_path):
             super().__init__(file_path)
             # Initialize your data sources here
-            # Define your signals dictionary
+            # Define your signals dictionary with rich metadata
             self.signals = {
                 "my_signal": {
                     "func": self.get_my_data,
-                    "type": "temporal"
+                    "type": "temporal",
+                    "description": "My useful signal",
+                    "units": "meters/sec",
+                    "category": "measurements",
+                    "tags": ["velocity", "sensor"]
                 }
             }
             
@@ -46,6 +75,14 @@ class PluginBase(ABC):
     plugin_class = MyPlugin
     ```
     """
+    
+    # Default metadata - override in subclasses
+    METADATA = {
+        "name": "Base Plugin",
+        "version": "0.1.0",
+        "description": "Base class for Debug Player plugins",
+        "author": "Debug Player Team"
+    }
     
     @abstractmethod
     def __init__(self, file_path: Optional[str] = None) -> None:
