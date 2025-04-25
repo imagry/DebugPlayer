@@ -7,7 +7,7 @@ This module provides a centralized system for managing signals from plugins,
 including registration, validation, and subscription management.
 """
 
-from typing import Dict, Any, List, Callable, Set, Optional
+from typing import Dict, Any, List, Callable, Set, Optional, Tuple
 from core.signal_validation import validate_signal_definition, SignalValidationError
 import logging
 

@@ -17,7 +17,7 @@ from datetime import datetime
 from typing import Dict, Any, List
 import logging
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QSplitter, QTabWidget
+from PySide6.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QSplitter, QTabWidget, QLabel
 from PySide6.QtCore import Qt, QTimer
 
 # Ensure the Debug Player modules are in the Python path
@@ -29,8 +29,42 @@ from gui.views import register_views
 from gui.views.table_view import TableView
 from gui.views.text_view import TextView
 from gui.views.metrics_view import MetricsView
-from views.temporal_view import TemporalView
-from views.spatial_view import SpatialView
+
+# Import standard view types
+try:
+    from views.temporal_view import TemporalView
+    from views.spatial_view import SpatialView
+except ImportError:
+    print("Warning: Could not import standard view types. Trying alternate paths...")
+    try:
+        # Try alternate import paths
+        from project_root.views.temporal_view import TemporalView
+        from project_root.views.spatial_view import SpatialView
+    except ImportError:
+        print("Error: Could not import TemporalView and SpatialView classes. Will create mock versions.")
+        # Create mock classes if needed
+        from core.view_manager import ViewBase
+        class TemporalView(ViewBase):
+            def __init__(self, view_id, parent=None):
+                super().__init__(view_id, parent)
+                self.supported_signal_types = {'temporal'}
+                self.widget = QWidget()
+                self.widget.setLayout(QVBoxLayout())
+                self.widget.layout().addWidget(QLabel("Mock Temporal View - Import Failed"))
+            
+            def update_data(self, signal_name, data):
+                return True
+        
+        class SpatialView(ViewBase):
+            def __init__(self, view_id, parent=None):
+                super().__init__(view_id, parent)
+                self.supported_signal_types = {'spatial'}
+                self.widget = QWidget()
+                self.widget.setLayout(QVBoxLayout())
+                self.widget.layout().addWidget(QLabel("Mock Spatial View - Import Failed"))
+            
+            def update_data(self, signal_name, data):
+                return True
 
 # Configure logging
 log_level = os.environ.get('LOG_LEVEL', 'INFO')
@@ -221,6 +255,10 @@ class ViewSystemDemo(QMainWindow):
         # Create view manager and register view types
         self.view_manager = ViewManager()
         register_views(self.view_manager)
+        
+        # Register the standard view types as well
+        self.view_manager.register_view_class('temporal', TemporalView)
+        self.view_manager.register_view_class('spatial', SpatialView)
         
         # Create a tab widget to organize the different view demos
         self.tab_widget = QTabWidget()
