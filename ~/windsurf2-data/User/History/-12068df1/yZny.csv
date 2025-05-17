@@ -1,0 +1,9 @@
+Task ID,Category,Description,Priority,Status,Depends On
+1,Testing,Write unit tests for timeline control logic in core/,High,Pending,
+2,Testing,Write unit tests for DataManager synchronization (offline CSV),High,Pending,
+3,Integration,Add integration test for full playback loop (seek, step, sync),High,Pending,1;2
+4,Analysis,Identify all coupled logic in gui/ that interacts with core/,High,Pending,
+5,Refactor,Modularize PlaybackController into testable units,Medium,Pending,1
+6,Refactor,Define BaseDebugWidget interface (do not use yet),Medium,Pending,4
+7,Architecture,Introduce PluginInterface and PluginMeta classes (empty),Medium,Planned,6
+8,Doc,Create a coverage report or notes on untested logic,Medium,Planned,1;2;4

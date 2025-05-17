@@ -95,9 +95,14 @@
                 "--trip1",
                 "/home/thh3/data/trips/2024-10-17T13_08_07/"
             ],
-            "cwd": "${workspaceFolder:project_root}", 
+            "cwd": "${workspaceFolder:project_root}",
+            "python": "${command:python.interpreterPath}",
+            "justMyCode": false,
+            "preLaunchTask": "conda-activate-DbgPkg",
             "env": {
-                "PYTHONPATH": "${workspaceFolder:project_root}" 
+                "PYTHONPATH": "${workspaceFolder:project_root}",
+                "CONDA_PREFIX": "${env:CONDA_PREFIX}",
+                "CONDA_DEFAULT_ENV": "DbgPkg"
             }
         },
         {

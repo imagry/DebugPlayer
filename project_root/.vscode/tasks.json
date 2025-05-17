@@ -1,0 +1,12 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "conda-activate-DbgPkg",
+            "type": "shell",
+            "command": "${command:conda.activate}",
+            "args": ["DbgPkg"],
+            "problemMatcher": []
+        }
+    ]
+}

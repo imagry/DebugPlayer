@@ -104,15 +104,89 @@ def get_available_signals(trip_path: str) -> dict:
     """
     Scan trip data and return available signals.
     
+    This function scans the specified directory for data files (CSV, pickle) and
+    extracts information about available signals.
+    
     Args:
-        trip_path (str): Path to trip data.
+        trip_path (str): Path to trip data directory or file.
         
     Returns:
-        dict: Dictionary of available signals and their types.
+        dict: Dictionary where keys are signal names and values are dictionaries
+              containing signal metadata (type, description, etc.).
+              
+    Raises:
+        DataLoadError: If the trip path is invalid or inaccessible.
     """
-    # This is a placeholder for future implementation
-    # In the future, this could scan the trip directory structure
-    # and find available signals based on file patterns or metadata
+    import os
+    import pandas as pd
+    import pickle
+    from pathlib import Path
     
-    # For now, return an empty dict to indicate no automatic detection
-    return {}
+    # Check if path exists
+    if not os.path.exists(trip_path):
+        raise DataLoadError(f"Trip path does not exist: {trip_path}")
+    
+    signals = {}
+    path = Path(trip_path)
+    
+    # If it's a file, handle it directly
+    if path.is_file():
+        if path.suffix.lower() == '.pkl':
+            # Handle pickle file
+            try:
+                with open(path, 'rb') as f:
+                    data = pickle.load(f)
+                signals[path.stem] = {
+                    'type': 'generic',
+                    'description': f'Data from {path.name}',
+                    'source': str(path)
+                }
+            except (pickle.PickleError, EOFError) as e:
+                raise DataLoadError(f"Error reading pickle file {path}: {str(e)}")
+        elif path.suffix.lower() == '.csv':
+            # Handle CSV file
+            signals[path.stem] = {
+                'type': 'temporal',
+                'description': f'Time series data from {path.name}',
+                'source': str(path)
+            }
+        return signals
+    
+    # If it's a directory, scan for data files
+    if not path.is_dir():
+        raise DataLoadError(f"Path is neither a file nor a directory: {trip_path}")
+    
+    # Scan for CSV files
+    for csv_file in path.glob('**/*.csv'):
+        try:
+            # Just read the header to check if it's a valid CSV
+            with open(csv_file, 'r') as f:
+                # Read just the first line to get headers
+                header = f.readline().strip().split(',')
+                if len(header) >= 2:  # At least one data column + timestamp
+                    signals[csv_file.stem] = {
+                        'type': 'temporal',
+                        'description': f'Time series data from {csv_file.name}',
+                        'source': str(csv_file),
+                        'columns': header
+                    }
+        except Exception as e:
+            # Skip files that can't be read
+            continue
+    
+    # Scan for pickle files
+    for pkl_file in path.glob('**/*.pkl'):
+        try:
+            with open(pkl_file, 'rb') as f:
+                # Just try to load it to verify it's a valid pickle
+                data = pickle.load(f)
+                signals[pkl_file.stem] = {
+                    'type': 'generic',
+                    'description': f'Data from {pkl_file.name}',
+                    'source': str(pkl_file)
+                }
+        except (pickle.PickleError, EOFError):
+            # Skip invalid pickle files
+            continue
+    
+    return signals

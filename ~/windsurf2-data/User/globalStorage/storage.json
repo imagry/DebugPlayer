@@ -1,0 +1,93 @@
+{
+    "telemetry.sqmId": "",
+    "telemetry.machineId": "4e05eecfee05d4b55885ad2a4316aee8d5fec5ff988b0e75e0be8638baf69ba5",
+    "telemetry.devDeviceId": "7887cd43-414c-4364-b6ed-a46d716b5b25",
+    "backupWorkspaces": {
+        "workspaces": [
+            {
+                "id": "f8ce58f17f3a6a270a8ff184939d47d5",
+                "configURIPath": "file:///home/thh3/work/DebugPlayer/DebugPlayer.code-workspace"
+            }
+        ],
+        "folders": [
+            {
+                "folderUri": "file:///home/thh3/work/DebugPlayer"
+            }
+        ],
+        "emptyWindows": [
+            {
+                "backupFolder": "1747511626071"
+            }
+        ]
+    },
+    "windowControlHeight": 42,
+    "profileAssociations": {
+        "workspaces": {
+            "file:///home/thh3/work/DebugPlayer": "__default__profile__",
+            "file:///home/thh3/work/DebugPlayer/DebugPlayer.code-workspace": "__default__profile__"
+        },
+        "emptyWindows": {
+            "1747511626071": "__default__profile__"
+        }
+    },
+    "theme": "vs",
+    "themeBackground": "#e6e7ed",
+    "windowSplash": {
+        "zoomLevel": 0,
+        "baseTheme": "vs",
+        "colorInfo": {
+            "foreground": "#363c4d",
+            "background": "#e6e7ed",
+            "editorBackground": "#e6e7ed",
+            "titleBarBackground": "#d6d8df",
+            "titleBarBorder": "#c1c2c7",
+            "activityBarBackground": "#d6d8df",
+            "activityBarBorder": "#d6d8df",
+            "sideBarBackground": "#d6d8df",
+            "sideBarBorder": "#c1c2c7",
+            "statusBarBackground": "#d6d8df",
+            "statusBarBorder": "#c1c2c7",
+            "statusBarNoFolderBackground": "#e6e7ed",
+            "windowBorder": "#cdced1"
+        },
+        "layoutInfo": {
+            "sideBarSide": "left",
+            "editorPartMinWidth": 220,
+            "titleBarHeight": 35,
+            "activityBarWidth": 42,
+            "sideBarWidth": 405,
+            "auxiliarySideBarWidth": 890,
+            "statusBarHeight": 22,
+            "windowBorder": false
+        }
+    },
+    "windowsState": {
+        "lastActiveWindow": {
+            "workspaceIdentifier": {
+                "id": "f8ce58f17f3a6a270a8ff184939d47d5",
+                "configURIPath": "file:///home/thh3/work/DebugPlayer/DebugPlayer.code-workspace"
+            },
+            "backupPath": "/home/thh3/work/DebugPlayer/~/windsurf2-data/Backups/f8ce58f17f3a6a270a8ff184939d47d5",
+            "uiState": {
+                "mode": 0,
+                "x": 680,
+                "y": 320,
+                "width": 1200,
+                "height": 800,
+                "zoomLevel": 1
+            }
+        },
+        "openedWindows": []
+    },
+    "windowSplashWorkspaceOverride": {
+        "layoutInfo": {
+            "auxiliarySideBarWidth": [
+                890,
+                [
+                    "a8fa70f25abc4418e9b959f164687a1d",
+                    "f8ce58f17f3a6a270a8ff184939d47d5"
+                ]
+            ]
+        }
+    }
+}
