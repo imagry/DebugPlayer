@@ -68,7 +68,14 @@ Thumbs.db
 *.npz
 
 # WindSurf specific
+~/windsurf2-data/
+.windsurf2-data/
 windsurf2-data/
+*/windsurf2-data/
+*/*/windsurf2-data/
+*/*/*/windsurf2-data/
+**/windsurf2-data/**
+**/windsurf2-data/
 
 # Local development settings
 local_settings.py
