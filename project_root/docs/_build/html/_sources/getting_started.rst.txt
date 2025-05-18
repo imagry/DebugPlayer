@@ -1,0 +1,126 @@
+.. _getting_started:
+
+Getting Started
+==============
+
+This guide will help you get up and running with Debug Player.
+
+Installation
+-----------
+
+First, install Debug Player using pip:
+
+.. code-block:: bash
+
+   pip install debug-player
+
+Or install from source:
+
+.. code-block:: bash
+
+   git clone https://github.com/imagry/debug-player.git
+   cd debug-player
+   pip install -e .
+
+Basic Usage
+-----------
+
+1. **Launch the application**:
+
+   .. code-block:: bash
+
+      debug-player
+
+2. **Load a data file**:
+   - Click "File" > "Open" or press Ctrl+O
+   - Navigate to your data file and select it
+
+3. **Navigate the interface**:
+   - Use the timeline at the bottom to navigate through the data
+   - Zoom in/out using the mouse wheel or +/- buttons
+   - Pan by clicking and dragging
+
+4. **View signals**:
+   - Signals are displayed in the left sidebar
+   - Click on a signal to view its plot
+   - Right-click on a plot for more options
+
+5. **Save your session**:
+   - Click "File" > "Save Session" to save your current layout and settings
+
+Key Features
+-----------
+
+Signal Visualization
+~~~~~~~~~~~~~~~~~~~
+
+- Plot multiple signals on the same axis
+- Customize line styles, colors, and markers
+- Add annotations and markers to important points
+
+Data Analysis
+~~~~~~~~~~~~
+
+- Calculate statistics for selected time ranges
+- Export data to CSV or other formats
+- Apply filters and transformations to signals
+
+Plugin System
+~~~~~~~~~~~~
+
+Debug Player supports plugins to extend its functionality. To load a plugin:
+
+1. Click "Plugins" > "Load Plugin"
+2. Navigate to the plugin file (.py)
+3. The plugin will appear in the Plugins menu
+
+Keyboard Shortcuts
+-----------------
+
++------------------+----------------------------------+
+| Shortcut         | Action                           |
++==================+==================================+
+| Ctrl+O          | Open a file                      |
++------------------+----------------------------------+
+| Ctrl+S          | Save session                     |
++------------------+----------------------------------+
+| Space           | Play/Pause playback             |
++------------------+----------------------------------+
+| Left/Right      | Step backward/forward           |
++------------------+----------------------------------+
+| Home/End        | Jump to start/end               |
++------------------+----------------------------------+
+| +               | Zoom in                         |
++------------------+----------------------------------+
+| -               | Zoom out                        |
++------------------+----------------------------------+
+| 0               | Reset zoom                      |
++------------------+----------------------------------+
+| F1              | Show help                       |
++------------------+----------------------------------+
+
+
+Troubleshooting
+--------------
+
+Common Issues
+~~~~~~~~~~~~
+
+1. **Missing Dependencies**
+   - Make sure all required dependencies are installed
+   - Run `pip install -r requirements.txt`
+
+2. **Plugin Loading Issues**
+   - Check the console for error messages
+   - Make sure the plugin implements the required interface
+
+3. **Performance Issues**
+   - Try reducing the number of visible signals
+   - Increase the data decimation factor in settings
+
+Getting Help
+-----------
+
+- Check the :ref:`user_guide` for more detailed information
+- Visit our `GitHub repository <https://github.com/imagry/debug-player>`_
+- Open an issue on GitHub for bug reports and feature requests

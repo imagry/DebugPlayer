@@ -1,0 +1,78 @@
+.. _api_reference:
+
+API Reference
+============
+
+This page provides detailed documentation for the Debug Player API.
+
+Core Modules
+-----------
+
+.. toctree::
+   :maxdepth: 2
+
+   modules/core/plot_manager
+   modules/core/signal_validation
+   modules/core/data_loader
+   modules/core/logger
+
+Plugin System
+------------
+
+.. toctree::
+   :maxdepth: 2
+
+   modules/plugins/base
+   modules/plugins/example_plugin
+
+GUI Components
+-------------
+
+.. toctree::
+   :maxdepth: 2
+
+   modules/gui/main_window
+   modules/gui/plot_widgets
+   modules/gui/controls
+
+Data Models
+-----------
+
+.. toctree::
+   :maxdepth: 2
+
+   modules/models/signal
+   modules/models/plugin
+   modules/models/plot
+
+Utilities
+---------
+
+.. toctree::
+   :maxdepth: 2
+
+   modules/utils/helpers
+   modules/utils/validators
+   modules/utils/constants
+
+Exceptions
+----------
+
+.. automodule:: debug_player.exceptions
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+.. automodule:: debug_player.errors
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+
+Type Aliases
+------------
+
+.. automodule:: debug_player.types
+   :members:
+   :undoc-members:
+   :show-inheritance:

@@ -1,0 +1,355 @@
+.. _user_guide_advanced:
+
+Advanced Topics
+==============
+
+This section covers advanced features and techniques for power users.
+
+Customizing the Interface
+------------------------
+
+Layout Management
+~~~~~~~~~~~~~~~~
+
+Debug Player allows you to customize the interface layout:
+
+1. **Dockable Panels**: Drag and drop panels to rearrange them
+2. **Floating Windows**: Double-click a panel title to float it
+3. **Tabbed Interface**: Drag one panel onto another to create tabs
+4. **Save Layout**: Save your custom layout via "View" > "Layouts" > "Save Current Layout"
+
+Keyboard Shortcuts
+~~~~~~~~~~~~~~~~~
+
+Customize keyboard shortcuts:
+
+1. Go to "Edit" > "Preferences" > "Keyboard Shortcuts"
+2. Find the command you want to modify
+3. Click on the current shortcut and press the new key combination
+4. Click "Apply" to save changes
+
+Themes
+~~~~~~
+
+Change the application theme:
+
+1. Go to "Edit" > "Preferences" > "Appearance"
+2. Select a theme from the dropdown
+3. Adjust colors and fonts as needed
+4. Click "Apply" to save changes
+
+Available themes:
+
+- **Light**: Bright theme for well-lit environments
+- **Dark**: Dark theme for low-light conditions
+- **System**: Follows the system theme
+- **High Contrast**: For improved accessibility
+
+Data Analysis
+------------
+
+Signal Processing
+~~~~~~~~~~~~~~~~
+
+Apply signal processing operations:
+
+1. Select one or more signals
+2. Right-click and choose "Process"
+3. Select an operation:
+   - Filter (low-pass, high-pass, band-pass)
+   - Resample
+   - Detrend
+   - Normalize
+   - Smooth
+   - FFT (Fast Fourier Transform)
+
+Custom Scripting
+~~~~~~~~~~~~~~~
+
+Run Python scripts to process data:
+
+1. Go to "Tools" > "Script Editor"
+2. Write or paste your Python code
+3. Use the `debug_player` module to access data
+4. Click "Run" to execute the script
+
+Example script:
+
+.. code-block:: python
+
+   # Get the current plot
+   plot = debug_player.get_current_plot()
+   
+   # Get signals from the plot
+   signals = plot.get_signals()
+   
+   # Process each signal
+   for signal in signals:
+       data = signal.get_data()
+       # Your processing code here
+       processed_data = data * 2
+       
+       # Add processed signal to plot
+       new_signal = signal.copy(name=f"{signal.name}_processed")
+       new_signal.set_data(processed_data)
+       plot.add_signal(new_signal)
+
+Batch Processing
+~~~~~~~~~~~~~~~
+
+Process multiple files:
+
+1. Go to "File" > "Batch Process"
+2. Add files or folders
+3. Configure processing steps
+4. Set output directory
+5. Click "Start" to begin processing
+
+Supported batch operations:
+- Apply signal processing
+- Convert between file formats
+- Extract statistics
+- Generate reports
+
+Automation
+----------
+
+Macros
+~~~~~
+
+Record and play back macros:
+
+1. Go to "Tools" > "Macro Recorder"
+2. Click "Record" and perform actions
+3. Click "Stop" when done
+4. Save the macro for later use
+5. Play back macros from the Macro menu
+
+Command Line Interface
+~~~~~~~~~~~~~~~~~~~~~
+
+Run Debug Player from the command line:
+
+.. code-block:: bash
+
+   # Basic usage
+   debug-player [options] [file]
+
+   # Batch process files
+   debug-player --batch process_config.json
+
+   # Run a script
+   debug-player --script process.py data_file.csv
+
+   # Start in server mode
+   debug-player --server --port 8080
+
+Command-line options:
+
++------------------+----------------------------------+
+| Option           | Description                      |
++==================+==================================+
+| -h, --help      | Show help message               |
++------------------+----------------------------------+
+| -v, --version   | Show version                    |
++------------------+----------------------------------+
+| --batch FILE    | Run batch processing            |
++------------------+----------------------------------+
+| --script FILE   | Run a script                    |
++------------------+----------------------------------+
+| --server        | Start in server mode            |
++------------------+----------------------------------+
+| --port PORT     | Port for server mode (default: 8080) |
++------------------+----------------------------------+
+| --no-gui        | Run without GUI                 |
++------------------+----------------------------------+
+| --log-level LEVEL | Set log level (debug, info, warning, error) |
++------------------+----------------------------------+
+
+
+Remote Control
+-------------
+
+Web Interface
+~~~~~~~~~~~~
+
+Access Debug Player through a web browser:
+
+1. Start the web server:
+
+   .. code-block:: bash
+
+      debug-player --server --port 8080
+
+2. Open a web browser and navigate to `http://localhost:8080`
+3. Use the web interface to control Debug Player
+
+REST API
+~~~~~~~~
+
+Interact with Debug Player programmatically:
+
+.. code-block:: python
+
+   import requests
+   import json
+
+   # Get list of signals
+   response = requests.get('http://localhost:8080/api/signals')
+   signals = response.json()
+
+   # Set signal value
+   payload = {'signal': 'signal1', 'value': 42}
+   response = requests.post('http://localhost:8080/api/signal', json=payload)
+
+   # Execute command
+   response = requests.post('http://localhost:8080/api/command', json={'command': 'play'})
+
+Available API endpoints:
+
++---------------------+------+-----------------------------------+
+| Endpoint           | Method | Description                     |
++=====================+========+===================================+
+| /api/signals       | GET    | List all signals                |
++---------------------+--------+-----------------------------------+
+| /api/signal        | POST   | Set signal value                |
++---------------------+--------+-----------------------------------+
+| /api/command       | POST   | Execute command                 |
++---------------------+--------+-----------------------------------+
+| /api/script        | POST   | Execute Python script           |
++---------------------+--------+-----------------------------------+
+| /api/status        | GET    | Get application status          |
++---------------------+--------+-----------------------------------+
+
+Python API
+~~~~~~~~~
+
+Use Debug Player as a Python library:
+
+.. code-block:: python
+
+   import debug_player as dp
+
+   # Create a new session
+   app = dp.Application()
+
+   # Load data
+   app.load_data('data.csv')
+
+   # Get a signal
+   signal = app.get_signal('signal1')
+   # Process data
+   data = signal.get_data()
+   processed = data * 2
+   # Add new signal
+   app.add_signal(processed, name='processed_signal')
+   # Save session
+   app.save_session('session.db')
+
+Performance Optimization
+----------------------
+
+Large Datasets
+~~~~~~~~~~~~~
+
+For working with large datasets:
+
+1. Enable data decimation in settings
+2. Use chunked loading for very large files
+3. Disable auto-scrolling when not needed
+4. Close unused plots and signals
+5. Increase memory allocation in preferences
+
+GPU Acceleration
+~~~~~~~~~~~~~~~
+
+Enable GPU acceleration:
+
+1. Install required drivers
+2. Enable GPU acceleration in preferences
+3. Restart the application
+
+Supported backends:
+- CUDA (NVIDIA GPUs)
+- OpenCL (AMD/Intel GPUs)
+- CPU fallback
+
+Custom Extensions
+---------------
+
+Custom Plot Types
+~~~~~~~~~~~~~~~~
+
+Add custom plot types:
+
+1. Create a subclass of `PlotWidget`
+2. Implement the required methods
+3. Register the plot type:
+
+   .. code-block:: python
+
+      from debug_player.plugins import register_plot_type
+      
+      class MyCustomPlot(PlotWidget):
+          # Implementation...
+      
+      def register_plugin():
+          register_plot_type('my_plot', 'My Custom Plot', MyCustomPlot)
+
+Data Import/Export
+~~~~~~~~~~~~~~~~~
+
+Add support for custom file formats:
+
+1. Create a class that implements `DataImporter` or `DataExporter`
+2. Register the handler:
+
+   .. code-block:: python
+
+      from debug_player.plugins import register_data_handler
+      
+      class MyDataImporter(DataImporter):
+          # Implementation...
+      
+      def register_plugin():
+          register_data_handler('myformat', 'My Format', MyDataImporter)
+
+Troubleshooting
+--------------
+
+Debugging Tools
+~~~~~~~~~~~~~~
+
+1. **Log Viewer**: View application logs in "Help" > "Show Logs"
+2. **Python Console**: Access an interactive Python console in "Help" > "Python Console"
+3. **Signal Inspector**: Examine signal data in detail by right-clicking a signal and selecting "Inspect"
+4. **Performance Profiler**: Profile code execution in "Tools" > "Profiler"
+
+Common Issues
+~~~~~~~~~~~~
+
+1. **High Memory Usage**
+   - Close unused plots and signals
+   - Increase system swap space
+   - Use chunked loading for large files
+
+2. **Slow Performance**
+   - Disable auto-scrolling
+   - Reduce plot update rate
+   - Close unused applications
+   - Update graphics drivers
+
+3. **Plugin Crashes**
+   - Update to the latest version of the plugin
+   - Check for compatibility with your Debug Player version
+   - Contact the plugin author
+
+Getting Help
+-----------
+
+For additional help:
+
+1. Check the :ref:`troubleshooting` guide
+2. Search the `GitHub issues <https://github.com/imagry/debug-player/issues>`_
+3. Ask a question on our `Discord server <https://discord.gg/imagry>`_
+4. Email `support@imagry.com`

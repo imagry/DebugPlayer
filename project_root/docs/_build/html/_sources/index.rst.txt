@@ -1,0 +1,42 @@
+.. Debug Player documentation master file, created by
+   sphinx-quickstart on Sun May 18 06:55:00 2023.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Debug Player
+============
+
+Debug Player is a powerful tool for visualizing and analyzing time-series data.
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Getting Started
+   
+   getting_started
+   installation
+
+.. toctree::
+   :maxdepth: 2
+   :caption: User Guide
+   
+   user_guide
+   user_guide/interface
+   user_guide/plugins
+   user_guide/advanced
+   user_guide/troubleshooting
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Developer Documentation
+   
+   development
+   contributing
+   api_reference
+   changelog
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

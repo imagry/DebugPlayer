@@ -1,0 +1,551 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Contributing &mdash; Debug Player 0.2.0 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=92fd9be5" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=938c9ccc"></script>
+      <script src="_static/doctools.js?v=9a2dae69"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api_reference.html" />
+    <link rel="prev" title="Development Guide" href="development.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Debug Player
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="getting_started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#basic-usage">Basic Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#key-features">Key Features</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting_started.html#signal-visualization">Signal Visualization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting_started.html#data-analysis">Data Analysis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="getting_started.html#plugin-system">Plugin System</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#keyboard-shortcuts">Keyboard Shortcuts</a></li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="getting_started.html#common-issues">Common Issues</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="getting_started.html#getting-help">Getting Help</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#prerequisites">Prerequisites</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#installation-methods">Installation Methods</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#using-pip-recommended">Using pip (recommended)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#from-source">From source</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#core-dependencies">Core Dependencies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#development-dependencies">Development Dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#verifying-the-installation">Verifying the Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="installation.html#common-issues">Common Issues</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#getting-help">Getting Help</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">User Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="user_guide.html">User Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#table-of-contents">Table of Contents</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/interface.html">Interface Overview</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/interface.html#main-window-layout">Main Window Layout</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/interface.html#menu-bar">Menu Bar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/interface.html#toolbar">Toolbar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/interface.html#signal-browser">Signal Browser</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/interface.html#plot-area">Plot Area</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/interface.html#timeline">Timeline</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/interface.html#status-bar">Status Bar</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/interface.html#context-menus">Context Menus</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html">Plugins</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/plugins.html#built-in-plugins">Built-in Plugins</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/plugins.html#managing-plugins">Managing Plugins</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/plugins.html#creating-plugins">Creating Plugins</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/plugins.html#plugin-packaging">Plugin Packaging</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/plugins.html#troubleshooting-plugins">Troubleshooting Plugins</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/plugins.html#advanced-topics">Advanced Topics</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/plugins.html#best-practices">Best Practices</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html">Advanced Topics</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/advanced.html#customizing-the-interface">Customizing the Interface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/advanced.html#data-analysis">Data Analysis</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/advanced.html#automation">Automation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/advanced.html#remote-control">Remote Control</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/advanced.html#performance-optimization">Performance Optimization</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/advanced.html#custom-extensions">Custom Extensions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/advanced.html#troubleshooting">Troubleshooting</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/advanced.html#getting-help">Getting Help</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/troubleshooting.html#installation-issues">Installation Issues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/troubleshooting.html#application-startup-issues">Application Startup Issues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/troubleshooting.html#data-loading-issues">Data Loading Issues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/troubleshooting.html#performance-issues">Performance Issues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/troubleshooting.html#plugin-issues">Plugin Issues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/troubleshooting.html#display-issues">Display Issues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/troubleshooting.html#export-and-save-issues">Export and Save Issues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/troubleshooting.html#network-and-remote-access-issues">Network and Remote Access Issues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="user_guide/troubleshooting.html#getting-help">Getting Help</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#interface-overview">Interface Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#main-window">Main Window</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#signal-browser">Signal Browser</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#plot-area">Plot Area</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#timeline">Timeline</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#working-with-data">Working with Data</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#loading-data">Loading Data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#saving-and-exporting">Saving and Exporting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#signal-operations">Signal Operations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#plugins">Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#keyboard-shortcuts">Keyboard Shortcuts</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#navigation">Navigation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#zooming">Zooming</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#file-operations">File Operations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#common-issues">Common Issues</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide.html#getting-help">Getting Help</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/interface.html">Interface Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/interface.html#main-window-layout">Main Window Layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/interface.html#menu-bar">Menu Bar</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/interface.html#file-menu">File Menu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/interface.html#edit-menu">Edit Menu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/interface.html#view-menu">View Menu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/interface.html#tools-menu">Tools Menu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/interface.html#window-menu">Window Menu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/interface.html#help-menu">Help Menu</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/interface.html#toolbar">Toolbar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/interface.html#signal-browser">Signal Browser</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/interface.html#plot-area">Plot Area</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/interface.html#timeline">Timeline</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/interface.html#status-bar">Status Bar</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/interface.html#context-menus">Context Menus</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/interface.html#signal-context-menu">Signal Context Menu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/interface.html#plot-context-menu">Plot Context Menu</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/interface.html#timeline-context-menu">Timeline Context Menu</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/plugins.html">Plugins</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/plugins.html#built-in-plugins">Built-in Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/plugins.html#managing-plugins">Managing Plugins</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#loading-a-plugin">Loading a Plugin</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#enabling-disabling-plugins">Enabling/Disabling Plugins</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#plugin-settings">Plugin Settings</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/plugins.html#creating-plugins">Creating Plugins</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#plugin-structure">Plugin Structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#required-methods">Required Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#optional-methods">Optional Methods</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#signal-types">Signal Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#example-plugin">Example Plugin</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/plugins.html#plugin-packaging">Plugin Packaging</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/plugins.html#troubleshooting-plugins">Troubleshooting Plugins</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#common-issues">Common Issues</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#debugging-plugins">Debugging Plugins</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/plugins.html#advanced-topics">Advanced Topics</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#custom-widgets">Custom Widgets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#threading">Threading</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#data-streaming">Data Streaming</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/plugins.html#plugin-dependencies">Plugin Dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/plugins.html#best-practices">Best Practices</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/advanced.html">Advanced Topics</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/advanced.html#customizing-the-interface">Customizing the Interface</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#layout-management">Layout Management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#keyboard-shortcuts">Keyboard Shortcuts</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#themes">Themes</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/advanced.html#data-analysis">Data Analysis</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#signal-processing">Signal Processing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#custom-scripting">Custom Scripting</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#batch-processing">Batch Processing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/advanced.html#automation">Automation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#macros">Macros</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#command-line-interface">Command Line Interface</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/advanced.html#remote-control">Remote Control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#web-interface">Web Interface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#rest-api">REST API</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#python-api">Python API</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/advanced.html#performance-optimization">Performance Optimization</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#large-datasets">Large Datasets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#gpu-acceleration">GPU Acceleration</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/advanced.html#custom-extensions">Custom Extensions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#custom-plot-types">Custom Plot Types</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#data-import-export">Data Import/Export</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/advanced.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#debugging-tools">Debugging Tools</a></li>
+<li class="toctree-l3"><a class="reference internal" href="user_guide/advanced.html#common-issues">Common Issues</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/advanced.html#getting-help">Getting Help</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="user_guide/troubleshooting.html">Troubleshooting</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/troubleshooting.html#installation-issues">Installation Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/troubleshooting.html#application-startup-issues">Application Startup Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/troubleshooting.html#data-loading-issues">Data Loading Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/troubleshooting.html#performance-issues">Performance Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/troubleshooting.html#plugin-issues">Plugin Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/troubleshooting.html#display-issues">Display Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/troubleshooting.html#export-and-save-issues">Export and Save Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/troubleshooting.html#network-and-remote-access-issues">Network and Remote Access Issues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user_guide/troubleshooting.html#getting-help">Getting Help</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Developer Documentation</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="development.html">Development Guide</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="development.html#development-environment-setup">Development Environment Setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#project-structure">Project Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#coding-standards">Coding Standards</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development.html#code-style">Code Style</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development.html#documentation">Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development.html#testing">Testing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#creating-plugins">Creating Plugins</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#version-control">Version Control</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development.html#branching-strategy">Branching Strategy</a></li>
+<li class="toctree-l3"><a class="reference internal" href="development.html#commit-messages">Commit Messages</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#release-process">Release Process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#troubleshooting">Troubleshooting</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="development.html#common-issues">Common Issues</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="development.html#getting-help">Getting Help</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Contributing</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#ways-to-contribute">Ways to Contribute</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-started">Getting Started</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coding-standards">Coding Standards</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#code-style">Code Style</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#documentation">Documentation</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#testing">Testing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#pull-request-guidelines">Pull Request Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#code-review-process">Code Review Process</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#reporting-bugs">Reporting Bugs</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#feature-requests">Feature Requests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#community-guidelines">Community Guidelines</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getting-help">Getting Help</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#core-modules">Core Modules</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#plugin-system">Plugin System</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#gui-components">GUI Components</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#data-models">Data Models</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#utilities">Utilities</a><ul class="simple">
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#exceptions">Exceptions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api_reference.html#type-aliases">Type Aliases</a></li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Debug Player</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Contributing</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/contributing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="contributing">
+<span id="id1"></span><h1>Contributing<a class="headerlink" href="#contributing" title="Link to this heading"></a></h1>
+<p>We welcome contributions from the community! This guide will help you get started with contributing to Debug Player.</p>
+<section id="ways-to-contribute">
+<h2>Ways to Contribute<a class="headerlink" href="#ways-to-contribute" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Report bugs</p></li>
+<li><p>Suggest new features</p></li>
+<li><p>Improve documentation</p></li>
+<li><p>Submit bug fixes</p></li>
+<li><p>Write tests</p></li>
+<li><p>Improve performance</p></li>
+<li><p>Help answer questions</p></li>
+</ul>
+</section>
+<section id="getting-started">
+<h2>Getting Started<a class="headerlink" href="#getting-started" title="Link to this heading"></a></h2>
+<ol class="arabic">
+<li><p><strong>Fork the repository</strong> on GitHub</p></li>
+<li><p><strong>Clone your fork</strong> locally:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/your-username/debug-player.git
+<span class="nb">cd</span><span class="w"> </span>debug-player
+</pre></div>
+</div>
+</li>
+<li><p><strong>Set up the development environment</strong>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Create and activate a virtual environment</span>
+python<span class="w"> </span>-m<span class="w"> </span>venv<span class="w"> </span>venv
+<span class="nb">source</span><span class="w"> </span>venv/bin/activate<span class="w">  </span><span class="c1"># On Windows: venv\Scripts\activate</span>
+
+<span class="c1"># Install development dependencies</span>
+pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>dev<span class="o">]</span>
+
+<span class="c1"># Install pre-commit hooks</span>
+pre-commit<span class="w"> </span>install
+</pre></div>
+</div>
+</li>
+<li><p><strong>Create a new branch</strong> for your changes:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>fix/your-bug-fix
+<span class="c1"># or</span>
+git<span class="w"> </span>checkout<span class="w"> </span>-b<span class="w"> </span>feature/your-new-feature
+</pre></div>
+</div>
+</li>
+<li><p><strong>Make your changes</strong> and ensure tests pass:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Run tests</span>
+pytest
+
+<span class="c1"># Format code</span>
+black<span class="w"> </span>.
+isort<span class="w"> </span>.
+
+<span class="c1"># Check for linting errors</span>
+flake8
+</pre></div>
+</div>
+</li>
+<li><p><strong>Commit your changes</strong> with a descriptive message:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>commit<span class="w"> </span>-m<span class="w"> </span><span class="s2">&quot;fix: resolve issue with signal loading&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Push your changes</strong> to your fork:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>push<span class="w"> </span>origin<span class="w"> </span>your-branch-name
+</pre></div>
+</div>
+</li>
+<li><p><strong>Open a pull request</strong> on GitHub</p></li>
+</ol>
+</section>
+<section id="coding-standards">
+<h2>Coding Standards<a class="headerlink" href="#coding-standards" title="Link to this heading"></a></h2>
+<section id="code-style">
+<h3>Code Style<a class="headerlink" href="#code-style" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Follow <a class="reference external" href="https://www.python.org/dev/peps/pep-0008/">PEP 8</a> style guide</p></li>
+<li><p>Use type hints for all function parameters and return values</p></li>
+<li><p>Keep lines under 88 characters (Black enforces this)</p></li>
+<li><p>Use absolute imports</p></li>
+</ul>
+</section>
+<section id="documentation">
+<h3>Documentation<a class="headerlink" href="#documentation" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Document all public APIs with docstrings</p></li>
+<li><p>Use Google-style docstrings</p></li>
+<li><p>Update documentation when making API changes</p></li>
+<li><p>Add examples for complex functionality</p></li>
+</ul>
+</section>
+<section id="testing">
+<h3>Testing<a class="headerlink" href="#testing" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p>Write tests for new features and bug fixes</p></li>
+<li><p>Keep tests fast and focused</p></li>
+<li><p>Use descriptive test names</p></li>
+<li><p>Aim for good test coverage (80%+)</p></li>
+</ul>
+</section>
+</section>
+<section id="pull-request-guidelines">
+<h2>Pull Request Guidelines<a class="headerlink" href="#pull-request-guidelines" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>Keep pull requests focused on a single feature or bug fix</p></li>
+<li><p>Update documentation and tests as needed</p></li>
+<li><p>Reference related issues in your PR description</p></li>
+<li><p>Ensure all tests pass before submitting</p></li>
+<li><p>Request reviews from appropriate team members</p></li>
+</ol>
+</section>
+<section id="code-review-process">
+<h2>Code Review Process<a class="headerlink" href="#code-review-process" title="Link to this heading"></a></h2>
+<ol class="arabic simple">
+<li><p>A maintainer will review your PR</p></li>
+<li><p>Address any feedback or requested changes</p></li>
+<li><p>Once approved, a maintainer will merge your PR</p></li>
+</ol>
+</section>
+<section id="reporting-bugs">
+<h2>Reporting Bugs<a class="headerlink" href="#reporting-bugs" title="Link to this heading"></a></h2>
+<p>When reporting bugs, please include:</p>
+<ol class="arabic simple">
+<li><p>Steps to reproduce the issue</p></li>
+<li><p>Expected behavior</p></li>
+<li><p>Actual behavior</p></li>
+<li><p>Environment details (OS, Python version, etc.)</p></li>
+<li><p>Any relevant error messages or screenshots</p></li>
+</ol>
+</section>
+<section id="feature-requests">
+<h2>Feature Requests<a class="headerlink" href="#feature-requests" title="Link to this heading"></a></h2>
+<p>For feature requests, please:</p>
+<ol class="arabic simple">
+<li><p>Describe the feature you’d like to see</p></li>
+<li><p>Explain why this would be useful</p></li>
+<li><p>Provide any relevant use cases or examples</p></li>
+</ol>
+</section>
+<section id="community-guidelines">
+<h2>Community Guidelines<a class="headerlink" href="#community-guidelines" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Be respectful and inclusive</p></li>
+<li><p>Keep discussions constructive and on-topic</p></li>
+<li><p>Follow the <a class="reference external" href="CODE_OF_CONDUCT.md">Code of Conduct</a></p></li>
+</ul>
+</section>
+<section id="getting-help">
+<h2>Getting Help<a class="headerlink" href="#getting-help" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p>Check the documentation</p></li>
+<li><p>Search the issue tracker</p></li>
+<li><p>Join our community chat</p></li>
+<li><p>Open an issue for specific questions</p></li>
+</ul>
+<p>Thank you for contributing to Debug Player!</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="development.html" class="btn btn-neutral float-left" title="Development Guide" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api_reference.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023-2025, Imagry.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

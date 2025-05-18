@@ -1,0 +1,246 @@
+.. _development:
+
+Development Guide
+================
+
+This guide provides information for developers working on the Debug Player project.
+
+Development Environment Setup
+---------------------------
+
+1. **Clone the repository**:
+
+   .. code-block:: bash
+
+      git clone https://github.com/imagry/debug-player.git
+      cd debug-player
+
+2. **Set up a virtual environment** (recommended):
+
+   .. code-block:: bash
+
+      python -m venv venv
+      source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+3. **Install development dependencies**:
+
+   .. code-block:: bash
+
+      pip install -e .[dev]
+
+4. **Install pre-commit hooks**:
+
+   .. code-block:: bash
+
+      pre-commit install
+
+Project Structure
+----------------
+
+.. code-block:: text
+
+   debug_player/
+   ├── core/               # Core functionality
+   │   ├── __init__.py
+   │   ├── plot_manager.py   # Manages plots and data flow
+   │   ├── signal_validation.py  # Signal validation logic
+   │   └── data_loader.py   # Data loading and processing
+   ├── plugins/             # Plugin implementations
+   │   ├── __init__.py
+   │   └── example_plugin.py
+   ├── gui/                 # Graphical user interface
+   │   ├── __init__.py
+   │   ├── main_window.py   # Main application window
+   │   └── plot_widgets.py  # Plotting widgets
+   ├── models/              # Data models
+   │   ├── __init__.py
+   │   ├── signal.py        # Signal data model
+   │   └── plugin.py        # Plugin interface
+   ├── utils/               # Utility functions
+   │   ├── __init__.py
+   │   ├── helpers.py       # Helper functions
+   │   └── validators.py    # Data validation
+   └── __main__.py          # Entry point
+
+tests/                     # Test files
+   ├── __init__.py
+   ├── test_plot_manager.py
+   └── ...
+
+docs/                      # Documentation
+   ├── conf.py
+   ├── index.rst
+   └── ...
+
+
+Coding Standards
+---------------
+
+Code Style
+~~~~~~~~~~
+
+We use several tools to maintain code quality:
+
+- **Black** for code formatting
+- **isort** for import sorting
+- **Flake8** for linting
+- **mypy** for static type checking
+
+Run these tools before committing:
+
+.. code-block:: bash
+
+   black .
+   isort .
+   flake8
+   mypy .
+
+Documentation
+~~~~~~~~~~~~~
+
+- All public modules, classes, and functions must have docstrings.
+- Use Google-style docstrings.
+- Document all parameters, return values, and exceptions.
+- Include examples in docstrings where helpful.
+
+Testing
+~~~~~~~
+
+Run tests with:
+
+.. code-block:: bash
+
+   # Run all tests
+   pytest
+
+   # Run tests with coverage
+   pytest --cov=debug_player --cov-report=term-missing
+
+   # Run a specific test file
+   pytest tests/core/test_plot_manager.py
+
+   # Run tests in parallel
+   pytest -n auto
+
+Creating Plugins
+---------------
+
+1. Create a new Python file in the `plugins` directory
+2. Define a class that inherits from `debug_player.models.plugin.PluginBase`
+3. Implement the required methods
+4. Register signals in the `__init__` method
+5. Add tests for your plugin
+
+Example plugin:
+
+.. code-block:: python
+
+   from debug_player.models.plugin import PluginBase
+   from debug_player.models.signal import Signal, SignalType
+
+   class MyPlugin(PluginBase):
+       """Example plugin that demonstrates the plugin interface."""
+
+       def __init__(self):
+           super().__init__("my_plugin")
+           
+           # Register signals
+           self.register_signal(
+               Signal(
+                   name="example_signal",
+                   signal_type=SignalType.TEMPORAL,
+                   description="An example signal",
+                   data_type=float,
+                   default_value=0.0,
+               )
+           )
+
+       def update(self, timestamp: float) -> None:
+           """Update the plugin state.
+           
+           Args:
+               timestamp: Current timestamp in seconds
+           """
+           # Update signal values here
+           self.set_signal_value("example_signal", timestamp % 10)
+
+Version Control
+--------------
+
+Branching Strategy
+~~~~~~~~~~~~~~~~~~
+
+- `main`: Stable, production-ready code
+- `develop`: Integration branch for features
+- `feature/*`: Feature branches
+- `bugfix/*`: Bug fix branches
+- `release/*`: Release preparation branches
+
+Commit Messages
+~~~~~~~~~~~~~~~
+
+Follow the Conventional Commits specification:
+
+- `feat`: A new feature
+- `fix`: A bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes
+- `refactor`: Code changes that don't affect functionality
+- `perf`: Performance improvements
+- `test`: Adding or modifying tests
+- `chore`: Maintenance tasks
+
+Example:
+
+.. code-block:: text
+
+   feat(plot): add support for 3D visualization
+   
+   - Add new 3D plot widget
+   - Update plot manager to handle 3D data
+   - Add example notebook
+   
+   Closes #123
+
+Release Process
+--------------
+
+1. Update the version number in `pyproject.toml` and `__version__.py`
+2. Update `CHANGELOG.md` with the new version and changes
+3. Create a release branch: `release/vX.Y.Z`
+4. Run all tests and update documentation
+5. Create a pull request to merge into `main`
+6. After merging, create a Git tag: `git tag vX.Y.Z`
+7. Push the tag: `git push origin vX.Y.Z`
+8. Create a GitHub release with the changelog
+9. Publish to PyPI (maintainers only):
+
+   .. code-block:: bash
+
+      python -m build
+      twine upload dist/*
+
+Troubleshooting
+--------------
+
+Common Issues
+~~~~~~~~~~~~
+
+1. **Import errors**
+   - Make sure your Python environment is activated
+   - Run `pip install -e .[dev]` to install in development mode
+
+2. **Test failures**
+   - Run tests with `-v` for more verbose output
+   - Check that all dependencies are installed
+
+3. **Type checking errors**
+   - Run `mypy` to see detailed type checking errors
+   - Make sure type hints are correct and complete
+
+Getting Help
+-----------
+
+- Check the `GitHub issues <https://github.com/imagry/debug-player/issues>`_
+- Join our `Discord server <https://discord.gg/imagry>`_
+- Email: `support@imagry.com`

@@ -1,0 +1,177 @@
+.. _user_guide:
+
+User Guide
+==========
+
+This guide provides detailed information about using Debug Player.
+
+Table of Contents
+----------------
+
+.. toctree::
+   :maxdepth: 2
+   
+   user_guide/interface
+   user_guide/plugins
+   user_guide/advanced
+   user_guide/troubleshooting
+
+Interface Overview
+-----------------
+
+Main Window
+~~~~~~~~~~~
+
+The main window consists of the following components:
+
+1. **Menu Bar**: Access to file operations, view options, and help
+2. **Toolbar**: Quick access to common actions
+3. **Signal Browser**: List of available signals and plugins
+4. **Plot Area**: Displays the selected signals
+5. **Timeline**: Navigate through the data
+6. **Status Bar**: Shows current time and other status information
+
+Signal Browser
+~~~~~~~~~~~~~
+
+The signal browser allows you to:
+
+- View available signals organized by plugin
+- Show/hide signals in the plot
+- Adjust signal properties (color, line style, etc.)
+- Group related signals together
+
+Plot Area
+~~~~~~~~~
+
+The plot area is where your signals are visualized. You can:
+
+- Zoom in/out using the mouse wheel or +/- buttons
+- Pan by clicking and dragging
+- Add annotations and markers
+- Adjust plot settings (axis labels, grid, etc.)
+
+Timeline
+~~~~~~~~
+
+The timeline at the bottom of the window allows you to:
+
+- Navigate through the data
+- Select time ranges for analysis
+- Set loop points for playback
+
+Working with Data
+----------------
+
+Loading Data
+~~~~~~~~~~~~
+
+1. Click "File" > "Open" or press Ctrl+O
+2. Navigate to your data file and select it
+3. Supported formats: CSV, HDF5, Parquet, and more via plugins
+
+Saving and Exporting
+~~~~~~~~~~~~~~~~~~~
+
+- **Save Session**: Save the current layout and settings
+- **Export Data**: Export the current view or selected signals to various formats
+- **Save Plot**: Save the current plot as an image (PNG, SVG, PDF)
+
+Signal Operations
+~~~~~~~~~~~~~~~~
+
+- **Math Operations**: Perform mathematical operations on signals
+- **Filtering**: Apply filters to signals
+- **Statistics**: Calculate statistics for selected time ranges
+
+Plugins
+-------
+
+Debug Player supports plugins to extend its functionality. Plugins can:
+
+- Add support for new file formats
+- Provide custom signal processing
+- Add new visualization types
+- Integrate with external tools
+
+To manage plugins:
+
+1. Click "Plugins" in the menu bar
+2. Select "Load Plugin" to add a new plugin
+3. Use "Plugin Manager" to enable/disable plugins
+
+Keyboard Shortcuts
+-----------------
+
+Navigation
+~~~~~~~~~~
+
++------------------+----------------------------------+
+| Shortcut         | Action                           |
++==================+==================================+
+| Space           | Play/Pause playback             |
++------------------+----------------------------------+
+| Left/Right      | Step backward/forward           |
++------------------+----------------------------------+
+| Home/End        | Jump to start/end               |
++------------------+----------------------------------+
+| Page Up/Down    | Jump by larger steps            |
++------------------+----------------------------------+
+
+Zooming
+~~~~~~~
+
++------------------+----------------------------------+
+| Shortcut         | Action                           |
++==================+==================================+
+| +               | Zoom in                         |
++------------------+----------------------------------+
+| -               | Zoom out                        |
++------------------+----------------------------------+
+| 0               | Reset zoom                      |
++------------------+----------------------------------+
+| Mouse Wheel     | Zoom in/out at mouse position    |
++------------------+----------------------------------+
+
+File Operations
+~~~~~~~~~~~~~~
+
++------------------+----------------------------------+
+| Shortcut         | Action                           |
++==================+==================================+
+| Ctrl+O          | Open file                       |
++------------------+----------------------------------+
+| Ctrl+S          | Save session                    |
++------------------+----------------------------------+
+| Ctrl+Shift+S    | Save as...                      |
++------------------+----------------------------------+
+| Ctrl+Q          | Quit application                |
++------------------+----------------------------------+
+
+Troubleshooting
+--------------
+
+Common Issues
+~~~~~~~~~~~~
+
+1. **Slow Performance**
+   - Reduce the number of visible signals
+   - Increase the decimation factor in settings
+   - Close other applications to free up memory
+
+2. **Missing Signals**
+   - Check that the file was loaded successfully
+   - Verify that the plugin for the file format is installed
+   - Check the console for error messages
+
+3. **Plot Display Issues**
+   - Try resetting the view (View > Reset View)
+   - Check that the signal ranges are appropriate
+   - Update your graphics drivers
+
+Getting Help
+~~~~~~~~~~~
+
+- Check the :ref:`troubleshooting` section
+- Visit our `GitHub repository <https://github.com/imagry/debug-player>`_
+- Open an issue for bug reports or feature requests

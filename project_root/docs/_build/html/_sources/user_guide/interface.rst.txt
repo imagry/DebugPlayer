@@ -1,0 +1,236 @@
+.. _user_guide_interface:
+
+Interface Overview
+=================
+
+This section provides a detailed look at the Debug Player interface and its components.
+
+Main Window Layout
+-----------------
+
+The main window is organized into several key areas:
+
+.. figure:: /_static/images/interface_overview.png
+   :alt: Debug Player Interface Overview
+   :align: center
+
+   1. **Menu Bar** - Access to file operations, view options, and help
+   2. **Toolbar** - Quick access to frequently used functions
+   3. **Signal Browser** - Lists available signals and plugins
+   4. **Plot Area** - Displays the selected signals
+   5. **Timeline** - Navigate through the data
+   6. **Status Bar** - Shows current time and status information
+
+Menu Bar
+--------
+
+File Menu
+~~~~~~~~~
+
+- **New Session** - Start a new session (Ctrl+N)
+- **Open...** - Open a data file (Ctrl+O)
+- **Open Recent** - Recently opened files
+- **Save Session** - Save the current session (Ctrl+S)
+- **Save Session As...** - Save session with a new name
+- **Export...** - Export data or plots
+- **Preferences** - Configure application settings
+- **Exit** - Quit the application (Ctrl+Q)
+
+Edit Menu
+~~~~~~~~~
+
+- **Undo** - Undo the last action (Ctrl+Z)
+- **Redo** - Redo the last undone action (Ctrl+Y)
+- **Copy** - Copy the current selection (Ctrl+C)
+- **Paste** - Paste from clipboard (Ctrl+V)
+- **Delete** - Remove the selected item (Del)
+- **Select All** - Select all items (Ctrl+A)
+- **Find...** - Search for signals or data (Ctrl+F)
+
+View Menu
+~~~~~~~~~
+
+- **Toolbar** - Show/hide the toolbar
+- **Status Bar** - Show/hide the status bar
+- **Full Screen** - Toggle full screen mode (F11)
+- **Reset View** - Reset the plot view to default (0)
+- **Zoom In** - Zoom in on the plot (+)
+- **Zoom Out** - Zoom out from the plot (-)
+- **Auto Scale** - Automatically scale the plot to fit data (A)
+
+Tools Menu
+~~~~~~~~~~
+
+- **Signal Calculator** - Perform mathematical operations on signals
+- **Filter Designer** - Design and apply filters to signals
+- **Statistics** - Calculate statistics for selected signals
+- **Plugin Manager** - Manage installed plugins
+
+Window Menu
+~~~~~~~~~~~
+
+- **Cascade** - Arrange windows in a cascade
+- **Tile** - Tile windows
+- **Close All** - Close all open windows
+- **Windows...** - List of open windows
+
+Help Menu
+~~~~~~~~~
+
+- **Documentation** - Open the user manual (F1)
+- **Examples** - Load example data
+- **Check for Updates** - Check for new versions
+- **About** - Show version and copyright information
+
+Toolbar
+-------
+
+The toolbar provides quick access to frequently used functions:
+
++------------------+----------------------------------+
+| Icon            | Description                      |
++==================+==================================+
+| |new|          | New Session (Ctrl+N)             |
++------------------+----------------------------------+
+| |open|         | Open File (Ctrl+O)               |
++------------------+----------------------------------+
+| |save|         | Save Session (Ctrl+S)            |
++------------------+----------------------------------+
+| |play|         | Play/Pause (Space)               |
++------------------+----------------------------------+
+| |stop|         | Stop                            |
++------------------+----------------------------------+
+| |back|         | Step Backward (Left)             |
++------------------+----------------------------------+
+| |forward|      | Step Forward (Right)            |
++------------------+----------------------------------+
+| |zoomin|       | Zoom In (+)                     |
++------------------+----------------------------------+
+| |zoomout|      | Zoom Out (-)                    |
++------------------+----------------------------------+
+| |fit|          | Fit to View (0)                 |
++------------------+----------------------------------+
+| |help|         | Help (F1)                       |
++------------------+----------------------------------+
+
+.. |new| image:: /_static/icons/new.png
+   :width: 16px
+   :height: 16px
+.. |open| image:: /_static/icons/open.png
+   :width: 16px
+   :height: 16px
+.. |save| image:: /_static/icons/save.png
+   :width: 16px
+   :height: 16px
+.. |play| image:: /_static/icons/play.png
+   :width: 16px
+   :height: 16px
+.. |stop| image:: /_static/icons/stop.png
+   :width: 16px
+   :height: 16px
+.. |back| image:: /_static/icons/back.png
+   :width: 16px
+   :height: 16px
+.. |forward| image:: /_static/icons/forward.png
+   :width: 16px
+   :height: 16px
+.. |zoomin| image:: /_static/icons/zoomin.png
+   :width: 16px
+   :height: 16px
+.. |zoomout| image:: /_static/icons/zoomout.png
+   :width: 16px
+   :height: 16px
+.. |fit| image:: /_static/icons/fit.png
+   :width: 16px
+   :height: 16px
+.. |help| image:: /_static/icons/help.png
+   :width: 16px
+   :height: 16px
+
+Signal Browser
+-------------
+
+The signal browser displays all available signals organized by plugin. You can:
+
+- Expand/collapse plugin nodes
+- Show/hide signals by clicking the checkbox
+- Right-click for signal options (properties, export, etc.)
+- Drag and drop signals to reorder them
+- Group signals by dragging one signal onto another
+
+Plot Area
+---------
+
+The plot area is where your signals are visualized. You can:
+
+- Left-click and drag to pan
+- Right-click and drag to zoom
+- Mouse wheel to zoom in/out
+- Middle-click and drag to create a zoom rectangle
+- Double-click to reset the view
+
+Each plot can have multiple y-axes. To add a new y-axis:
+
+1. Right-click on the plot
+2. Select "Add Y Axis"
+3. Assign signals to the new axis using the signal properties
+
+Timeline
+--------
+
+The timeline at the bottom of the window shows the current position in the data and allows you to:
+
+- Click to jump to a specific time
+- Click and drag to select a time range
+- Use the play/pause button to animate through the data
+- Adjust the playback speed
+- Set loop points for continuous playback
+
+Status Bar
+----------
+
+The status bar at the bottom of the window shows:
+
+- Current time in the data
+- Number of selected points
+- Memory usage
+- Any active operations
+- Error messages
+
+Context Menus
+------------
+
+Right-clicking in different areas of the application will show context-sensitive menus with relevant options.
+
+Signal Context Menu
+~~~~~~~~~~~~~~~~~~
+Appears when right-clicking on a signal in the signal browser:
+
+- **Properties** - Edit signal properties
+- **Show/Hide** - Toggle signal visibility
+- **Export...** - Export signal data
+- **Copy** - Copy signal data to clipboard
+- **Delete** - Remove the signal
+
+Plot Context Menu
+~~~~~~~~~~~~~~~~
+Appears when right-clicking on a plot:
+
+- **Add Signal...** - Add a signal to the plot
+- **Add Y Axis** - Add a new y-axis
+- **Auto Scale** - Auto-scale the plot
+- **Save Image...** - Save the plot as an image
+- **Copy Image** - Copy the plot to clipboard
+- **Print...** - Print the plot
+- **Properties...** - Configure plot properties
+
+Timeline Context Menu
+~~~~~~~~~~~~~~~~~~~~
+Appears when right-clicking on the timeline:
+
+- **Set Start Marker** - Set the start of the selection
+- **Set End Marker** - Set the end of the selection
+- **Clear Selection** - Clear the current selection
+- **Zoom to Selection** - Zoom to the selected range
+- **Loop Selection** - Toggle looping of the selected range
+- **Properties...** - Configure timeline properties

@@ -1,0 +1,321 @@
+.. _user_guide_plugins:
+
+Plugins
+=======
+
+Debug Player's functionality can be extended through plugins. This section covers how to use and create plugins.
+
+Built-in Plugins
+---------------
+
+Debug Player comes with several built-in plugins:
+
+1. **CSV Loader**
+   - Loads data from CSV files
+   - Supports both comma and tab delimiters
+   - Auto-detects header rows
+
+2. **HDF5 Loader**
+   - Loads data from HDF5 files
+   - Supports both tables and datasets
+   - Preserves metadata and attributes
+
+3. **Parquet Loader**
+   - Loads data from Apache Parquet files
+   - Efficient for large datasets
+   - Preserves schema information
+
+4. **Signal Processing**
+   - Provides common signal processing functions
+   - Includes filters, FFT, and other transforms
+   - Can be applied to any signal
+
+Managing Plugins
+---------------
+
+Loading a Plugin
+~~~~~~~~~~~~~~~~
+
+1. Click "Plugins" in the menu bar
+2. Select "Load Plugin..."
+3. Navigate to the plugin file (.py)
+4. Click "Open"
+
+The plugin will be loaded and its signals will appear in the signal browser.
+
+Enabling/Disabling Plugins
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+1. Click "Plugins" > "Plugin Manager"
+2. Check/uncheck the box next to each plugin to enable/disable it
+3. Click "OK" to apply changes
+
+Note: Some plugins may require a restart to take effect.
+
+Plugin Settings
+~~~~~~~~~~~~~~
+
+Some plugins provide configurable settings:
+
+1. Click "Plugins" > "Plugin Manager"
+2. Select a plugin from the list
+3. Click "Configure..." to adjust settings
+4. Click "OK" to save changes
+
+Creating Plugins
+---------------
+
+Plugin Structure
+~~~~~~~~~~~~~~~
+
+A basic plugin has the following structure:
+
+.. code-block:: python
+
+   from debug_player.plugins import PluginBase
+   from debug_player.models import Signal, SignalType
+
+   class MyPlugin(PluginBase):
+       """Documentation for MyPlugin."""
+
+       def __init__(self):
+           super().__init__("my_plugin")
+           
+           # Register signals
+           self.register_signal(
+               Signal(
+                   name="example_signal",
+                   signal_type=SignalType.TEMPORAL,
+                   description="An example signal",
+                   data_type=float,
+                   default_value=0.0,
+               )
+           )
+
+       def update(self, timestamp: float) -> None:
+           """Update the plugin state."""
+           self.set_signal_value("example_signal", timestamp % 10)
+
+Required Methods
+~~~~~~~~~~~~~~~
+
+1. **__init__()**
+   - Initialize the plugin
+   - Register signals
+   - Set up any resources
+
+2. **update(timestamp: float) -> None**
+   - Called on each time step
+   - Update signal values based on the current timestamp
+
+Optional Methods
+~~~~~~~~~~~~~~~
+
+1. **load_data(file_path: str) -> bool**
+   - Load data from a file
+   - Return True on success, False on failure
+
+2. **save_data(file_path: str) -> bool**
+   - Save data to a file
+   - Return True on success, False on failure
+
+3. **get_config() -> dict**
+   - Return the current configuration
+   - Used for saving/loading plugin state
+
+4. **set_config(config: dict) -> None**
+   - Apply a configuration
+   - Used for loading saved state
+
+Signal Types
+~~~~~~~~~~~
+
+- **Temporal**: Time-series data (e.g., sensor readings)
+- **Spatial**: 2D or 3D spatial data (e.g., position, orientation)
+- **Event**: Discrete events with timestamps (e.g., button presses)
+- **State**: Finite state machine states (e.g., system modes)
+
+Example Plugin
+~~~~~~~~~~~~~
+
+Here's a complete example of a simple counter plugin:
+
+.. code-block:: python
+
+   from typing import Dict, Any
+   from debug_player.plugins import PluginBase
+   from debug_player.models import Signal, SignalType
+
+   class CounterPlugin(PluginBase):
+       """A simple counter plugin that increments with time."""
+
+       def __init__(self):
+           super().__init__("counter")
+           self.count = 0
+           
+           self.register_signal(
+               Signal(
+                   name="count",
+                   signal_type=SignalType.TEMPORAL,
+                   description="Incrementing counter",
+                   data_type=int,
+                   default_value=0,
+               )
+           )
+
+       def update(self, timestamp: float) -> None:
+           self.count += 1
+           self.set_signal_value("count", self.count)
+
+       def get_config(self) -> Dict[str, Any]:
+           return {"count": self.count}
+
+       def set_config(self, config: Dict[str, Any]) -> None:
+           self.count = config.get("count", 0)
+
+Plugin Packaging
+---------------
+
+To distribute your plugin:
+
+1. Create a Python package with this structure:
+
+   .. code-block:: text
+
+      my_plugin/
+      ├── __init__.py
+      ├── plugin.py
+      ├── README.md
+      └── setup.py
+
+2. In `plugin.py`, define your plugin class
+3. In `__init__.py`, expose your plugin:
+
+   .. code-block:: python
+
+      from .plugin import MyPlugin
+      __all__ = ['MyPlugin']
+
+4. Create a `setup.py`:
+
+   .. code-block:: python
+
+      from setuptools import setup, find_packages
+
+      setup(
+          name="debug-player-my-plugin",
+          version="0.1.0",
+          packages=find_packages(),
+          entry_points={
+              "debug_player.plugins": [
+                  "my_plugin = my_plugin:MyPlugin",
+              ],
+          },
+      )
+
+5. Install with `pip install -e .` for development or `pip install .` for distribution
+
+Troubleshooting Plugins
+----------------------
+
+Common Issues
+~~~~~~~~~~~~
+
+1. **Plugin Not Loading**
+   - Check the console for error messages
+   - Ensure all dependencies are installed
+   - Verify the plugin implements required methods
+
+2. **Signals Not Appearing**
+   - Check that signals are registered in `__init__`
+   - Verify signal names are unique
+   - Ensure the plugin is enabled in Plugin Manager
+
+3. **Performance Issues**
+   - Avoid heavy processing in the update method
+   - Use efficient data structures
+   - Consider using numpy for numerical operations
+
+Debugging Plugins
+~~~~~~~~~~~~~~~~
+
+1. Add logging statements:
+
+   .. code-block:: python
+
+      import logging
+      logger = logging.getLogger(__name__)
+      
+      class MyPlugin(PluginBase):
+          def __init__(self):
+              logger.info("Initializing MyPlugin")
+              # ...
+
+2. Use a debugger:
+
+   .. code-block:: python
+
+      import pdb; pdb.set_trace()  # Set breakpoint
+
+3. Check the application logs in `~/.debug_player/logs/`
+
+Advanced Topics
+--------------
+
+Custom Widgets
+~~~~~~~~~~~~~
+
+Plugins can provide custom UI widgets:
+
+1. Create a QWidget subclass
+2. Implement the necessary signals/slots
+3. Register it with `self.register_widget()`
+
+Threading
+~~~~~~~~
+
+For long-running operations:
+
+1. Use QThread to avoid blocking the UI
+2. Emit signals to update the main thread
+3. Use thread-safe data structures
+
+Data Streaming
+~~~~~~~~~~~~~
+
+For real-time data:
+
+1. Use a separate thread for data acquisition
+2. Buffer incoming data
+3. Update signals at a controlled rate
+
+Plugin Dependencies
+~~~~~~~~~~~~~~~~~~
+
+To specify dependencies:
+
+1. Add them to `setup.py`:
+
+   .. code-block:: python
+
+      install_requires=[
+          'numpy>=1.20.0',
+          'pandas>=1.3.0',
+      ]
+
+2. Document them in your README
+3. Handle import errors gracefully
+
+Best Practices
+-------------
+
+1. Keep plugins focused and modular
+2. Document all public APIs
+3. Handle errors gracefully
+4. Use type hints
+5. Write tests
+6. Follow PEP 8 style guide
+7. Use meaningful signal names
+8. Optimize for performance
+9. Support saving/loading state
+10. Provide example configurations
